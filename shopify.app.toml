@@ -1,0 +1,17 @@
+name = "deal-image-test-hook"
+client_id = "7a98f9c3acca409600b85651a0a2305c"
+application_url = "https://shopify-image-app-seven.vercel.app"
+embedded = false
+
+[access_scopes]
+scopes = "read_products,write_products,read_metafields,write_metafields,write_files"
+
+[auth]
+redirect_urls = ["https://shopify-image-app-seven.vercel.app/auth/callback"]
+
+[webhooks]
+api_version = "2026-04"
+
+[build]
+automatically_update_urls_on_dev = false
+dev_store_url = "revya-boutique.myshopify.com"
