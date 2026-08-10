@@ -12,13 +12,12 @@ const W = 1200;
 const H = 628;
 
 // ─── Blue / white split geometry ─────────────────────────────────────────────
-const SPLIT_X = 530;   // blue section right edge at top & bottom
-const CTRL_X  = 383;   // bezier control x — INWARD (concave); curve dips to ~x=420 at mid
-const IMG_X   = 400;   // product image start — must be ≤ curve minimum (~420) to avoid gap
+const SPLIT_X = Math.round(W * 0.30);
+const WHITE_SECTION_W = W - SPLIT_X;
 
 // ─── Brand palette ───────────────────────────────────────────────────────────
 const BLUE   = '#1A1AE6';
-const ORANGE = '#FF6B00';
+const ORANGE = '#ff6a03';
 const WHITE  = '#FFFFFF';
 
 // ─── Badge geometry ──────────────────────────────────────────────────────────
@@ -27,22 +26,24 @@ const BADGE_Y  = 140;
 const BADGE_BW = 290;   // body width; arrow tip adds another 36 px
 const BADGE_H  = 80;
 const BADGE_R  = 12;    // corner radius (left side only)
+const ORANGE_PRICE_GAP = -5;
+const ORANGE_TITLE_GAP = -20;
 
 // ─── Left-section vertical rhythm ────────────────────────────────────────────
 const PRICE_CX = 262;   // horizontal centre of the left section
 const PRICE_Y  = 341;   // sale-price vertical centre (centers block at H/2 for all font sizes)
                         // REG_Y is dynamic: PRICE_Y + priceFS/2 + 40 (computed in buildSVG)
-const REG_FONT = 40;
+const REG_FONT = 30;
 
 // ─── Logo box (top-right) ─────────────────────────────────────────────────────
 // White rounded rect that backs the logo image (or fallback text).
 // Logo image is resized to fit max 220×68 and centred within the box.
-const LOGO_X = 985;
-const LOGO_Y = 25;
 const LOGO_W = 180;
 const LOGO_H = 90;
-const LOGO_IMG_MAX_W = 165;
-const LOGO_IMG_MAX_H = 62;
+const LOGO_X = W - LOGO_W - 10;
+const LOGO_Y = 10;
+const LOGO_IMG_MAX_W = 149;
+const LOGO_IMG_MAX_H = 56;
 const PRODUCT_SAFE_TOP = LOGO_Y + Math.round(LOGO_H * 0.8);
 const PRODUCT_SHIFT_LEFT = Math.round(580 * 0.1);
 
@@ -223,8 +224,8 @@ async function generateProductImage(product) {
       .png()
       .toBuffer();
     const { width: fw, height: fh } = await sharp(fitted).metadata();
-    const left = 600 + Math.round((580 - fw) / 2) - PRODUCT_SHIFT_LEFT;
-    const top  = PRODUCT_SAFE_TOP + Math.round((H - PRODUCT_SAFE_TOP - fh) / 2);
+    const left = SPLIT_X + Math.round((WHITE_SECTION_W - fw) / 2);
+    const top  = Math.round((H - fh) / 2);
     composites.push({ input: fitted, top, left });
   }
 
@@ -242,18 +243,18 @@ async function generateProductImage(product) {
   const _titleOnlyMode = _titleMode && _badgeHidden;
   const _saleStrLayout = deal_sale_price === 'hide' ? '' : (deal_sale_price || (price ? `$${price}` : ''));
   const _badgeOnly     = !_titleMode && !_saleStrLayout;
-  const _priceFSLayout = _saleStrLayout.length <= 6 ? 99 : _saleStrLayout.length <= 8 ? 79 : _saleStrLayout.length <= 10 ? 61 : 50;
+  const _priceFSLayout = _saleStrLayout.length <= 6 ? 72 : _saleStrLayout.length <= 8 ? 64 : _saleStrLayout.length <= 10 ? 54 : 44;
   let computedBadgeY;
   if (_titleOnlyMode) {
     computedBadgeY = 0;  // no fire in title-only mode
   } else if (_titleMode) {
     const _tLines  = wrapText(truncateText(deal_title.trim(), 60), TITLE_MAX_W, TITLE_FS);
     const _tBlockH = _tLines.length * TITLE_FS + (_tLines.length - 1) * TITLE_LINE_GAP;
-    computedBadgeY = Math.floor((H - (BADGE_H + 20 + _tBlockH)) / 2);
+    computedBadgeY = Math.floor((H - (BADGE_H + ORANGE_TITLE_GAP + _tBlockH)) / 2);
   } else if (_badgeOnly) {
     computedBadgeY = Math.floor((H - BADGE_H) / 2);
   } else {
-    computedBadgeY = PRICE_Y - Math.floor(_priceFSLayout / 2) - 20 - BADGE_H;
+    computedBadgeY = PRICE_Y - Math.floor(_priceFSLayout / 2) - ORANGE_PRICE_GAP - BADGE_H;
   }
   console.log('[generator] step 4: building SVG');
   const svgBuf = Buffer.from(buildSVG({ price, compare_at_price, badge_text: _badgeHidden ? null : (deal_badge_text || badge_text), deal_title, badgeHidden: _badgeHidden, deal_sale_price, deal_reg_price, showLogoText: logoData === null, showFireImg: fireData !== null && !_badgeHidden, fireWidth: fireData?.w ?? 0 }));
@@ -273,15 +274,15 @@ async function generateProductImage(product) {
   if (logoData) {
     composites.push({
       input: logoData.buffer,
-      top:  LOGO_Y + Math.round((LOGO_H - logoData.h) / 2),
-      left: LOGO_X + Math.round((LOGO_W - logoData.w) / 2),
+      top: LOGO_Y,
+      left: W - 10 - logoData.w,
     });
   }
 
   // 6. Flatten to JPEG buffer
   const buffer = await sharp({ create: { width: W, height: H, channels: 3, background: WHITE } })
     .composite(composites)
-    .jpeg({ quality: 70, mozjpeg: false })
+    .jpeg({ quality: 90, chromaSubsampling: '4:4:4', mozjpeg: false })
     .toBuffer();
   console.log('[generator] step 7: sharp complete');
 
@@ -385,9 +386,9 @@ function svgPath(text, x, y, fontSize, opts = {}) {
 }
 const TITLE_FS       = 38;
 const TITLE_LINE_GAP = 12;   // vertical gap between title lines (badge+title mode)
-const TITLE_MAX_W    = BADGE_BW + 20;  // max wrap width (badge+title mode)
+const TITLE_MAX_W    = 270;
 
-const TITLE_ONLY_MAX_W = 320;  // safe max width within blue bezier area
+const TITLE_ONLY_MAX_W = 270;
 
 // Truncate text to charLimit characters at word boundary.
 function truncateText(text, charLimit = 60) {
@@ -464,15 +465,15 @@ function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden
 
   // Title-only: auto-size font so up to 60 chars fits within the blue area
   // Short text → big font; longer text → smaller font, more lines allowed
-  const titleOnlyFS = dealTitleCapped.length <= 20 ? 80
-                    : dealTitleCapped.length <= 40 ? 70
-                    :                                60;
+  const titleOnlyFS = dealTitleCapped.length <= 20 ? 72
+                    : dealTitleCapped.length <= 40 ? 58
+                    :                                46;
   const titleOnlyLH = Math.round(titleOnlyFS * 1.3);
   const titleOnlyMaxLines = dealTitleCapped.length <= 20 ? 3
                            : dealTitleCapped.length <= 40 ? 5
                            :                                6;
   // Short text uses wider column (340px) so "Free $10" fits on one line at 80px
-  const titleOnlyMaxW = dealTitleCapped.length <= 20 ? 340 : TITLE_ONLY_MAX_W;
+  const titleOnlyMaxW = TITLE_ONLY_MAX_W;
 
   const titleOnlyLines = titleOnlyMode
     ? (wrapText(dealTitleCapped, titleOnlyMaxW, titleOnlyFS, titleOnlyMaxLines) || []) : [];
@@ -513,10 +514,10 @@ function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden
     : BADGE_X + BADGE_BW / 2 + 6;
 
   // ── Sale price font size ───────────────────────────────────────────────────
-  const priceFS = saleStr.length <= 6 ? 99
-               : saleStr.length <= 8 ? 79
-               : saleStr.length <= 10 ? 61
-               :                        50;
+  const priceFS = saleStr.length <= 6 ? 72
+               : saleStr.length <= 8 ? 64
+               : saleStr.length <= 10 ? 54
+               :                        44;
 
   // ── Reg. price geometry ────────────────────────────────────────────────────
   const regLabelW  = textWidth('Reg. ', REG_FONT, fontReg(), 0);
@@ -527,39 +528,24 @@ function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden
   const titleBlockH = titleLines.length > 0
     ? titleLines.length * TITLE_FS + (titleLines.length - 1) * TITLE_LINE_GAP : 0;
   const blockH = badgeWithTitle
-    ? BADGE_H + 20 + titleBlockH
+    ? BADGE_H + ORANGE_TITLE_GAP + titleBlockH
     : badgeOnly
       ? BADGE_H
-      : BADGE_H + 20 + priceFS + 25 + REG_FONT;
+      : BADGE_H + ORANGE_PRICE_GAP + priceFS + 25 + REG_FONT;
   // titleOnlyMode centers text itself; all other badge-bearing modes use dynamicBadgeY
   const dynamicBadgeY = titleOnlyMode
     ? 0
     : (badgeWithTitle || badgeOnly)
       ? Math.floor((H - blockH) / 2)
-      : PRICE_Y - Math.floor(priceFS / 2) - 20 - BADGE_H;
+      : PRICE_Y - Math.floor(priceFS / 2) - ORANGE_PRICE_GAP - BADGE_H;
   const regY    = PRICE_Y + Math.floor(priceFS / 2) + 25;
   const strikeY = regY;
 
   // ── Blue left-section bezier path ─────────────────────────────────────────
-  const bluePath =
-    `M 0 0 L ${SPLIT_X} 0 ` +
-    `C ${CTRL_X} ${H * 0.25}, ${CTRL_X} ${H * 0.75}, ${SPLIT_X} ${H} ` +
-    `L 0 ${H} Z`;
+  const bluePath = `M 0 0 H ${SPLIT_X} V ${H} H 0 Z`;
 
   // ── Orange badge: rounded-left rect + right arrow ─────────────────────────
-  const arrowX  = BADGE_X + BADGE_BW + 36;
   const midY    = dynamicBadgeY + BADGE_H / 2;
-  const bBot    = dynamicBadgeY + BADGE_H;
-
-  const badgePath =
-    `M ${BADGE_X + BADGE_R},${dynamicBadgeY} ` +
-    `H ${BADGE_X + BADGE_BW} ` +
-    `L ${arrowX},${midY} ` +
-    `L ${BADGE_X + BADGE_BW},${bBot} ` +
-    `H ${BADGE_X + BADGE_R} ` +
-    `Q ${BADGE_X},${bBot} ${BADGE_X},${bBot - BADGE_R} ` +
-    `V ${dynamicBadgeY + BADGE_R} ` +
-    `Q ${BADGE_X},${dynamicBadgeY} ${BADGE_X + BADGE_R},${dynamicBadgeY} Z`;
 
   return `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg" xml:space="preserve">
 
@@ -568,20 +554,19 @@ function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden
 
   <!-- ══ Orange badge (hidden in title-only mode) ══ -->
   ${!badgeHidden ? `
-  <path d="${badgePath}" fill="${ORANGE}"/>
-  ${(()=>{ const fs = badgeOnly ? 64 : (badgeLabel.length <= 8 ? 46 : badgeLabel.length <= 11 ? 38 : 30); return svgPath(badgeLabel, badgeTX, midY + 4, fs, { bold: true, fill: 'rgba(0,0,0,0.35)', center: true, middleBaseline: true, shadow: null }) + svgPath(badgeLabel, badgeTX, midY + 2, fs, { bold: true, fill: WHITE, center: true, middleBaseline: true, strokeColor: WHITE, strokeWidth: 3 }); })()}
+  ${(()=>{ const fs = badgeOnly ? 64 : (badgeLabel.length <= 8 ? 40 : badgeLabel.length <= 11 ? 34 : 28); return svgPath(badgeLabel, BADGE_X, midY + 2, fs, { bold: true, fill: ORANGE, middleBaseline: true, strokeColor: badgeOnly ? ORANGE : null, strokeWidth: badgeOnly ? 1.5 : 0 }); })()}
   ` : ''}
 
   <!-- ══ Title-only: large left-aligned text, no badge ══ -->
   ${titleOnlyMode ? titleOnlyLines.map((line, i) => {
     const cy = titleOnlyStartY + i * titleOnlyLH + Math.floor(titleOnlyFS / 2);
-    return svgPath(line, BADGE_X, cy, titleOnlyFS, { bold: true, fill: WHITE, middleBaseline: true });
+    return svgPath(line, BADGE_X, cy, titleOnlyFS, { bold: true, fill: WHITE, middleBaseline: true, strokeColor: WHITE, strokeWidth: 2.5 });
   }).join('') : ''}
 
   <!-- ══ Badge+title: left-aligned title below badge ══ -->
   ${badgeWithTitle ? titleLines.map((line, i) => {
-    const cy = dynamicBadgeY + BADGE_H + 20 + i * (TITLE_FS + TITLE_LINE_GAP) + TITLE_FS / 2;
-    return svgPath(line, BADGE_X, cy, TITLE_FS, { bold: true, fill: WHITE, middleBaseline: true });
+    const cy = dynamicBadgeY + BADGE_H + ORANGE_TITLE_GAP + i * (TITLE_FS + TITLE_LINE_GAP) + TITLE_FS / 2;
+    return svgPath(line, BADGE_X, cy, TITLE_FS, { bold: true, fill: WHITE, middleBaseline: true, strokeColor: WHITE, strokeWidth: 1.5 });
   }).join('') : ''}
 
   <!-- ══ Sale price ══ -->
