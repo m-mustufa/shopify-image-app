@@ -43,8 +43,8 @@ const LOGO_W = 180;
 const LOGO_H = 90;
 const LOGO_X = W - LOGO_W - 10;
 const LOGO_Y = 10;
-const LOGO_IMG_MAX_W = Math.round(149 * 0.95);
-const LOGO_IMG_MAX_H = Math.round(56 * 0.95);
+const LOGO_IMG_MAX_W = Math.round(149 * 0.95 * 0.95);
+const LOGO_IMG_MAX_H = Math.round(56 * 0.95 * 0.95);
 const PRODUCT_SAFE_TOP = LOGO_Y + Math.round(LOGO_H * 0.8);
 const PRODUCT_SHIFT_LEFT = Math.round(580 * 0.1);
 
@@ -225,7 +225,7 @@ async function generateProductImage(product) {
       .png()
       .toBuffer();
     const { width: fw, height: fh } = await sharp(fitted).metadata();
-    const left = SPLIT_X + Math.round((WHITE_SECTION_W - fw) / 2) - 20;
+    const left = SPLIT_X + Math.round((WHITE_SECTION_W - fw) / 2) - 40;
     const top  = Math.round((H - fh) / 2);
     composites.push({ input: fitted, top, left });
   }
@@ -242,9 +242,9 @@ async function generateProductImage(product) {
   const _titleMode     = !!(deal_title && deal_title.trim());
   const _badgeHidden   = deal_badge_text === 'hide';
   const _titleOnlyMode = _titleMode && _badgeHidden;
-  const _saleStrLayout = deal_sale_price === 'hide' ? '' : (deal_sale_price || (price ? `$${price}` : ''));
+  const _saleStrLayout = deal_sale_price === 'hide' ? '' : (deal_sale_price || formatCurrency(price));
   const _badgeOnly     = !_titleMode && !_saleStrLayout;
-  const _priceFSLayout = _saleStrLayout.length <= 6 ? 92 : _saleStrLayout.length <= 8 ? 80 : _saleStrLayout.length <= 10 ? 68 : 56;
+  const _priceFSLayout = getPriceFontSize(_saleStrLayout);
   let computedBadgeY;
   if (_titleOnlyMode) {
     computedBadgeY = 0;  // no fire in title-only mode
@@ -452,6 +452,24 @@ function wrapText(text, maxWidth, fontSize, maxLines = 3) {
   return lines;
 }
 
+function formatCurrency(value, roundUp = false) {
+  if (value === null || value === undefined || value === '') return '';
+  const amount = Number(String(value).replace(/[^\d.-]/g, ''));
+  if (!Number.isFinite(amount)) return String(value);
+  const formattedAmount = roundUp
+    ? Math.ceil(amount).toLocaleString('en-US')
+    : amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return `$${formattedAmount}`;
+}
+
+function getPriceFontSize(priceText) {
+  const maxWidth = CURVE_CTRL_X - BADGE_X - 12;
+  for (const fontSize of [86, 74, 63, 56, 50, 46]) {
+    if (textWidth(priceText, fontSize, fontBold(), 0) <= maxWidth) return fontSize;
+  }
+  return 42;
+}
+
 function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden, deal_sale_price, deal_reg_price, showLogoText, showFireImg, fireWidth }) {
 
   // ── Mode detection ────────────────────────────────────────────────────────
@@ -491,11 +509,11 @@ function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden
   const compareRaw = parseFloat(compare_at_price) || 0;
 
   // "hide" suppresses all price rows; empty price triggers badge-only
-  const saleStr   = deal_sale_price === 'hide' ? '' : (deal_sale_price || (price ? `$${price}` : ''));
+  const saleStr   = deal_sale_price === 'hide' ? '' : (deal_sale_price ? formatCurrency(deal_sale_price) : formatCurrency(price));
   const badgeOnly = !titleMode && !saleStr;
 
   const showReg     = !titleMode && !badgeOnly && (!!(deal_reg_price) || (compareRaw > 0 && compareRaw > saleNum));
-  const regPriceStr = deal_reg_price || (showReg && compareRaw > 0 ? `$${Math.ceil(compareRaw)}` : '');
+  const regPriceStr = deal_reg_price ? formatCurrency(deal_reg_price) : (showReg && compareRaw > 0 ? formatCurrency(compareRaw, true) : '');
 
   const effectiveSaleAmt = parseFloat((deal_sale_price && deal_sale_price !== 'hide' ? deal_sale_price : price)?.replace(/[^\d.]/g, '')) || saleNum;
   const effectiveRegAmt  = parseFloat(deal_reg_price?.replace(/[^\d.]/g, '')) || compareRaw;
@@ -515,10 +533,7 @@ function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden
     : BADGE_X + BADGE_BW / 2 + 6;
 
   // ── Sale price font size ───────────────────────────────────────────────────
-  const priceFS = saleStr.length <= 6 ? 86
-               : saleStr.length <= 8 ? 74
-               : saleStr.length <= 10 ? 63
-               :                        52;
+  const priceFS = getPriceFontSize(saleStr);
 
   // ── Reg. price geometry ────────────────────────────────────────────────────
   const regLabelW  = textWidth('Reg. ', REG_FONT, fontReg(), 0);
