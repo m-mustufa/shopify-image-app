@@ -43,8 +43,8 @@ const LOGO_W = 180;
 const LOGO_H = 90;
 const LOGO_X = W - LOGO_W - 10;
 const LOGO_Y = 10;
-const LOGO_IMG_MAX_W = 149;
-const LOGO_IMG_MAX_H = 56;
+const LOGO_IMG_MAX_W = Math.round(149 * 0.95);
+const LOGO_IMG_MAX_H = Math.round(56 * 0.95);
 const PRODUCT_SAFE_TOP = LOGO_Y + Math.round(LOGO_H * 0.8);
 const PRODUCT_SHIFT_LEFT = Math.round(580 * 0.1);
 
@@ -225,7 +225,7 @@ async function generateProductImage(product) {
       .png()
       .toBuffer();
     const { width: fw, height: fh } = await sharp(fitted).metadata();
-    const left = SPLIT_X + Math.round((WHITE_SECTION_W - fw) / 2);
+    const left = SPLIT_X + Math.round((WHITE_SECTION_W - fw) / 2) - 20;
     const top  = Math.round((H - fh) / 2);
     composites.push({ input: fitted, top, left });
   }
