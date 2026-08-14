@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "test": "node tests/cache-busting.test.js",
+    "test": "node tests/cache-busting.test.js && node tests/whatsapp.test.js",
     "test:generate": "node scripts/test-generate.js",
     "test:generate:no-image": "node scripts/test-generate.js --no-image"
   },

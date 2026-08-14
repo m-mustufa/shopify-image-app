@@ -3,18 +3,35 @@ const { waitUntil } = require('@vercel/functions');
 const config = require('./config');
 const { verifyShopifyWebhook } = require('./webhooks/verifySignature');
 const { handleProduct, extractProductData } = require('./webhooks/product');
+const {
+  verifyWhatsAppWebhook,
+  handleWhatsAppWebhook,
+} = require('./webhooks/whatsapp');
 
 const app = express();
 
 app.use(
   express.json({
     verify: (req, res, buf) => {
-      if (req.path.startsWith('/webhooks/')) verifyShopifyWebhook(req, res, buf);
+      if (req.path.startsWith('/webhooks/products/')) {
+        verifyShopifyWebhook(req, res, buf);
+      } else if (req.path === '/webhooks/whatsapp') {
+        req.rawBody = Buffer.from(buf);
+      }
     },
   })
 );
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
+
+app.get('/webhooks/whatsapp', verifyWhatsAppWebhook);
+
+app.post('/webhooks/whatsapp', (req, res) => {
+  res.status(200).send('EVENT_RECEIVED');
+  waitUntil(handleWhatsAppWebhook(req).catch(err =>
+    console.error('[whatsapp] async error:', err.message)
+  ));
+});
 
 app.post('/webhooks/products/create', (req, res) => {
   const product = extractProductData(req.body);
