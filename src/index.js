@@ -7,6 +7,11 @@ const {
   verifyWhatsAppWebhook,
   handleWhatsAppWebhook,
 } = require('./webhooks/whatsapp');
+const {
+  privacyPolicy,
+  termsOfService,
+  dataDeletionInstructions,
+} = require('./pages/legal');
 
 const app = express();
 
@@ -23,6 +28,10 @@ app.use(
 );
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
+
+app.get('/privacy', (_req, res) => res.type('html').send(privacyPolicy()));
+app.get('/terms', (_req, res) => res.type('html').send(termsOfService()));
+app.get('/data-deletion', (_req, res) => res.type('html').send(dataDeletionInstructions()));
 
 app.get('/webhooks/whatsapp', verifyWhatsAppWebhook);
 
