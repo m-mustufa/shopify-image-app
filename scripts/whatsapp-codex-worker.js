@@ -50,7 +50,11 @@ async function ensureLabel(name, color, description) {
 
 function run(command, args, options = {}) {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { cwd: repoPath, stdio: 'pipe', shell: false });
+    const child = spawn(command, args, {
+      cwd: repoPath,
+      stdio: 'pipe',
+      shell: options.shell === true,
+    });
     let stdout = '';
     let stderr = '';
     child.stdout.on('data', chunk => { stdout += chunk; process.stdout.write(chunk); });
@@ -110,11 +114,10 @@ async function processTask(issue) {
     'Finish with a concise summary and tests run.',
   ].join('\n');
 
-  const codexCommand = process.platform === 'win32' ? 'codex.cmd' : 'codex';
-  await run(codexCommand, [
+  await run('codex', [
     'exec', '-C', repoPath, '--sandbox', 'workspace-write', '--approve-for-me',
     '--output-last-message', resultFile, '-'
-  ], { input: prompt });
+  ], { input: prompt, shell: process.platform === 'win32' });
 
   const summary = fs.existsSync(resultFile)
     ? fs.readFileSync(resultFile, 'utf8').trim()
