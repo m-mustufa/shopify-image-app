@@ -115,7 +115,7 @@ async function processTask(issue) {
   ].join('\n');
 
   await run('codex', [
-    'exec', '-C', repoPath, '--sandbox', 'workspace-write', '--approve-for-me',
+    'exec', '-C', repoPath, '--approve-for-me',
     '--output-last-message', resultFile, '-'
   ], { input: prompt, shell: process.platform === 'win32' });
 
