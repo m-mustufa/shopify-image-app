@@ -63,6 +63,10 @@ function run(command, args, options = {}) {
   });
 }
 
+function runGit(args) {
+  return run('git', [`-c`, `safe.directory=${repoPath.replace(/\\/g, '/')}`, ...args]);
+}
+
 async function setLabels(issue, labels) {
   await github(`/issues/${issue}/labels`, { method: 'POST', body: JSON.stringify({ labels }) });
 }
@@ -89,12 +93,12 @@ async function processTask(issue) {
   await setLabels(issue.number, [runningLabel]);
   await comment(issue.number, 'Local Codex worker claimed this task. No push, merge, or deployment is authorized.');
 
-  const status = await run('git', ['status', '--porcelain']);
+  const status = await runGit(['status', '--porcelain']);
   if (status.stdout.trim()) throw new Error('Local repository has uncommitted changes; refusing to overwrite them');
 
-  await run('git', ['switch', 'main']);
+  await runGit(['switch', 'main']);
   const branch = `whatsapp/task-${issue.number}`;
-  await run('git', ['switch', '-c', branch]);
+  await runGit(['switch', '-c', branch]);
 
   const resultFile = path.join(os.tmpdir(), `codex-task-${issue.number}.txt`);
   const prompt = [
@@ -115,10 +119,10 @@ async function processTask(issue) {
   const summary = fs.existsSync(resultFile)
     ? fs.readFileSync(resultFile, 'utf8').trim()
     : 'Codex completed the task.';
-  await run('git', ['add', '-A']);
-  const staged = await run('git', ['diff', '--cached', '--name-only']);
+  await runGit(['add', '-A']);
+  const staged = await runGit(['diff', '--cached', '--name-only']);
   if (!staged.stdout.trim()) throw new Error('Codex completed without making file changes');
-  await run('git', ['commit', '-m', `WhatsApp task #${issue.number}`]);
+  await runGit(['commit', '-m', `WhatsApp task #${issue.number}`]);
 
   await setLabels(issue.number, [completeLabel]);
   await comment(issue.number, `Completed locally on branch \`${branch}\`. Nothing was pushed or deployed.\n\n${summary.slice(0, 5000)}`);
