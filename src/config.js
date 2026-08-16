@@ -13,6 +13,8 @@ module.exports = {
   whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || null,
   whatsappAllowedNumber: process.env.WHATSAPP_ALLOWED_NUMBER || null,
   whatsappGraphVersion: process.env.WHATSAPP_GRAPH_VERSION || 'v26.0',
+  githubTaskToken: process.env.GITHUB_TASK_TOKEN || null,
+  githubTaskRepository: process.env.GITHUB_TASK_REPOSITORY || null,
   storePublicDomain:     process.env.STORE_PUBLIC_DOMAIN || null,
 testProductId: process.env.TEST_PRODUCT_ID || null,
   outputDir: process.env.VERCEL ? '/tmp' : (process.env.OUTPUT_DIR || './output'),

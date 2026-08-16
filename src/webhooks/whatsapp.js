@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const config = require('../config');
+const { createGitHubTask, taskInstruction } = require('../tasks/github');
 
 function verifyWhatsAppWebhook(req, res) {
   const mode = req.query['hub.mode'];
@@ -43,12 +44,27 @@ function normalizePhone(value) {
 function commandReply(text) {
   const command = text.trim().toLowerCase();
   if (command === 'help') {
-    return 'Available commands:\n• help\n• status';
+    return 'Available commands:\n- help\n- status\n- task <change you want>';
   }
   if (command === 'status') {
     return 'Shopify Image Bot is online and ready.';
   }
   return 'Unknown command. Send "help" to see available commands.';
+}
+
+async function handleCommand(message, from) {
+  const text = message.text?.body || '';
+  const instruction = taskInstruction(text);
+  if (!instruction) return commandReply(text);
+  if (instruction.length < 10) return 'Please describe the task in at least 10 characters.';
+  if (instruction.length > 3000) return 'Task is too long. Keep it under 3,000 characters.';
+
+  const task = await createGitHubTask({
+    instruction,
+    whatsappMessageId: message.id || 'unknown',
+    from,
+  });
+  return `Task #${task.number} queued securely. Your local Codex worker will process it when your PC is online.`;
 }
 
 async function sendWhatsAppText(to, body) {
@@ -95,7 +111,7 @@ async function handleWhatsAppWebhook(req) {
       console.warn(`[whatsapp] ignored message from unauthorized number: ${from || 'unknown'}`);
       continue;
     }
-    await sendWhatsAppText(from, commandReply(message.text?.body || ''));
+    await sendWhatsAppText(from, await handleCommand(message, from));
   }
 }
 
@@ -103,6 +119,7 @@ module.exports = {
   commandReply,
   getIncomingMessages,
   hasValidMetaSignature,
+  handleCommand,
   handleWhatsAppWebhook,
   normalizePhone,
   sendWhatsAppText,

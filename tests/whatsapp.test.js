@@ -13,8 +13,13 @@ const {
 
 assert.strictEqual(normalizePhone('+92 300-1234567'), '923001234567');
 assert.match(commandReply(' HELP '), /status/);
+assert.match(commandReply('help'), /task <change you want>/);
 assert.match(commandReply('status'), /online/);
 assert.match(commandReply('anything else'), /Unknown command/);
+
+const { taskInstruction } = require('../src/tasks/github');
+assert.strictEqual(taskInstruction('task replace native selects'), 'replace native selects');
+assert.strictEqual(taskInstruction('status'), null);
 
 const payload = Buffer.from(JSON.stringify({ entry: [] }));
 config.fbAppSecret = 'test-meta-secret';
