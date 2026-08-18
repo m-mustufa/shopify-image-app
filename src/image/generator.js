@@ -32,8 +32,8 @@ const ORANGE_TITLE_GAP = 20;
 
 // ─── Left-section vertical rhythm ────────────────────────────────────────────
 const PRICE_CX = 262;   // horizontal centre of the left section
-const PRICE_Y  = 341;   // sale-price vertical centre (centers block at H/2 for all font sizes)
-                        // REG_Y is dynamic: PRICE_Y + priceFS/2 + 40 (computed in buildSVG)
+const PRICE_Y  = 341;   // only feeds the unused fire-icon layout math below; buildSVG
+                        // derives its own centered price position from blockH instead
 const REG_FONT = 41;
 
 // ─── Logo box (top-right) ─────────────────────────────────────────────────────
@@ -547,14 +547,14 @@ function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden
     ? BADGE_H + ORANGE_TITLE_GAP + titleBlockH
     : badgeOnly
       ? BADGE_H
-      : BADGE_H + ORANGE_PRICE_GAP + priceFS + 25 + REG_FONT;
-  // titleOnlyMode centers text itself; all other badge-bearing modes use dynamicBadgeY
+      : BADGE_H + ORANGE_PRICE_GAP + priceFS + (showReg ? 25 + REG_FONT : 0);
+  // titleOnlyMode centers text itself; all other badge-bearing modes center the
+  // whole block (badge + price + reg price) vertically via blockH
   const dynamicBadgeY = titleOnlyMode
     ? 0
-    : (badgeWithTitle || badgeOnly)
-      ? Math.floor((H - blockH) / 2)
-      : PRICE_Y - Math.floor(priceFS / 2) - ORANGE_PRICE_GAP - BADGE_H;
-  const regY    = PRICE_Y + Math.floor(priceFS / 2) + 25;
+    : Math.floor((H - blockH) / 2);
+  const priceY  = dynamicBadgeY + BADGE_H + ORANGE_PRICE_GAP + Math.floor(priceFS / 2);
+  const regY    = priceY + Math.floor(priceFS / 2) + 25;
   const strikeY = regY;
 
   // ── Blue left-section bezier path ─────────────────────────────────────────
@@ -586,7 +586,7 @@ function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden
   <!-- ══ Orange badge (hidden in title-only mode) ══ -->
   ${!badgeHidden ? `
   <path d="${badgePath}" fill="${ORANGE}"/>
-  ${(()=>{ const fs = badgeOnly ? 50 : (badgeLabel.length <= 8 ? 42 : badgeLabel.length <= 11 ? 36 : 31); return svgPath(badgeLabel, badgeTX, midY + 2, fs, { bold: true, fill: WHITE, center: true, middleBaseline: true, strokeColor: WHITE, strokeWidth: 1.5 }); })()}
+  ${(()=>{ const fs = badgeOnly ? 56 : (badgeLabel.length <= 8 ? 48 : badgeLabel.length <= 11 ? 42 : 37); return svgPath(badgeLabel, badgeTX, midY + 2, fs, { bold: true, fill: WHITE, center: true, middleBaseline: true, strokeColor: WHITE, strokeWidth: 1.5 }); })()}
   ` : ''}
 
   <!-- ══ Title-only: large left-aligned text, no badge ══ -->
@@ -602,7 +602,7 @@ function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden
   }).join('') : ''}
 
   <!-- ══ Sale price ══ -->
-  ${!titleMode && saleStr ? svgPath(saleStr, BADGE_X, PRICE_Y, priceFS, { bold: true, fill: WHITE, middleBaseline: true }) : ''}
+  ${!titleMode && saleStr ? svgPath(saleStr, BADGE_X, priceY, priceFS, { bold: true, fill: WHITE, middleBaseline: true }) : ''}
 
   <!-- ══ Reg. price ══ -->
   ${showReg ? `
