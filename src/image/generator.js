@@ -34,7 +34,7 @@ const ORANGE_TITLE_GAP = 20;
 const PRICE_CX = 262;   // horizontal centre of the left section
 const PRICE_Y  = 341;   // sale-price vertical centre (centers block at H/2 for all font sizes)
                         // REG_Y is dynamic: PRICE_Y + priceFS/2 + 40 (computed in buildSVG)
-const REG_FONT = 35;
+const REG_FONT = 41;
 
 // ─── Logo box (top-right) ─────────────────────────────────────────────────────
 // White rounded rect that backs the logo image (or fallback text).
@@ -464,10 +464,10 @@ function formatCurrency(value, roundUp = false) {
 
 function getPriceFontSize(priceText) {
   const maxWidth = CURVE_CTRL_X - BADGE_X - 12;
-  for (const fontSize of [86, 74, 63, 56, 50, 46]) {
+  for (const fontSize of [100, 88, 77, 70, 64, 60]) {
     if (textWidth(priceText, fontSize, fontBold(), 0) <= maxWidth) return fontSize;
   }
-  return 42;
+  return 56;
 }
 
 function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden, deal_sale_price, deal_reg_price, showLogoText, showFireImg, fireWidth }) {
