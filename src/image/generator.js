@@ -27,7 +27,7 @@ const ORANGE = '#ff6a03';
 const WHITE  = '#FFFFFF';
 
 // ─── Badge geometry ──────────────────────────────────────────────────────────
-const BADGE_X  = 40;
+const BADGE_X  = 30;
 const BADGE_Y  = 140;
 const BADGE_BW = Math.round(270 * 1.05);   // body width; arrow tip adds another BADGE_ARROW_W px
 const BADGE_H  = Math.round(64 * 1.05);
