@@ -34,7 +34,7 @@ const ORANGE_TITLE_GAP = 20;
 const PRICE_CX = 262;   // horizontal centre of the left section
 const PRICE_Y  = 341;   // only feeds the unused fire-icon layout math below; buildSVG
                         // derives its own centered price position from blockH instead
-const REG_FONT = 41;
+const REG_FONT = 48;
 
 // ─── Logo box (top-right) ─────────────────────────────────────────────────────
 // White rounded rect that backs the logo image (or fallback text).
@@ -463,11 +463,26 @@ function formatCurrency(value, roundUp = false) {
 }
 
 function getPriceFontSize(priceText) {
+  // Conservative flat bound for the larger tiers (their text sits far enough from
+  // the canvas's vertical centre that the straight-line approximation is the safe one).
   const maxWidth = CURVE_CTRL_X - BADGE_X - 12;
-  for (const fontSize of [100, 88, 77, 70, 64, 60]) {
-    if (textWidth(priceText, fontSize, fontBold(), 0) <= maxWidth) return fontSize;
+  // Below ~66px, long prices push toward the smaller tiers, which sit close to the
+  // vertical centre where the actual bezier curve bulges further right than the flat
+  // approximation assumes. That gives real extra room there — computed from the curve's
+  // true minimum x (~370 at y=314) rather than guessed — so use the wider, accurate
+  // budget for just those tiers instead of inheriting the larger tiers' conservative one.
+  const curveMaxWidth = 317;
+  const LADDER = [112, 100, 89, 82, 76, 72, 66, 60, 54, 50];
+  for (const fontSize of LADDER) {
+    const budget = fontSize <= 66 ? curveMaxWidth : maxWidth;
+    if (textWidth(priceText, fontSize, fontBold(), 0) <= budget) return fontSize;
   }
-  return 56;
+  // Safety net: glyph advance widths scale exactly linearly with font size,
+  // so this computes the precise size where the string fits curveMaxWidth instead
+  // of guessing a fixed fallback that could still overflow for long strings.
+  const smallest = LADDER[LADDER.length - 1];
+  const widthAtSmallest = textWidth(priceText, smallest, fontBold(), 0);
+  return Math.max(24, Math.floor(smallest * curveMaxWidth / widthAtSmallest));
 }
 
 function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden, deal_sale_price, deal_reg_price, showLogoText, showFireImg, fireWidth }) {
@@ -586,7 +601,7 @@ function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden
   <!-- ══ Orange badge (hidden in title-only mode) ══ -->
   ${!badgeHidden ? `
   <path d="${badgePath}" fill="${ORANGE}"/>
-  ${(()=>{ const fs = badgeOnly ? 56 : (badgeLabel.length <= 8 ? 48 : badgeLabel.length <= 11 ? 42 : 37); return svgPath(badgeLabel, badgeTX, midY + 2, fs, { bold: true, fill: WHITE, center: true, middleBaseline: true, strokeColor: WHITE, strokeWidth: 1.5 }); })()}
+  ${(()=>{ const fs = badgeOnly ? 63 : (badgeLabel.length <= 8 ? 55 : badgeLabel.length <= 11 ? 49 : 44); return svgPath(badgeLabel, badgeTX, midY + 2, fs, { bold: true, fill: WHITE, center: true, middleBaseline: true, strokeColor: WHITE, strokeWidth: 1.5 }); })()}
   ` : ''}
 
   <!-- ══ Title-only: large left-aligned text, no badge ══ -->
@@ -602,7 +617,7 @@ function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden
   }).join('') : ''}
 
   <!-- ══ Sale price ══ -->
-  ${!titleMode && saleStr ? svgPath(saleStr, BADGE_X, priceY, priceFS, { bold: true, fill: WHITE, middleBaseline: true }) : ''}
+  ${!titleMode && saleStr ? svgPath(saleStr, BADGE_X, priceY, priceFS, { bold: true, fill: WHITE, middleBaseline: true, strokeColor: WHITE, strokeWidth: 1.5 }) : ''}
 
   <!-- ══ Reg. price ══ -->
   ${showReg ? `
