@@ -463,26 +463,23 @@ function formatCurrency(value, roundUp = false) {
 }
 
 function getPriceFontSize(priceText) {
-  // Conservative flat bound for the larger tiers (their text sits far enough from
-  // the canvas's vertical centre that the straight-line approximation is the safe one).
-  const maxWidth = CURVE_CTRL_X - BADGE_X - 12;
-  // Below ~66px, long prices push toward the smaller tiers, which sit close to the
-  // vertical centre where the actual bezier curve bulges further right than the flat
-  // approximation assumes. That gives real extra room there — computed from the curve's
-  // true minimum x (~370 at y=314) rather than guessed — so use the wider, accurate
-  // budget for just those tiers instead of inheriting the larger tiers' conservative one.
-  const curveMaxWidth = 317;
+  // The price's vertical position is a near-fixed ~314-356px regardless of its font
+  // size or whether the reg-price row is shown (an algebraic invariant of the
+  // centering formula in buildSVG). At that y, the actual bezier curve boundary
+  // bulges out to roughly x=370 — CURVE_CTRL_X (333) is just a control point, not a
+  // point on the curve itself, so a straight-line approximation using it understates
+  // the real available width at every tier, not just the smaller ones.
+  const maxWidth = 317;
   const LADDER = [112, 100, 89, 82, 76, 72, 66, 60, 54, 50];
   for (const fontSize of LADDER) {
-    const budget = fontSize <= 66 ? curveMaxWidth : maxWidth;
-    if (textWidth(priceText, fontSize, fontBold(), 0) <= budget) return fontSize;
+    if (textWidth(priceText, fontSize, fontBold(), 0) <= maxWidth) return fontSize;
   }
   // Safety net: glyph advance widths scale exactly linearly with font size,
-  // so this computes the precise size where the string fits curveMaxWidth instead
+  // so this computes the precise size where the string fits maxWidth instead
   // of guessing a fixed fallback that could still overflow for long strings.
   const smallest = LADDER[LADDER.length - 1];
   const widthAtSmallest = textWidth(priceText, smallest, fontBold(), 0);
-  return Math.max(24, Math.floor(smallest * curveMaxWidth / widthAtSmallest));
+  return Math.max(24, Math.floor(smallest * maxWidth / widthAtSmallest));
 }
 
 function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden, deal_sale_price, deal_reg_price, showLogoText, showFireImg, fireWidth }) {
