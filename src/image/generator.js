@@ -12,9 +12,14 @@ const W = 1200;
 const H = 628;
 
 // ─── Blue / white split geometry ─────────────────────────────────────────────
-const SPLIT_X = Math.round(W * 0.40);
+const SPLIT_X = Math.round(W * 0.44); // 10% wider blue area than the original 0.40
 const WHITE_SECTION_W = W - SPLIT_X;
 const CURVE_CTRL_X = SPLIT_X - 147;
+// Exact minimum x reached by the blue/white bezier curve (at t=0.5, y=H/2) — the
+// curve's x(t) only depends on the control points' x-coordinates (SPLIT_X and
+// CURVE_CTRL_X twice), and is symmetric about t=0.5, so this closed form is exact:
+// x(0.5) = 0.25*SPLIT_X + 0.75*CURVE_CTRL_X = SPLIT_X - 0.75*147 = SPLIT_X - 110.25
+const CURVE_MIN_X = SPLIT_X - 110.25;
 
 // ─── Brand palette ───────────────────────────────────────────────────────────
 const BLUE   = '#1A1AE6';
@@ -24,9 +29,10 @@ const WHITE  = '#FFFFFF';
 // ─── Badge geometry ──────────────────────────────────────────────────────────
 const BADGE_X  = 40;
 const BADGE_Y  = 140;
-const BADGE_BW = 270;   // body width; arrow tip adds another 23 px
-const BADGE_H  = 64;
-const BADGE_R  = 12;    // corner radius (left side only)
+const BADGE_BW = Math.round(270 * 1.05);   // body width; arrow tip adds another BADGE_ARROW_W px
+const BADGE_H  = Math.round(64 * 1.05);
+const BADGE_R  = Math.round(12 * 1.05);    // corner radius (left side only)
+const BADGE_ARROW_W = Math.round(23 * 1.05); // arrow tip width beyond BADGE_BW
 const ORANGE_PRICE_GAP = 20;
 const ORANGE_TITLE_GAP = 20;
 
@@ -218,8 +224,8 @@ async function generateProductImage(product) {
     } else {
       console.log('[generator] preserving product image background');
     }
-    const MAX_W = Math.round(588 * 1.05);
-    const MAX_H = Math.round(553 * 1.05);
+    const MAX_W = Math.round(588 * 1.05 * 0.9);
+    const MAX_H = Math.round(553 * 1.05 * 0.9);
     const fitted = await sharp(preparedImage.buffer)
       .resize(MAX_W, MAX_H, { fit: 'inside', withoutEnlargement: false })
       .png()
@@ -465,11 +471,10 @@ function formatCurrency(value, roundUp = false) {
 function getPriceFontSize(priceText) {
   // The price's vertical position is a near-fixed ~314-356px regardless of its font
   // size or whether the reg-price row is shown (an algebraic invariant of the
-  // centering formula in buildSVG). At that y, the actual bezier curve boundary
-  // bulges out to roughly x=370 — CURVE_CTRL_X (333) is just a control point, not a
-  // point on the curve itself, so a straight-line approximation using it understates
-  // the real available width at every tier, not just the smaller ones.
-  const maxWidth = 317;
+  // centering formula in buildSVG) — i.e. always close to the curve's true minimum
+  // (CURVE_MIN_X, at y=H/2). CURVE_CTRL_X is just a control point, not a point on the
+  // curve itself, so using it directly would understate the real available width.
+  const maxWidth = CURVE_MIN_X - BADGE_X - 12;
   const LADDER = [112, 100, 89, 82, 76, 72, 66, 60, 54, 50];
   for (const fontSize of LADDER) {
     if (textWidth(priceText, fontSize, fontBold(), 0) <= maxWidth) return fontSize;
@@ -576,7 +581,7 @@ function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden
     `L 0 ${H} Z`;
 
   // ── Orange badge: rounded-left rect + right arrow ─────────────────────────
-  const arrowX  = BADGE_X + BADGE_BW + 23;
+  const arrowX  = BADGE_X + BADGE_BW + BADGE_ARROW_W;
   const midY    = dynamicBadgeY + BADGE_H / 2;
   const bBot    = dynamicBadgeY + BADGE_H;
 
