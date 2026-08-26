@@ -224,8 +224,8 @@ async function generateProductImage(product) {
     } else {
       console.log('[generator] preserving product image background');
     }
-    const MAX_W = Math.round(588 * 1.05 * 0.9);
-    const MAX_H = Math.round(553 * 1.05 * 0.9);
+    const MAX_W = Math.round(588 * 1.05 * 0.9 * 1.05);
+    const MAX_H = Math.round(553 * 1.05 * 0.9 * 1.05);
     const fitted = await sharp(preparedImage.buffer)
       .resize(MAX_W, MAX_H, { fit: 'inside', withoutEnlargement: false })
       .png()
