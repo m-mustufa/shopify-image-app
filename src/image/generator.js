@@ -224,15 +224,22 @@ async function generateProductImage(product) {
     } else {
       console.log('[generator] preserving product image background');
     }
-    const MAX_W = Math.round(588 * 1.05 * 0.9 * 1.05);
-    const MAX_H = Math.round(553 * 1.05 * 0.9 * 1.05);
+    const MAX_W = Math.round(588 * 1.05 * 0.9 * 1.05 * 1.1);
+    const MAX_H = Math.round(553 * 1.05 * 0.9 * 1.05 * 1.1);
     const fitted = await sharp(preparedImage.buffer)
       .resize(MAX_W, MAX_H, { fit: 'inside', withoutEnlargement: false })
       .png()
       .toBuffer();
     const { width: fw, height: fh } = await sharp(fitted).metadata();
-    const left = SPLIT_X + Math.round((WHITE_SECTION_W - fw) / 2) - 40;
-    const top  = Math.round((H - fh) / 2);
+    const top = Math.round((H - fh) / 2);
+    const centeredLeft = SPLIT_X + Math.round((WHITE_SECTION_W - fw) / 2) - 40;
+    const whiteSafeLeft = Math.ceil(CURVE_MIN_X) + 10;
+    const rightPaddedLeft = W - 30 - fw;
+    const logoSafeLeft = W - 10 - LOGO_IMG_MAX_W - 10;
+    let left = Math.max(whiteSafeLeft, Math.min(centeredLeft, rightPaddedLeft));
+    if (top < PRODUCT_SAFE_TOP) {
+      left = Math.max(whiteSafeLeft, Math.min(left, logoSafeLeft - fw));
+    }
     composites.push({ input: fitted, top, left });
   }
 
