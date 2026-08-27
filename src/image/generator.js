@@ -232,10 +232,11 @@ async function generateProductImage(product) {
       .toBuffer();
     const { width: fw, height: fh } = await sharp(fitted).metadata();
     const top = Math.round((H - fh) / 2);
-    const centeredLeft = SPLIT_X + Math.round((WHITE_SECTION_W - fw) / 2) - 30;
+    const productRightShift = 25;
+    const centeredLeft = SPLIT_X + Math.round((WHITE_SECTION_W - fw) / 2) - 30 + productRightShift;
     const whiteSafeLeft = Math.ceil(CURVE_MIN_X) + 10;
     const rightPaddedLeft = W - 30 - fw;
-    const logoSafeLeft = W - 10 - LOGO_IMG_MAX_W;
+    const logoSafeLeft = W - 10 - LOGO_IMG_MAX_W + productRightShift;
     let left = Math.max(whiteSafeLeft, Math.min(centeredLeft, rightPaddedLeft));
     if (top < PRODUCT_SAFE_TOP) {
       left = Math.max(whiteSafeLeft, Math.min(left, logoSafeLeft - fw));
