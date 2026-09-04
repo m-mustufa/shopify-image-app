@@ -135,7 +135,7 @@ function loadAssetBuffer(filename) {
   return null;
 }
 
-const LOGO_URL = 'https://cdn.shopify.com/s/files/1/0987/7903/7992/files/logo.png?v=1782185728';
+const LOGO_URL = 'https://cdn.shopify.com/s/files/1/0752/8647/8918/files/logo.png?v=1788550367';
 let cachedLogoDataPromise = null;
 let cachedFireDataPromise = null;
 
