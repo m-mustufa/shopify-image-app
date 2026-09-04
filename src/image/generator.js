@@ -224,8 +224,8 @@ async function generateProductImage(product) {
     } else {
       console.log('[generator] preserving product image background');
     }
-    const MAX_W = Math.round(588 * 1.05 * 0.9 * 1.05 * 1.1 * 1.02);
-    const MAX_H = Math.round(553 * 1.05 * 0.9 * 1.05 * 1.1 * 1.02);
+    const MAX_W = Math.round(588 * 1.05 * 0.9 * 1.05 * 1.1 * 0.88);
+    const MAX_H = Math.round(553 * 1.05 * 0.9 * 1.05 * 1.1 * 0.88);
     const fitted = await sharp(preparedImage.buffer)
       .resize(MAX_W, MAX_H, { fit: 'inside', withoutEnlargement: false })
       .png()
@@ -523,7 +523,7 @@ function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden
     ? (wrapText(dealTitleCapped, titleOnlyMaxW, titleOnlyFS, titleOnlyMaxLines) || []) : [];
   const titleOnlyBlockH = titleOnlyLines.length > 0
     ? (titleOnlyLines.length - 1) * titleOnlyLH + titleOnlyFS : 0;
-  const titleOnlyStartY = Math.floor((H - titleOnlyBlockH) / 2);
+  const titleOnlyStartY = Math.floor((H - titleOnlyBlockH) / 2) + 15;
 
   // Badge+title wrapping (38px, centered below badge)
   const titleLines = badgeWithTitle
@@ -574,10 +574,11 @@ function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden
       ? BADGE_H
       : BADGE_H + ORANGE_PRICE_GAP + priceFS + (showReg ? 25 + REG_FONT : 0);
   // titleOnlyMode centers text itself; all other badge-bearing modes center the
-  // whole block (badge + price + reg price) vertically via blockH
+  // whole block (badge + price + reg price) vertically via blockH, then nudge it
+  // down 15px so the block sits with a bit more top breathing room than a dead centre.
   const dynamicBadgeY = titleOnlyMode
     ? 0
-    : Math.floor((H - blockH) / 2);
+    : Math.floor((H - blockH) / 2) + 15;
   const priceY  = dynamicBadgeY + BADGE_H + ORANGE_PRICE_GAP + Math.floor(priceFS / 2);
   const regY    = priceY + Math.floor(priceFS / 2) + 25;
   const strikeY = regY;
