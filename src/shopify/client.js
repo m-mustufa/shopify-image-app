@@ -1,70 +1,88 @@
 'use strict';
 
-const axios  = require('axios');
+const axios = require('axios');
 const config = require('../config');
+const { normalizeShopDomain } = require('./security');
 
-let _token     = null;
-let _expiresAt = 0;
+function createShopifyClient({ shopDomain, accessToken, apiVersion = config.shopifyApiVersion }) {
+  const shop = normalizeShopDomain(shopDomain);
+  if (!shop) throw new Error('Invalid Shopify shop domain');
+  if (!accessToken) throw new Error(`Missing offline access token for ${shop}`);
 
-async function getShopifyToken() {
-  if (_token && Date.now() < _expiresAt - 60_000) return _token;
-
-  console.log('[shopify] fetching new access token via client_credentials');
-  console.log('[shopify] client_id set:', !!config.shopifyClientId, '| client_secret set:', !!config.shopifyClientSecret);
-
-  let res;
-  try {
-    res = await axios.post(
-      `https://${config.shopifyShopDomain}/admin/oauth/access_token`,
-      {
-        grant_type:    'client_credentials',
-        client_id:     config.shopifyClientId,
-        client_secret: config.shopifyClientSecret,
-      },
-      { headers: { 'Content-Type': 'application/json' }, timeout: 10_000 }
-    );
-  } catch (err) {
-    const status = err.response?.status;
-    const body   = JSON.stringify(err.response?.data ?? {});
-    console.error(`[shopify] token fetch failed — HTTP ${status} — body: ${body}`);
-    throw err;
-  }
-
-  _token     = res.data.access_token;
-  const ttl  = res.data.expires_in ?? 86_400;
-  _expiresAt = Date.now() + ttl * 1_000;
-  console.log(`[shopify] token acquired, expires in ${ttl}s`);
-  return _token;
+  return axios.create({
+    baseURL: `https://${shop}/admin/api/${apiVersion}`,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Shopify-Access-Token': accessToken,
+    },
+    timeout: 30_000,
+  });
 }
 
-const shopifyClient = axios.create({
-  baseURL: `https://${config.shopifyShopDomain}/admin/api/2024-04`,
+function createInstallationClient(installation) {
+  if (!installation || installation.status === 'uninstalled') {
+    throw new Error('Shopify installation is unavailable');
+  }
+  return createShopifyClient({
+    shopDomain: installation.shopDomain,
+    accessToken: installation.accessToken,
+  });
+}
+
+let legacyToken = null;
+let legacyExpiresAt = 0;
+
+async function getLegacyToken() {
+  if (legacyToken && Date.now() < legacyExpiresAt - 60_000) return legacyToken;
+  if (!config.shopifyShopDomain || !config.shopifyClientId || !config.shopifyClientSecret) {
+    throw new Error('No installed shop context or legacy Shopify credentials were provided');
+  }
+
+  console.log('[shopify] fetching legacy access token via client_credentials');
+  const response = await axios.post(
+    `https://${config.shopifyShopDomain}/admin/oauth/access_token`,
+    {
+      grant_type: 'client_credentials',
+      client_id: config.shopifyClientId,
+      client_secret: config.shopifyClientSecret,
+    },
+    { headers: { 'Content-Type': 'application/json' }, timeout: 10_000 }
+  );
+
+  legacyToken = response.data.access_token;
+  const ttl = response.data.expires_in ?? 86_400;
+  legacyExpiresAt = Date.now() + ttl * 1_000;
+  return legacyToken;
+}
+
+const legacyClient = axios.create({
+  baseURL: config.shopifyShopDomain
+    ? `https://${config.shopifyShopDomain}/admin/api/${config.shopifyApiVersion}`
+    : undefined,
   headers: { 'Content-Type': 'application/json' },
   timeout: 30_000,
 });
 
-// Inject a fresh token before every request — auto-refreshes when expired
-shopifyClient.interceptors.request.use(async (reqConfig) => {
-  const token = await getShopifyToken();
-  reqConfig.headers['X-Shopify-Access-Token'] = token;
-  return reqConfig;
+legacyClient.interceptors.request.use(async request => {
+  request.headers['X-Shopify-Access-Token'] = await getLegacyToken();
+  return request;
 });
 
-// On 401, clear cached token and retry once — covers mid-session revocation
-shopifyClient.interceptors.response.use(
-  (res) => res,
-  async (err) => {
-    if (err.response?.status === 401 && !err.config._retried) {
-      console.warn('[shopify] 401 received — clearing token cache and retrying');
-      _token = null;
-      _expiresAt = 0;
-      err.config._retried = true;
-      const token = await getShopifyToken();
-      err.config.headers['X-Shopify-Access-Token'] = token;
-      return axios(err.config);
+legacyClient.interceptors.response.use(
+  response => response,
+  async error => {
+    if (error.response?.status === 401 && !error.config._retried) {
+      legacyToken = null;
+      legacyExpiresAt = 0;
+      error.config._retried = true;
+      error.config.headers['X-Shopify-Access-Token'] = await getLegacyToken();
+      return axios(error.config);
     }
-    throw err;
+    throw error;
   }
 );
 
-module.exports = shopifyClient;
+legacyClient.createShopifyClient = createShopifyClient;
+legacyClient.createInstallationClient = createInstallationClient;
+
+module.exports = legacyClient;

@@ -1,40 +1,46 @@
+'use strict';
+
 const express = require('express');
 const { waitUntil } = require('@vercel/functions');
 const config = require('./config');
 const { verifyShopifyWebhook } = require('./webhooks/verifySignature');
 const { handleProduct, extractProductData } = require('./webhooks/product');
-const {
-  verifyWhatsAppWebhook,
-  handleWhatsAppWebhook,
-} = require('./webhooks/whatsapp');
-const {
-  privacyPolicy,
-  termsOfService,
-  dataDeletionInstructions,
-} = require('./pages/legal');
+const { verifyWhatsAppWebhook, handleWhatsAppWebhook } = require('./webhooks/whatsapp');
+const { privacyPolicy, termsOfService, dataDeletionInstructions } = require('./pages/legal');
+const { router: appRouter } = require('./pages/app');
+const { beginOAuth, oauthCallback } = require('./shopify/oauth');
+const { getInstallationStore } = require('./shopify/installations');
+const { normalizeShopDomain } = require('./shopify/security');
+const { resolveWebhookContext } = require('./shopify/webhookContext');
 
 const app = express();
+const asyncRoute = handler => (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next);
 
-app.use(
-  express.json({
-    verify: (req, res, buf) => {
-      if (req.path.startsWith('/webhooks/products/')) {
-        verifyShopifyWebhook(req, res, buf);
-      } else if (req.path === '/webhooks/whatsapp') {
-        req.rawBody = Buffer.from(buf);
-      }
-    },
-  })
-);
+function isShopifyWebhook(pathname) {
+  return pathname.startsWith('/webhooks/products/') || pathname.startsWith('/webhooks/shopify/');
+}
 
-app.get('/health', (_req, res) => res.json({ status: 'ok' }));
+app.use(express.json({
+  limit: '2mb',
+  verify: (req, res, buffer) => {
+    if (isShopifyWebhook(req.path)) {
+      req.rawBody = Buffer.from(buffer);
+      verifyShopifyWebhook(req, res, buffer);
+    } else if (req.path === '/webhooks/whatsapp') {
+      req.rawBody = Buffer.from(buffer);
+    }
+  },
+}));
 
+app.get('/health', (_req, res) => res.json({ status: 'ok', mode: 'installable' }));
 app.get('/privacy', (_req, res) => res.type('html').send(privacyPolicy()));
 app.get('/terms', (_req, res) => res.type('html').send(termsOfService()));
 app.get('/data-deletion', (_req, res) => res.type('html').send(dataDeletionInstructions()));
 
-app.get('/webhooks/whatsapp', verifyWhatsAppWebhook);
+app.get('/auth', asyncRoute(beginOAuth));
+app.get('/auth/callback', asyncRoute(oauthCallback));
 
+app.get('/webhooks/whatsapp', verifyWhatsAppWebhook);
 app.post('/webhooks/whatsapp', (req, res) => {
   res.status(200).send('EVENT_RECEIVED');
   waitUntil(handleWhatsAppWebhook(req).catch(err =>
@@ -42,33 +48,64 @@ app.post('/webhooks/whatsapp', (req, res) => {
   ));
 });
 
-app.post('/webhooks/products/create', (req, res) => {
-  const product = extractProductData(req.body);
-  console.log(`[webhook] products/create — id=${product.id} title="${product.title}"`);
-  console.log('[webhook] processing started for product:', product.id);
-  waitUntil(handleProduct(product).catch(err =>
-    console.error('[product] async error:', err.message)
-  ));
+async function acceptProductWebhook(req, res, next) {
+  try {
+    const topic = req.headers['x-shopify-topic'];
+    if (topic && !['products/create', 'products/update'].includes(topic)) {
+      return res.status(400).json({ error: `Unexpected Shopify topic: ${topic}` });
+    }
+    const product = extractProductData(req.body);
+    const context = await resolveWebhookContext(req);
+    console.log(`[webhook] ${topic || req.path} — shop=${context.shopDomain} id=${product.id}`);
+    res.status(200).json({ ok: true });
+    waitUntil(handleProduct(product, context).catch(err =>
+      console.error(`[product] async error for ${context.shopDomain}:`, err.message)
+    ));
+  } catch (err) {
+    next(err);
+  }
+}
+
+app.post('/webhooks/shopify/products', acceptProductWebhook);
+app.post('/webhooks/products/create', acceptProductWebhook);
+app.post('/webhooks/products/update', acceptProductWebhook);
+
+app.post('/webhooks/shopify/app-uninstalled', (req, res) => {
+  const shopDomain = normalizeShopDomain(req.headers['x-shopify-shop-domain']);
   res.status(200).json({ ok: true });
+  if (shopDomain) {
+    waitUntil(getInstallationStore().delete(shopDomain).then(() =>
+      console.log(`[install] removed ${shopDomain}`)
+    ).catch(err => console.error(`[install] uninstall cleanup failed for ${shopDomain}:`, err.message)));
+  }
 });
 
-app.post('/webhooks/products/update', (req, res) => {
-  const product = extractProductData(req.body);
-  console.log(`[webhook] products/update — id=${product.id} title="${product.title}"`);
-  console.log('[webhook] processing started for product:', product.id);
-  waitUntil(handleProduct(product).catch(err =>
-    console.error('[product] async error:', err.message)
-  ));
-  res.status(200).json({ ok: true });
+app.post('/webhooks/shopify/customers-data-request', (_req, res) => {
+  res.status(200).json({ ok: true, storedCustomerData: false });
 });
+
+app.post('/webhooks/shopify/customers-redact', (_req, res) => {
+  res.status(200).json({ ok: true, storedCustomerData: false });
+});
+
+app.post('/webhooks/shopify/shop-redact', (req, res) => {
+  const shopDomain = normalizeShopDomain(req.body?.shop_domain || req.headers['x-shopify-shop-domain']);
+  res.status(200).json({ ok: true });
+  if (shopDomain) {
+    waitUntil(getInstallationStore().delete(shopDomain).catch(err =>
+      console.error(`[privacy] shop redact cleanup failed for ${shopDomain}:`, err.message)
+    ));
+  }
+});
+
+app.use(appRouter);
 
 app.use((err, _req, res, _next) => {
-  const status = err.status || (err.type === 'entity.parse.failed' ? 400 : 500);
+  const status = err.status || (err.type === 'entity.parse.failed' || err.name === 'MulterError' ? 400 : 500);
   console.error('[request] rejected:', err.message);
   res.status(status).json({ error: err.message });
 });
 
-// Export for Vercel serverless; only bind a port when run directly
 if (require.main === module) {
   app.listen(config.port, () => {
     console.log(`Shopify image app listening on port ${config.port}`);

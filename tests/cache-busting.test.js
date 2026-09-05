@@ -27,6 +27,7 @@ async function testProductIdempotency() {
   let metafieldCalls = 0;
   let lastMetafieldArgs = null;
   let lastUploadArgs = null;
+  let dealEnabled = null;
 
   const generatorPath = require.resolve('../src/image/generator');
   const filesPath = require.resolve('../src/shopify/files');
@@ -41,6 +42,7 @@ async function testProductIdempotency() {
   } } };
   require.cache[metafieldsPath] = { exports: {
     fetchProductOverrides: async () => ({
+      deal_enabled: dealEnabled,
       _storedHash: null,
       _storedOgVersion: storedVersion,
       _storedShareVersion: storedShareVersion,
@@ -68,6 +70,10 @@ async function testProductIdempotency() {
     computeInputHash({ ...product, image_url: 'https://cdn.example/changed.jpg' }, {})
   );
   assert.notStrictEqual(
+    computeInputHash(product, {}, { logoUrl: 'https://cdn.shopify.com/first.png' }),
+    computeInputHash(product, {}, { logoUrl: 'https://cdn.shopify.com/second.png' })
+  );
+  assert.notStrictEqual(
     computeShareVersion({ title: 'Example', body_html: 'First' }),
     computeShareVersion({ title: 'Example', body_html: 'Changed' })
   );
@@ -78,6 +84,10 @@ async function testProductIdempotency() {
   assert.notStrictEqual(
     expectedShareVersion,
     computeShareVersionWithMetafields(product.share_version, [{ ...shareMetafields[0], value: 'Changed deal' }])
+  );
+  assert.notStrictEqual(
+    computeShareVersionWithMetafields(product.share_version, shareMetafields, { logoUrl: 'https://cdn.shopify.com/first.png' }),
+    computeShareVersionWithMetafields(product.share_version, shareMetafields, { logoUrl: 'https://cdn.shopify.com/second.png' })
   );
 
   const changed = await handleProduct(product);
@@ -94,6 +104,13 @@ async function testProductIdempotency() {
   assert.strictEqual(unchanged.unchanged, true);
   assert.strictEqual(uploadCalls, 1, 'unchanged image must not be uploaded');
   assert.strictEqual(metafieldCalls, 1, 'unchanged image must not update metafields');
+
+  dealEnabled = null;
+  storedVersion = null;
+  storedShareVersion = expectedShareVersion;
+  const disabledForInstalledShop = await handleProduct(product, { installation: { shopDomain: 'installed.myshopify.com' } });
+  assert.strictEqual(disabledForInstalledShop, undefined);
+  assert.strictEqual(uploadCalls, 1, 'new installations require deal_enabled=true');
 }
 
 async function testBatchedMetafields() {

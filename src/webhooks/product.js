@@ -9,29 +9,7 @@ const {
   updateProductShareVersion,
   fetchProductOverrides,
 } = require('../shopify/metafields');
-const { fbAppId, fbAppSecret, storePublicDomain } = require('../config');
-
-async function bustFacebookCache(handle) {
-  if (!fbAppId || !fbAppSecret || !handle || !storePublicDomain) return;
-  const productUrl = `https://${storePublicDomain}/products/${handle}`;
-  const token      = `${fbAppId}|${fbAppSecret}`;
-  // Wait 5s for Shopify to propagate the new metafield before Facebook scrapes
-  await new Promise(r => setTimeout(r, 5000));
-  try {
-    const res  = await fetch(`https://graph.facebook.com/?id=${encodeURIComponent(productUrl)}&scrape=true&access_token=${encodeURIComponent(token)}`, { method: 'POST' });
-    const data = await res.json();
-    if (data.url || data.updated_time) {
-      const foundImage = data.image?.[0]?.url ?? 'none';
-      console.log(`[facebook] cache busted: ${productUrl} — image: ${foundImage}`);
-    } else {
-      console.warn('[facebook] scrape response:', JSON.stringify(data));
-    }
-  } catch (err) {
-    console.warn('[facebook] cache bust failed (non-fatal):', err.message);
-  }
-}
-
-function computeInputHash(product, overrides) {
+function computeInputHash(product, overrides, brand = {}) {
   const parts = [
     product.title            ?? '',
     product.price            ?? '',
@@ -42,6 +20,7 @@ function computeInputHash(product, overrides) {
     overrides.deal_sale_price  ?? '',
     overrides.deal_reg_price   ?? '',
     overrides.deal_title       ?? '',
+    brand.logoUrl              ?? '',
   ];
   return crypto.createHash('sha256').update(parts.join('|')).digest('hex').slice(0, 16);
 }
@@ -101,10 +80,10 @@ function computeShareVersion(payload) {
   return crypto.createHash('sha256').update(JSON.stringify(snapshot)).digest('hex').slice(0, 12);
 }
 
-function computeShareVersionWithMetafields(baseVersion, metafields = []) {
+function computeShareVersionWithMetafields(baseVersion, metafields = [], brand = {}) {
   return crypto
     .createHash('sha256')
-    .update(JSON.stringify({ baseVersion, metafields }))
+    .update(JSON.stringify({ baseVersion, metafields, logoUrl: brand.logoUrl || null }))
     .digest('hex')
     .slice(0, 12);
 }
@@ -122,11 +101,11 @@ function extractProductData(payload) {
   };
 }
 
-async function handleProduct(product) {
+async function handleProduct(product, context = {}) {
   console.log('[product] handleProduct called with:', product.id);
   try {
     // 1. Fetch per-product metafield overrides (includes _storedHash)
-    const overrides = await fetchProductOverrides(product.id);
+    const overrides = await fetchProductOverrides(product.id, context.client);
     const {
       _storedHash,
       _storedOgVersion,
@@ -145,23 +124,27 @@ async function handleProduct(product) {
 
     const shareVersion = computeShareVersionWithMetafields(
       product.share_version,
-      _shareMetafields ?? []
+      _shareMetafields ?? [],
+      { logoUrl: context.logoUrl }
     );
     const shareVersionChanged = Boolean(shareVersion && _storedShareVersion !== shareVersion);
 
-    if (cleanOverrides.deal_enabled === false) {
-      if (shareVersionChanged) await updateProductShareVersion(product.id, shareVersion);
-      console.log('[product] skipping - deal_enabled is false');
+    const generationDisabled = context.installation
+      ? cleanOverrides.deal_enabled !== true
+      : cleanOverrides.deal_enabled === false;
+    if (generationDisabled) {
+      if (shareVersionChanged) await updateProductShareVersion(product.id, shareVersion, context.client);
+      console.log('[product] skipping - deal_enabled is not enabled');
       return;
     }
 
     // 2. Skip if nothing that affects the image actually changed.
     //    This breaks the infinite loop caused by our own metafield updates
     //    triggering a new products/update webhook.
-    const inputHash = computeInputHash(product, cleanOverrides);
+    const inputHash = computeInputHash(product, cleanOverrides, { logoUrl: context.logoUrl });
     if (_storedHash === inputHash) {
       if (shareVersionChanged) {
-        await updateProductShareVersion(product.id, shareVersion);
+        await updateProductShareVersion(product.id, shareVersion, context.client);
         console.log(`[product] share version updated — ${shareVersion}`);
       }
       console.log(`[product] skipping — input unchanged (hash ${inputHash})`);
@@ -172,13 +155,13 @@ async function handleProduct(product) {
     const productData = { ...product, ...cleanOverrides };
 
     // 3. Generate the promo image as a buffer
-    const buffer = await generateProductImage(productData);
+    const buffer = await generateProductImage(productData, { logoUrl: context.logoUrl });
     console.log('[product] image buffer ready, size:', buffer.length);
 
     const ogVersion = computeOgVersion(buffer);
     if (_storedOgVersion === ogVersion) {
       if (shareVersionChanged) {
-        await updateProductShareVersion(product.id, shareVersion);
+        await updateProductShareVersion(product.id, shareVersion, context.client);
         console.log(`[product] share version updated — ${shareVersion}`);
       }
       console.log(`[product] skipping — generated image unchanged (OG version ${ogVersion})`);
@@ -189,7 +172,7 @@ async function handleProduct(product) {
     // 4. Upload to Shopify Files — failure is non-fatal
     let imageUrl = null;
     try {
-      imageUrl = await uploadBufferToShopify(buffer, product.id, ogVersion);
+      imageUrl = await uploadBufferToShopify(buffer, product.id, ogVersion, context.client, context.shopDomain);
       console.log('[product] uploaded to Shopify:', imageUrl);
     } catch (err) {
       console.error(`[product] Shopify upload failed (non-fatal): ${err.message}`);
@@ -200,19 +183,25 @@ async function handleProduct(product) {
     if (imageUrl) {
       let metafieldOk = false;
       try {
-        await updateProductMetafields(product.id, imageUrl, ogVersion, shareVersion, inputHash);
+        await updateProductMetafields(
+          product.id,
+          imageUrl,
+          ogVersion,
+          shareVersion,
+          inputHash,
+          context.client
+        );
         console.log(`[product] metafields updated — product ${product.id}`);
         metafieldOk = true;
         shareVersionWritten = true;
       } catch (err) {
         console.error(`[product] metafield update failed (non-fatal): ${err.message}`);
       }
-      if (metafieldOk) await bustFacebookCache(product.handle);
     }
 
     if (shareVersionChanged && !shareVersionWritten) {
       try {
-        await updateProductShareVersion(product.id, shareVersion);
+        await updateProductShareVersion(product.id, shareVersion, context.client);
         console.log(`[product] share version updated — ${shareVersion}`);
       } catch (err) {
         console.error(`[product] share version update failed (non-fatal): ${err.message}`);

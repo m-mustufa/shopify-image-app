@@ -2,9 +2,11 @@
 
 const fs       = require('fs');
 const path     = require('path');
+const crypto   = require('crypto');
 const axios    = require('axios');
 const FormData = require('form-data');
-const client   = require('./client');
+const defaultClient = require('./client');
+const config = require('../config');
 
 const STAGE_UPLOAD_MUTATION = `
   mutation stagedUploadsCreate($input: [StagedUploadInput!]!) {
@@ -74,7 +76,7 @@ const GET_FILE_QUERY = `
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-async function uploadImageToShopify(filePath) {
+async function uploadImageToShopify(filePath, client = defaultClient, shopDomain = config.shopifyShopDomain) {
   const fileName = path.basename(filePath);
   const fileSize = fs.statSync(filePath).size.toString();
   const mimeType = 'image/jpeg';
@@ -167,17 +169,23 @@ async function uploadImageToShopify(filePath) {
   }
 
   // ── Fallback: construct CDN URL from shop domain + filename ───────────────
-  const config  = require('../config');
-  const cdnUrl  = `https://${config.shopifyShopDomain}/cdn/shop/files/${encodeURIComponent(fileName)}`;
+  const cdnUrl  = `https://${shopDomain}/cdn/shop/files/${encodeURIComponent(fileName)}`;
   console.warn(`[files] URL still null after ${MAX_POLLS} polls — returning CDN fallback: ${cdnUrl}`);
   return cdnUrl;
 }
 
-async function uploadBufferToShopify(buffer, productId, ogVersion) {
+async function uploadBufferToShopify(
+  buffer,
+  productId,
+  ogVersion,
+  client = defaultClient,
+  shopDomain = config.shopifyShopDomain,
+  options = {}
+) {
   const versionSuffix = /^[a-f0-9]{12}$/.test(ogVersion ?? '') ? `-${ogVersion}` : '';
-  const fileName = `promo-${productId}${versionSuffix}.jpg`;
+  const fileName = options.fileName || `promo-${productId}${versionSuffix}.jpg`;
   const fileSize = buffer.length.toString();
-  const mimeType = 'image/jpeg';
+  const mimeType = options.mimeType || 'image/jpeg';
 
   // Step 1: staged upload target
   console.log('[files] step 1 — stagedUploadsCreate');
@@ -262,10 +270,18 @@ async function uploadBufferToShopify(buffer, productId, ogVersion) {
     }
   }
 
-  const config = require('../config');
-  const cdnUrl = `https://${config.shopifyShopDomain}/cdn/shop/files/${encodeURIComponent(fileName)}`;
+  const cdnUrl = `https://${shopDomain}/cdn/shop/files/${encodeURIComponent(fileName)}`;
   console.warn(`[files] URL still null after polling — returning CDN fallback: ${cdnUrl}`);
   return cdnUrl;
 }
 
-module.exports = { uploadImageToShopify, uploadBufferToShopify };
+async function uploadLogoBufferToShopify(buffer, client, shopDomain) {
+  const version = crypto.createHash('sha256').update(buffer).digest('hex').slice(0, 12);
+  const shopPrefix = String(shopDomain || 'shop').split('.')[0].replace(/[^a-z0-9-]/gi, '');
+  return uploadBufferToShopify(buffer, 'logo', version, client, shopDomain, {
+    fileName: `promo-logo-${shopPrefix}-${version}.png`,
+    mimeType: 'image/png',
+  });
+}
+
+module.exports = { uploadImageToShopify, uploadBufferToShopify, uploadLogoBufferToShopify };

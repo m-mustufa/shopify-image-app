@@ -1,0 +1,32 @@
+{%- if request.page_type == 'product' and product != blank -%}
+  {%- assign promo_image = product.metafields.custom.og_image.value -%}
+  {%- assign share_version = product.metafields.custom.share_version.value -%}
+  {%- if promo_image != blank -%}
+    {%- assign versioned_url = canonical_url -%}
+    {%- if share_version != blank -%}
+      {%- assign versioned_url = canonical_url | append: '?pv=' | append: share_version -%}
+    {%- endif -%}
+    <meta property="og:url" content="{{ versioned_url | escape }}">
+    <meta property="og:image" content="{{ promo_image | escape }}">
+    <meta property="og:image:secure_url" content="{{ promo_image | escape }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="628">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="{{ promo_image | escape }}">
+    {%- if share_version != blank -%}
+      <meta name="social-image-version" content="{{ share_version | escape }}">
+    {%- endif -%}
+  {%- endif -%}
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Social preview metadata",
+  "target": "head",
+  "javascript": "social-preview.js",
+  "enabled_on": {
+    "templates": ["product"]
+  },
+  "settings": []
+}
+{% endschema %}

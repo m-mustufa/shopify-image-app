@@ -6,6 +6,7 @@ sharp.concurrency(1);
 const axios = require('axios');
 const path  = require('path');
 const fs    = require('fs');
+const { normalizeShopifyCdnUrl } = require('../shopify/security');
 
 // ─── Canvas ───────────────────────────────────────────────────────────────────
 const W = 1200;
@@ -135,15 +136,20 @@ function loadAssetBuffer(filename) {
   return null;
 }
 
-const LOGO_URL = 'https://cdn.shopify.com/s/files/1/0752/8647/8918/files/logo.png?v=1788550367';
-let cachedLogoDataPromise = null;
+const DEFAULT_LOGO_URL = 'https://cdn.shopify.com/s/files/1/0752/8647/8918/files/logo.png?v=1788550367';
+const logoDataCache = new Map();
 let cachedFireDataPromise = null;
 
-function getLogoData() {
-  if (!cachedLogoDataPromise) {
-    cachedLogoDataPromise = (async () => {
+function getLogoData(requestedLogoUrl = DEFAULT_LOGO_URL) {
+  const logoUrl = normalizeShopifyCdnUrl(requestedLogoUrl);
+  if (!logoUrl) {
+    console.warn('[generator] rejected logo outside Shopify CDN');
+    return Promise.resolve(null);
+  }
+  if (!logoDataCache.has(logoUrl)) {
+    const logoPromise = (async () => {
       const axios = require('axios');
-      const res = await axios.get(LOGO_URL, { responseType: 'arraybuffer', timeout: 10_000 });
+      const res = await axios.get(logoUrl, { responseType: 'arraybuffer', timeout: 10_000 });
       const resized = await sharp(Buffer.from(res.data))
         .resize(LOGO_IMG_MAX_W, LOGO_IMG_MAX_H, { fit: 'inside' })
         .png()
@@ -152,7 +158,8 @@ function getLogoData() {
       return { buffer: resized, w: lw, h: lh };
     })().catch(async err => {
       console.warn('[generator] logo fetch failed:', err.message);
-      cachedLogoDataPromise = null;
+      logoDataCache.delete(logoUrl);
+      if (logoUrl !== normalizeShopifyCdnUrl(DEFAULT_LOGO_URL)) return null;
       const embeddedLogo = loadAssetBuffer('logo.png');
       const resized = await sharp(embeddedLogo)
         .resize(LOGO_IMG_MAX_W, LOGO_IMG_MAX_H, { fit: 'inside' })
@@ -161,8 +168,9 @@ function getLogoData() {
       const { width: lw, height: lh } = await sharp(resized).metadata();
       return { buffer: resized, w: lw, h: lh };
     });
+    logoDataCache.set(logoUrl, logoPromise);
   }
-  return cachedLogoDataPromise;
+  return logoDataCache.get(logoUrl);
 }
 
 const FIRE_URL = 'https://cdn.shopify.com/s/files/1/0987/7903/7992/files/fire.jpg?v=1782179945';
@@ -189,7 +197,7 @@ function getFireData() {
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-async function generateProductImage(product) {
+async function generateProductImage(product, options = {}) {
   console.log('[generator] entered generateProductImage');
 
   console.log('[generator] step 1: parsing product data');
@@ -246,7 +254,11 @@ async function generateProductImage(product) {
 
   // 2. Try to load the logo file
   console.log('[generator] step 2: fetching logo');
-  const logoData = await getLogoData();
+  const hasShopLogoSetting = options.logoUrl !== undefined;
+  const requestedLogoUrl = hasShopLogoSetting
+    ? options.logoUrl
+    : (product.logo_url || DEFAULT_LOGO_URL);
+  const logoData = await getLogoData(requestedLogoUrl);
 
   // 3. Fire icon removed
   const fireData = null;
@@ -272,7 +284,7 @@ async function generateProductImage(product) {
     computedBadgeY = PRICE_Y - Math.floor(_priceFSLayout / 2) - ORANGE_PRICE_GAP - BADGE_H;
   }
   console.log('[generator] step 4: building SVG');
-  const svgBuf = Buffer.from(buildSVG({ price, compare_at_price, badge_text: _badgeHidden ? null : (deal_badge_text || badge_text), deal_title, badgeHidden: _badgeHidden, deal_sale_price, deal_reg_price, showLogoText: logoData === null, showFireImg: fireData !== null && !_badgeHidden, fireWidth: fireData?.w ?? 0 }));
+  const svgBuf = Buffer.from(buildSVG({ price, compare_at_price, badge_text: _badgeHidden ? null : (deal_badge_text || badge_text), deal_title, badgeHidden: _badgeHidden, deal_sale_price, deal_reg_price, showLogoText: logoData === null && !hasShopLogoSetting, showFireImg: fireData !== null && !_badgeHidden, fireWidth: fireData?.w ?? 0 }));
 
   // 5. Building composites array
   console.log('[generator] step 5: building composites array');

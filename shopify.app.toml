@@ -4,13 +4,33 @@ application_url = "https://shopify-image-app-seven.vercel.app"
 embedded = false
 
 [access_scopes]
-scopes = "read_products,write_products,read_metafields,write_metafields,write_files"
+scopes = "read_products,write_products,read_files,write_files"
 
 [auth]
 redirect_urls = ["https://shopify-image-app-seven.vercel.app/auth/callback"]
 
 [webhooks]
-api_version = "2026-04"
+api_version = "2026-07"
+
+[[webhooks.subscriptions]]
+topics = ["products/create", "products/update"]
+uri = "/webhooks/shopify/products"
+
+[[webhooks.subscriptions]]
+topics = ["app/uninstalled"]
+uri = "/webhooks/shopify/app-uninstalled"
+
+[[webhooks.subscriptions]]
+compliance_topics = ["customers/data_request"]
+uri = "/webhooks/shopify/customers-data-request"
+
+[[webhooks.subscriptions]]
+compliance_topics = ["customers/redact"]
+uri = "/webhooks/shopify/customers-redact"
+
+[[webhooks.subscriptions]]
+compliance_topics = ["shop/redact"]
+uri = "/webhooks/shopify/shop-redact"
 
 [build]
 automatically_update_urls_on_dev = false

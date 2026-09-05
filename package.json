@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "test": "node tests/cache-busting.test.js && node tests/whatsapp.test.js && node tests/legal-pages.test.js",
+    "test": "node tests/cache-busting.test.js && node tests/whatsapp.test.js && node tests/legal-pages.test.js && node tests/installable-app.test.js",
     "bridge:worker": "node scripts/whatsapp-codex-worker.js",
     "test:generate": "node scripts/test-generate.js",
     "test:generate:no-image": "node scripts/test-generate.js --no-image"
@@ -18,13 +18,19 @@
     "cloudinary": "^2.10.0",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "multer": "^2.3.0",
     "opentype.js": "^2.0.0",
-    "sharp": "^0.33.4"
+    "pg": "^8.23.0",
+    "qs": "6.16.0",
+    "sharp": "^0.35.4"
   },
   "devDependencies": {
     "nodemon": "^3.1.4"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "overrides": {
+    "qs": "$qs"
   }
 }

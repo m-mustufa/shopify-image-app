@@ -6,3 +6,4 @@ output/
 .vercel
 .env.bridge
 .claude/
+.data/

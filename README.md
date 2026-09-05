@@ -1,226 +1,168 @@
 # Shopify Social Image Automation
 
-![Shopify Social Image Automation](docs/github-banner.png)
+A multi-store Shopify app that generates 1200 x 628 promotional Open Graph images when products change. Images are uploaded to each merchant's own Shopify Files and written back to product metafields.
 
-A Node.js webhook service that automatically generates promotional Open Graph images for Shopify products, uploads them to Shopify Files, and publishes cache-busted sharing metadata.
+This repository also contains a WhatsApp-to-Codex bridge. That bridge is independent from merchant Shopify installations.
 
-The application is designed for stores that frequently update product images, prices, offers, or custom deal content and need social previews—especially WhatsApp previews—to reflect the latest product state.
+## Merchant experience
 
-## Highlights
+After the app is distributed, a merchant only needs to:
 
-- Handles Shopify `products/create` and `products/update` webhooks.
-- Verifies Shopify HMAC signatures against the raw request body.
-- Generates 1200 × 628 promotional images with Sharp.
-- Supports deal badges, sale prices, regular prices, and custom deal titles.
-- Safely trims transparent or near-white product-image padding.
-- Preserves images with photographic or designed backgrounds.
-- Reserves a top-right area for the brand logo.
-- Uploads each generated image to Shopify Files with a versioned filename.
-- Stores image and sharing versions in Shopify product metafields.
-- Prevents redundant processing and webhook loops.
-- Supports cache-busted storefront and social-sharing URLs.
-- Runs locally with Express and deploys as a Vercel function.
+1. Install the app and approve its Shopify scopes.
+2. Upload their logo and confirm their public storefront domain.
+3. Open the provided theme-editor link, enable the Social preview metadata app embed, and save the theme.
+4. Set Enable promo image on a product and save it.
 
-## How it works
+The app handles OAuth, offline-token storage, product webhooks, metafield definitions, image upload, and version metadata. Merchants don't create webhooks or metafield definitions manually.
+
+## Processing flow
 
 ```text
-Shopify product change
-        │
-        ▼
-Signed product webhook
-        │
-        ▼
-Validate raw-body HMAC
-        │
-        ▼
-Read product metafields and deal overrides
-        │
-        ├── Product content unchanged → stop
-        │
-        ▼
-Generate and hash the final OG image
-        │
-        ├── Final image unchanged → skip upload
-        │
-        ▼
-Upload versioned file to Shopify CDN
-        │
-        ▼
-Update Shopify metafields in one GraphQL mutation
+Shopify app installation
+        |
+        +-- OAuth callback validates state and HMAC
+        +-- Offline token is encrypted and stored per shop
+        +-- Product metafield definitions are created
+        +-- Merchant uploads a logo to their own Shopify Files
+
+Signed products/create or products/update webhook
+        |
+        +-- Resolve the sending shop and its token
+        +-- Read deal overrides and stored versions
+        +-- Skip unchanged input
+        +-- Generate the promotional image
+        +-- Upload a versioned file to Shopify Files
+        +-- Write OG image and sharing versions in one mutation
 ```
 
-## Shopify metafields
+Facebook's scraper API is not called. Cache invalidation uses the stable `pv` sharing version in the storefront URL.
 
-The service reads deal configuration from the `custom` namespace:
+## Shopify configuration
 
-| Metafield | Purpose |
-| --- | --- |
-| `custom.deal_enabled` | Enables or disables promotional generation. |
-| `custom.deal_badge_text` | Overrides the badge text; `hide` removes it. |
-| `custom.deal_sale_price` | Overrides the displayed sale price. |
-| `custom.deal_reg_price` | Overrides the displayed regular price. |
-| `custom.deal_title` | Adds custom promotional copy. |
+The checked-in [shopify.app.toml](shopify.app.toml) declares:
 
-It manages these output metafields:
+- `read_products`
+- `write_products`
+- `read_files`
+- `write_files`
+- `products/create` and `products/update` webhooks
+- `app/uninstalled` cleanup
+- mandatory customer/shop privacy webhooks
+- the theme app extension under `extensions/social-preview`
+
+The OAuth callback is `/auth/callback`. Shopify's CLI applies app-specific webhook subscriptions consistently to installed shops when a version is deployed.
+
+The app creates these merchant-owned product metafield definitions during installation:
 
 | Metafield | Type | Purpose |
 | --- | --- | --- |
-| `custom.og_image` | Single line text | Shopify CDN URL of the generated image. |
-| `custom.og_version` | Single line text | First 12 characters of the final image SHA-256 hash. |
-| `custom.share_version` | Single line text | Stable hash of customer-visible product content and custom metafields. |
-| `custom.og_image_input_hash` | Single line text | Internal idempotency guard for image inputs. |
+| `custom.deal_enabled` | Boolean | Enables generation for the product. |
+| `custom.deal_badge_text` | Single line text | Badge override; `hide` removes it. |
+| `custom.deal_sale_price` | Single line text | Sale-price override; `hide` removes prices. |
+| `custom.deal_reg_price` | Single line text | Regular-price override. |
+| `custom.deal_title` | Single line text | Promotional headline. |
+| `custom.og_image` | Single line text | Generated Shopify CDN URL. |
+| `custom.og_version` | Single line text | Generated-image hash. |
+| `custom.share_version` | Single line text | Customer-visible sharing-state hash. |
+| `custom.og_image_input_hash` | Single line text | Image-input idempotency hash. |
 
-Create definitions for `custom.og_version` and `custom.share_version` under **Shopify Admin → Settings → Custom data → Products**.
+The `custom` namespace is retained for compatibility with stores already using the prototype.
 
-## Cache busting
+## Environment variables
 
-WhatsApp and other platforms may cache previews by exact URL. The app gives every changed product state a stable sharing version:
+Copy `.env.example` to `.env` for local development.
 
-```text
-https://example.com/products/example?pv=63f70872bede
-```
+Required for installable mode:
 
-The canonical URL remains unchanged:
+| Variable | Purpose |
+| --- | --- |
+| `APP_URL` | Public HTTPS base URL of the app. Use the current tunnel URL during local Shopify testing. |
+| `SHOPIFY_API_KEY` | Shopify app client ID. |
+| `SHOPIFY_API_SECRET` | Shopify app client secret and webhook HMAC secret. |
+| `SHOPIFY_TOKEN_ENCRYPTION_KEY` | Separate random secret used to encrypt offline tokens at rest. |
+| `DATABASE_URL` | PostgreSQL connection string. Required on Vercel; local development can omit it. |
+| `SHOPIFY_API_VERSION` | Defaults to `2026-07`. |
+| `SHOPIFY_SCOPES` | Defaults to the four scopes declared above. |
 
-```liquid
-<link rel="canonical" href="{{ canonical_url }}">
-```
-
-The Shopify theme must read `custom.share_version` when constructing `og:url` and shared URLs. It can also update the visible product URL with `history.replaceState()` so a copied browser URL contains the current `pv` value.
-
-## Product-image handling
-
-Uploaded product images are normalized conservatively:
-
-- Transparent or overwhelmingly white outer padding is trimmed.
-- Visual and photographic backgrounds are preserved.
-- The product is resized to 90% of the available safe region.
-- The product is shifted 10% left from the original right-panel center.
-- The upper 80% of the logo zone is reserved; at most the lower 20% can intersect the image region.
-
-This keeps products visually consistent without blindly removing designed backgrounds.
-
-## Requirements
-
-- Node.js 18 or newer
-- A Shopify app with product, metafield, and file access
-- A Shopify webhook secret
-- Vercel for the included serverless deployment configuration
-
-Required Shopify scopes:
-
-```text
-read_products
-write_products
-read_metafields
-write_metafields
-write_files
-```
-
-## Local setup
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-Copy the environment template:
+Generate the encryption secret locally with Node:
 
 ```powershell
-Copy-Item .env.example .env
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-Configure `.env`:
+Local development without `DATABASE_URL` stores encrypted installation records in `.data/shop-installations.json`. That folder is ignored by Git. Vercel refuses installable mode without PostgreSQL because its filesystem is ephemeral.
 
-```dotenv
-PORT=3000
-SHOPIFY_WEBHOOK_SECRET=your_webhook_secret
-SHOPIFY_SHOP_DOMAIN=your-store.myshopify.com
-SHOPIFY_CLIENT_ID=your_client_id
-SHOPIFY_CLIENT_SECRET=your_client_secret
-STORE_PUBLIC_DOMAIN=www.example.com
-```
+The previous `SHOPIFY_SHOP_DOMAIN`, `SHOPIFY_CLIENT_ID`, `SHOPIFY_CLIENT_SECRET`, and `SHOPIFY_WEBHOOK_SECRET` variables remain as a temporary single-store compatibility path. New installations do not use them.
 
-Never commit `.env` or Shopify credentials.
+`FB_APP_SECRET` remains in use by the separate WhatsApp webhook signature check. It is no longer used for Shopify/OG cache scraping.
 
-Start the local server:
+## Local validation
 
-```bash
-npm run dev
-```
+Install dependencies and run the full test suite:
 
-Health check:
-
-```text
-GET http://localhost:3000/health
-```
-
-## Webhook endpoints
-
-```text
-POST /webhooks/products/create
-POST /webhooks/products/update
-```
-
-Webhook requests must include a valid `X-Shopify-Hmac-Sha256` header.
-
-## Testing
-
-Run the automated cache-busting and image-normalization tests:
-
-```bash
+```powershell
+npm install
 npm test
 ```
 
-Generate local sample images:
+Generate local image fixtures:
 
-```bash
+```powershell
 npm run test:generate
 ```
 
-Generated previews are written to `output/`, which is intentionally excluded from Git.
+Validate the Shopify app configuration and theme extension without deploying:
 
-## Deployment
-
-The repository includes a Vercel function entry point and routing configuration.
-
-Deploy a production build:
-
-```bash
-vercel --prod
+```powershell
+npx --yes @shopify/cli@latest app build
 ```
 
-After deployment, confirm:
+Start the app:
 
-```text
-GET https://your-project.vercel.app/health
+```powershell
+npm start
 ```
 
-Then change an image-affecting product field and verify that Shopify receives new values for `custom.og_image` and `custom.og_version`.
+Then check `http://localhost:3000/health` and the onboarding screen at `http://localhost:3000/`.
+
+## Pre-live test sequence
+
+Keep this work on a feature branch until all checks pass:
+
+1. Run `npm test` and the Shopify CLI build.
+2. Create a preview deployment with a preview PostgreSQL database.
+3. Link a Shopify development app configuration to the preview URL.
+4. Install it on a development store.
+5. Upload a test logo from the app dashboard.
+6. Activate the theme app embed and save the theme.
+7. Enable a product, save it, and confirm the generated Shopify File and four output metafields.
+8. Inspect the product page source for the generated `og:image` and versioned `og:url`.
+9. Test the exact `?pv=` URL with an external crawler. A password-protected development storefront cannot complete this final crawler check.
+
+Do not deploy the Shopify app version or merge the feature branch until this sequence is approved.
+
+## Production notes
+
+- Arbitrary unrelated merchants require public distribution and Shopify App Review. Custom distribution is limited to one store or stores in the same eligible organization.
+- Theme app embeds are disabled by default after installation; the merchant must confirm activation and save once.
+- Some themes already render their own OG tags. Duplicate-tag behavior must be tested on target themes before release.
+- `X-Shopify-Webhook-Id` persistence is still recommended for strict duplicate-delivery tracking. The current content hashes make repeated product deliveries idempotent, but a dedicated webhook-delivery table is the stronger production design.
+- Never commit `.env`, `.env.bridge`, PostgreSQL credentials, access tokens, or Shopify secrets.
 
 ## Project structure
 
 ```text
-api/                    Vercel function entry point
-assets/                 Brand and local test assets
-scripts/                Webhook registration and image test utilities
-src/
-  image/generator.js    Sharp image-generation pipeline
-  shopify/              Shopify API, file, and metafield clients
-  webhooks/             HMAC verification and product processing
-  index.js              Express application and webhook routes
-tests/                  Focused automated tests
-vercel.json             Vercel function and routing configuration
+api/                         Vercel function entry point
+assets/                      Legacy default logo and test assets
+extensions/social-preview/   Theme app embed and pv URL script
+scripts/                     Bridge, Shopify, and image test utilities
+src/image/                   Sharp image generator
+src/pages/                   Legal and merchant onboarding pages
+src/shopify/                 OAuth, encrypted installations, API clients, files, metafields
+src/webhooks/                Shopify product and WhatsApp webhook handlers
+tests/                       Regression and installable-app security checks
 ```
-
-## Operational notes
-
-- Previously shared URLs may continue showing their original cached previews.
-- A new versioned URL allows social platforms to fetch the latest metadata.
-- Existing products regenerate after an image-affecting product change triggers the webhook.
-- `X-Shopify-Webhook-Id` deduplication requires persistent storage such as Redis or Vercel KV; in-memory deduplication is unreliable in serverless environments.
 
 ## License
 
-This repository is currently private and does not include an open-source license.
+This repository is private and does not include an open-source license.
