@@ -146,6 +146,14 @@ async function updateProductShareVersion(productId, shareVersion, client = defau
   }], client);
 }
 
+async function updateProductProcessingState(productId, shareVersion, inputHash, client = defaultClient) {
+  const ownerId = `gid://shopify/Product/${productId}`;
+  return setMetafields([
+    { ownerId, namespace: 'custom', key: 'share_version', value: shareVersion, type: 'single_line_text_field' },
+    { ownerId, namespace: 'custom', key: 'og_image_input_hash', value: inputHash, type: 'single_line_text_field' },
+  ], client);
+}
+
 function parseBoolean(value) {
   if (value === true || value === 'true') return true;
   if (value === false || value === 'false') return false;
@@ -188,5 +196,6 @@ module.exports = {
   ensureProductMetafieldDefinitions,
   fetchProductOverrides,
   updateProductMetafields,
+  updateProductProcessingState,
   updateProductShareVersion,
 };

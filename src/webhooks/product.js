@@ -6,6 +6,7 @@ const { generateProductImage }                          = require('../image/gene
 const { uploadBufferToShopify }                         = require('../shopify/files');
 const {
   updateProductMetafields,
+  updateProductProcessingState,
   updateProductShareVersion,
   fetchProductOverrides,
 } = require('../shopify/metafields');
@@ -160,10 +161,8 @@ async function handleProduct(product, context = {}) {
 
     const ogVersion = computeOgVersion(buffer);
     if (_storedOgVersion === ogVersion) {
-      if (shareVersionChanged) {
-        await updateProductShareVersion(product.id, shareVersion, context.client);
-        console.log(`[product] share version updated — ${shareVersion}`);
-      }
+      await updateProductProcessingState(product.id, shareVersion, inputHash, context.client);
+      console.log(`[product] processing state updated — share ${shareVersion}, input ${inputHash}`);
       console.log(`[product] skipping — generated image unchanged (OG version ${ogVersion})`);
       return { imageUrl: null, ogVersion, unchanged: true };
     }

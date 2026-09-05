@@ -21,11 +21,14 @@ async function testHmacVerification() {
 async function testProductIdempotency() {
   const imageBuffer = Buffer.from('final generated image');
   const expectedVersion = crypto.createHash('sha256').update(imageBuffer).digest('hex').slice(0, 12);
+  let storedHash = null;
   let storedVersion = null;
   let storedShareVersion = null;
+  let generationCalls = 0;
   let uploadCalls = 0;
   let metafieldCalls = 0;
   let lastMetafieldArgs = null;
+  let lastProcessingArgs = null;
   let lastUploadArgs = null;
   let dealEnabled = null;
 
@@ -34,7 +37,10 @@ async function testProductIdempotency() {
   const metafieldsPath = require.resolve('../src/shopify/metafields');
   const productPath = require.resolve('../src/webhooks/product');
 
-  require.cache[generatorPath] = { exports: { generateProductImage: async () => imageBuffer } };
+  require.cache[generatorPath] = { exports: { generateProductImage: async () => {
+    generationCalls += 1;
+    return imageBuffer;
+  } } };
   require.cache[filesPath] = { exports: { uploadBufferToShopify: async (...args) => {
     uploadCalls += 1;
     lastUploadArgs = args;
@@ -43,12 +49,17 @@ async function testProductIdempotency() {
   require.cache[metafieldsPath] = { exports: {
     fetchProductOverrides: async () => ({
       deal_enabled: dealEnabled,
-      _storedHash: null,
+      _storedHash: storedHash,
       _storedOgVersion: storedVersion,
       _storedShareVersion: storedShareVersion,
       _shareMetafields: [{ namespace: 'custom', key: 'deal_title', type: 'single_line_text_field', value: 'Deal' }],
     }),
     updateProductMetafields: async (...args) => { metafieldCalls += 1; lastMetafieldArgs = args; },
+    updateProductProcessingState: async (...args) => {
+      metafieldCalls += 1;
+      lastProcessingArgs = args;
+      storedHash = args[2];
+    },
     updateProductShareVersion: async () => { metafieldCalls += 1; },
   } };
   delete require.cache[productPath];
@@ -62,6 +73,7 @@ async function testProductIdempotency() {
   const product = { id: 123, handle: 'example', title: 'Example', price: '10', compare_at_price: '15', image_url: 'https://cdn.example/source.jpg', share_version: 'share1234567' };
   const shareMetafields = [{ namespace: 'custom', key: 'deal_title', type: 'single_line_text_field', value: 'Deal' }];
   const expectedShareVersion = computeShareVersionWithMetafields(product.share_version, shareMetafields);
+  const expectedInputHash = computeInputHash(product, { deal_enabled: null });
   storedShareVersion = expectedShareVersion;
 
   assert.strictEqual(computeOgVersion(imageBuffer), expectedVersion);
@@ -92,18 +104,28 @@ async function testProductIdempotency() {
 
   const changed = await handleProduct(product);
   assert.strictEqual(changed.ogVersion, expectedVersion);
+  assert.strictEqual(generationCalls, 1);
   assert.strictEqual(uploadCalls, 1);
   assert.strictEqual(lastUploadArgs[2], expectedVersion);
   assert.strictEqual(metafieldCalls, 1);
   assert.strictEqual(lastMetafieldArgs[1], 'https://cdn.example/og.jpg');
   assert.strictEqual(lastMetafieldArgs[2], expectedVersion);
   assert.strictEqual(lastMetafieldArgs[3], expectedShareVersion);
+  assert.strictEqual(lastMetafieldArgs[4], expectedInputHash);
 
   storedVersion = expectedVersion;
   const unchanged = await handleProduct(product);
   assert.strictEqual(unchanged.unchanged, true);
+  assert.strictEqual(generationCalls, 2);
   assert.strictEqual(uploadCalls, 1, 'unchanged image must not be uploaded');
-  assert.strictEqual(metafieldCalls, 1, 'unchanged image must not update metafields');
+  assert.strictEqual(metafieldCalls, 2, 'unchanged image must persist its processed input state');
+  assert.deepStrictEqual(lastProcessingArgs.slice(0, 3), [product.id, expectedShareVersion, expectedInputHash]);
+
+  const stable = await handleProduct(product);
+  assert.strictEqual(stable, undefined);
+  assert.strictEqual(generationCalls, 2, 'persisted input state must prevent repeat generation');
+  assert.strictEqual(uploadCalls, 1);
+  assert.strictEqual(metafieldCalls, 2);
 
   dealEnabled = null;
   storedVersion = null;
@@ -122,7 +144,7 @@ async function testBatchedMetafields() {
     return { data: { data: { metafieldsSet: { metafields: [], userErrors: [] } } } };
   } } };
   delete require.cache[metafieldsPath];
-  const { updateProductMetafields } = require(metafieldsPath);
+  const { updateProductMetafields, updateProductProcessingState } = require(metafieldsPath);
   await updateProductMetafields(123, 'https://cdn.example/og.jpg', 'abc123def456', 'share1234567', 'input-hash');
 
   const values = Object.fromEntries(requestBody.variables.metafields.map(field => [field.key, field.value]));
@@ -131,6 +153,13 @@ async function testBatchedMetafields() {
     og_image: 'https://cdn.example/og.jpg',
     share_version: 'share1234567',
     og_image_input_hash: 'input-hash',
+  });
+
+  await updateProductProcessingState(123, 'share-next', 'input-next');
+  const processingValues = Object.fromEntries(requestBody.variables.metafields.map(field => [field.key, field.value]));
+  assert.deepStrictEqual(processingValues, {
+    share_version: 'share-next',
+    og_image_input_hash: 'input-next',
   });
 }
 
