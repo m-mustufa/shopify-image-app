@@ -17,6 +17,7 @@ const {
 } = require('../src/shopify/security');
 const { dashboardPage, installPage, normalizePublicDomain } = require('../src/pages/app');
 const { beginOAuth } = require('../src/shopify/oauth');
+const { ensureProductMetafieldDefinitions } = require('../src/shopify/metafields');
 
 async function testOAuthSecurity() {
   const secret = 'test-client-secret';
@@ -73,6 +74,52 @@ async function testTenantIsolation() {
   assert.strictEqual(beta.defaults.headers['X-Shopify-Access-Token'], 'beta-token');
 }
 
+async function testMerchantMetafieldsArePinned() {
+  const createRequests = [];
+  const pinRequests = [];
+  const client = {
+    async post(path, body) {
+      assert.strictEqual(path, '/graphql.json');
+      if (body.query.includes('metafieldDefinitionPin')) {
+        pinRequests.push(body.variables.identifier);
+        return {
+          data: {
+            data: {
+              metafieldDefinitionPin: {
+                pinnedDefinition: { id: `pin-${body.variables.identifier.key}` },
+                userErrors: [],
+              },
+            },
+          },
+        };
+      }
+
+      createRequests.push(body.variables.definition);
+      return {
+        data: {
+          data: {
+            metafieldDefinitionCreate: {
+              createdDefinition: null,
+              userErrors: [{ code: 'TAKEN', message: 'Definition already exists' }],
+            },
+          },
+        },
+      };
+    },
+  };
+
+  const results = await ensureProductMetafieldDefinitions(client);
+  const merchantKeys = ['deal_enabled', 'deal_badge_text', 'deal_sale_price', 'deal_reg_price', 'deal_title'];
+  const internalKeys = ['og_image', 'og_version', 'share_version', 'og_image_input_hash'];
+
+  assert.deepStrictEqual(createRequests.filter(definition => definition.pin).map(definition => definition.key), merchantKeys);
+  assert.deepStrictEqual(createRequests.filter(definition => !definition.pin).map(definition => definition.key), internalKeys);
+  assert.deepStrictEqual(pinRequests.map(identifier => identifier.key), merchantKeys);
+  assert.ok(pinRequests.every(identifier => identifier.namespace === 'custom' && identifier.ownerType === 'PRODUCT'));
+  assert.ok(results.filter(result => merchantKeys.includes(result.key)).every(result => result.pinned));
+  assert.ok(results.filter(result => internalKeys.includes(result.key)).every(result => !result.pinned));
+}
+
 async function testInputValidationAndPages() {
   assert.strictEqual(normalizeShopDomain('Example-Store.myshopify.com'), 'example-store.myshopify.com');
   assert.strictEqual(normalizeShopDomain('example.myshopify.com.attacker.test'), null);
@@ -106,6 +153,7 @@ async function testInputValidationAndPages() {
 (async () => {
   await testOAuthSecurity();
   await testTenantIsolation();
+  await testMerchantMetafieldsArePinned();
   await testInputValidationAndPages();
   console.log('installable app tests passed');
 })().catch(error => {
