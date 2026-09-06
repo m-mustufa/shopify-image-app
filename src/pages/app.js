@@ -8,6 +8,12 @@ const { uploadLogoBufferToShopify } = require('../shopify/files');
 const { getInstallationStore } = require('../shopify/installations');
 const { normalizeShopifyCdnUrl } = require('../shopify/security');
 const { requireEmbeddedInstallation, requireEmbeddedSession } = require('../shopify/embeddedAuth');
+const {
+  createSharePreviewToken,
+  createSharePreviewUrl,
+  normalizeProductHandle,
+  renderSharePreview,
+} = require('../shopify/sharePreview');
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -59,7 +65,7 @@ ${embedded ? `<meta name='shopify-api-key' content='${escapeHtml(config.shopifyA
   .file-picker{display:flex;align-items:center;gap:12px;min-height:48px;padding:8px;border:1px dashed #98a2ad;border-radius:10px;background:#fafbfb}.file-picker:focus-within{border-color:#2c6ecb;box-shadow:0 0 0 3px rgba(44,110,203,.12)}.file-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.file-trigger{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid #c7ccd1;border-radius:7px;background:#fff;font-size:13px;font-weight:700;cursor:pointer}.file-name{font-size:13px;color:#687078;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .card-footer{display:flex;justify-content:flex-end;align-items:center;gap:12px;padding:16px 24px;background:#fafbfb;border-top:1px solid #edf0f2}.button,button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;border:1px solid transparent;border-radius:8px;padding:9px 15px;background:var(--brand);color:#fff;font:inherit;font-size:13px;font-weight:750;text-decoration:none;cursor:pointer;transition:background .15s,transform .05s,box-shadow .15s}.button:hover,button:hover{background:var(--brand-hover)}.button:active,button:active{transform:translateY(1px)}button:disabled{cursor:not-allowed;opacity:.68}.button.secondary{background:#fff;color:var(--ink);border-color:#c7ccd1}.button.secondary:hover{background:#f6f7f8}.button.full{width:100%}
   .notice{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:10px;margin:0 0 20px;font-size:13px;font-weight:600}.notice.success{background:var(--success-bg);color:#166534;border:1px solid #ccebd5}.notice.error{background:var(--danger-bg);color:var(--danger);border:1px solid #ffd0cc}.notice.info{background:var(--info-bg);color:#1849a9;border:1px solid #cfe0ff}.notice[hidden]{display:none}
-  .embed-summary{padding:15px;border:1px solid #e7eaed;border-radius:11px;background:#fafbfb;margin-bottom:18px}.embed-summary p{font-size:13px;margin:8px 0 0}.check-list{display:grid;gap:13px;margin:18px 0 22px}.check-item{display:flex;gap:10px;font-size:13px;color:#4f565d}.check{display:grid;place-items:center;width:20px;height:20px;flex:0 0 20px;border-radius:50%;background:#e8f5f0;color:var(--brand);font-size:11px;font-weight:900}.mini-steps{display:grid;gap:4px}.mini-step{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid #edf0f2}.mini-step:last-child{border-bottom:0}.mini-num{display:grid;place-items:center;width:25px;height:25px;flex:0 0 25px;border-radius:7px;background:#f0f2f4;color:#4b5157;font-size:12px;font-weight:800}.mini-step p{font-size:13px;margin:1px 0 0}
+  .embed-summary{padding:15px;border:1px solid #e7eaed;border-radius:11px;background:#fafbfb;margin-bottom:18px}.embed-summary p{font-size:13px;margin:8px 0 0}.check-list{display:grid;gap:13px;margin:18px 0 22px}.check-item{display:flex;gap:10px;font-size:13px;color:#4f565d}.check{display:grid;place-items:center;width:20px;height:20px;flex:0 0 20px;border-radius:50%;background:#e8f5f0;color:var(--brand);font-size:11px;font-weight:900}.mini-steps{display:grid;gap:4px}.mini-step{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid #edf0f2}.mini-step:last-child{border-bottom:0}.mini-num{display:grid;place-items:center;width:25px;height:25px;flex:0 0 25px;border-radius:7px;background:#f0f2f4;color:#4b5157;font-size:12px;font-weight:800}.mini-step p{font-size:13px;margin:1px 0 0}.preview-form{display:grid;gap:12px}.preview-result{padding:12px;background:var(--success-bg);border:1px solid #ccebd5;border-radius:9px}.preview-result[hidden]{display:none}.preview-result .text-input{font-size:12px;margin-bottom:9px}.preview-actions{display:flex;gap:8px}.preview-actions button,.preview-actions a{flex:1}
   code{background:#f0f2f4;padding:2px 5px;border-radius:5px;font-size:12px;color:#343a40}.spinner{width:15px;height:15px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .7s linear infinite}.loading-state{padding-top:6px}.skeleton{position:relative;overflow:hidden;background:#e7eaed;border-radius:8px}.skeleton:after{content:'';position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent);animation:shimmer 1.25s infinite}.sk-title{width:310px;height:32px;margin-bottom:12px}.sk-sub{width:470px;max-width:80%;height:16px;margin-bottom:28px}.sk-strip{height:82px;margin-bottom:20px;border-radius:14px}.sk-grid{display:grid;grid-template-columns:1.55fr .85fr;gap:20px}.sk-card{height:430px;border-radius:14px}.sk-card.small{height:270px}.error-state{max-width:560px;margin:80px auto;padding:34px;text-align:center;background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}.error-mark{display:grid;place-items:center;width:48px;height:48px;margin:0 auto 17px;border-radius:13px;background:var(--danger-bg);color:var(--danger);font-size:24px;font-weight:800}.error-state p{margin-bottom:22px}
   @keyframes spin{to{transform:rotate(360deg)}}@keyframes shimmer{100%{transform:translateX(100%)}}@media(max-width:780px){.shell{padding:24px 16px 48px}.app-header{display:block}.connection{margin-top:16px;width:max-content}.setup-strip{align-items:flex-start;flex-direction:column}.progress{width:100%;min-width:0}.grid,.sk-grid{grid-template-columns:1fr}.logo-panel{align-items:flex-start}.card-head,.card-body{padding-left:18px;padding-right:18px}.card-footer{padding:14px 18px}}@media(max-width:480px){.logo-panel{display:block}.logo-frame{margin-bottom:12px;width:100%}.card-footer{display:block}.card-footer button{width:100%}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition:none!important}}
 </style></head><body><main class='shell'>${body}</main></body></html>`;
@@ -145,6 +151,16 @@ function embeddedAppPage() {
 
       document.addEventListener('click', event => {
         if (event.target.closest('#retry-load')) loadDashboard();
+        const copyButton = event.target.closest('#copy-preview-link');
+        if (copyButton) {
+          const input = document.getElementById('preview-url');
+          navigator.clipboard.writeText(input.value).then(() => {
+            copyButton.textContent = 'Copied';
+          }).catch(() => {
+            input.select();
+            showNotice('info', 'Copy the selected link.');
+          });
+        }
       });
 
       document.addEventListener('change', event => {
@@ -165,6 +181,31 @@ function embeddedAppPage() {
       });
 
       document.addEventListener('submit', async event => {
+        if (event.target.id === 'preview-link-form') {
+          event.preventDefault();
+          const button = event.target.querySelector('button[type=submit]');
+          const original = button.innerHTML;
+          button.disabled = true;
+          button.innerHTML = \`<span class='spinner' aria-hidden='true'></span>Generating...\`;
+          try {
+            const response = await shopifyRequest('/app/share-preview-link', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ product: document.getElementById('preview-product').value }),
+            });
+            if (!response.ok) throw new Error(await responseError(response));
+            const result = await response.json();
+            document.getElementById('preview-url').value = result.url;
+            document.getElementById('open-preview-link').href = result.url;
+            document.getElementById('preview-result').hidden = false;
+          } catch (error) {
+            showNotice('error', error.message || 'The test link could not be generated.');
+          } finally {
+            button.disabled = false;
+            button.innerHTML = original;
+          }
+          return;
+        }
         if (event.target.id !== 'settings-form') return;
         event.preventDefault();
         const button = event.target.querySelector('button[type=submit]');
@@ -272,6 +313,21 @@ function dashboardContent(installation, message = '') {
             <div class='mini-step'><span class='mini-num'>3</span><div><h3>Save the product</h3><p>Your branded social image is generated automatically.</p></div></div>
           </div>
         </section>
+
+        <section class='card'>
+          <div class='card-head'><div><h2>Test on WhatsApp</h2><p>Works while the Shopify storefront is password-protected.</p></div></div>
+          <div class='card-body'>
+            <form id='preview-link-form' class='preview-form'>
+              <div><label for='preview-product'>Product URL or handle</label><input class='text-input' id='preview-product' name='product' placeholder='the-multi-location-snowboard' required></div>
+              <button type='submit'>Generate test link</button>
+              <div id='preview-result' class='preview-result' hidden>
+                <label for='preview-url'>WhatsApp test link</label>
+                <input id='preview-url' class='text-input' readonly>
+                <div class='preview-actions'><button id='copy-preview-link' class='secondary' type='button'>Copy link</button><a id='open-preview-link' class='button secondary' target='_blank' rel='noopener'>Open</a></div>
+              </div>
+            </form>
+          </div>
+        </section>
       </aside>
     </div>`;
 }
@@ -288,6 +344,15 @@ router.get('/app', (_req, res) => res.type('html').send(embeddedAppPage()));
 
 router.get('/app/content', requireEmbeddedInstallation, (req, res) => {
   res.type('html').send(dashboardContent(req.shopify.installation, req.query.message || ''));
+});
+
+router.get('/share-preview', renderSharePreview);
+
+router.post('/app/share-preview-link', requireEmbeddedSession, express.json(), (req, res) => {
+  const handle = normalizeProductHandle(req.body.product);
+  if (!handle) return res.status(400).json({ error: 'Enter a valid product URL or product handle.' });
+  const token = createSharePreviewToken(req.shopify.shopDomain, handle);
+  return res.json({ url: createSharePreviewUrl(token), expiresInHours: 24 });
 });
 
 router.post('/app/settings', requireEmbeddedSession, upload.single('logo'), async (req, res, next) => {

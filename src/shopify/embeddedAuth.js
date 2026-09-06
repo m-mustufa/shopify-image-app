@@ -85,7 +85,7 @@ async function refreshOfflineToken(installation) {
     ...installation,
     accessToken: token.access_token,
     refreshToken: token.refresh_token || installation.refreshToken,
-    expiresAt: expiryFrom(token.expires_in) || existing?.expiresAt || null,
+    expiresAt: expiryFrom(token.expires_in) || installation.expiresAt || null,
     scopes: token.scope || installation.scopes,
   });
 }

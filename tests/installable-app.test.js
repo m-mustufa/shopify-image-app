@@ -157,6 +157,8 @@ async function testInputValidationAndPages() {
   assert.match(dashboard, /setup-progress/);
   assert.match(dashboard, /settings-form/);
   assert.match(dashboard, /form-notice/);
+  assert.match(dashboard, /preview-link-form/);
+  assert.match(embedded, /app\/share-preview-link/);
 
   const appConfig = fs.readFileSync('shopify.app.toml', 'utf8');
   assert.match(appConfig, /embedded = true/);

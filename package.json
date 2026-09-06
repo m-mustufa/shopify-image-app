@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "test": "node tests/cache-busting.test.js && node tests/whatsapp.test.js && node tests/legal-pages.test.js && node tests/installable-app.test.js",
+    "test": "node tests/cache-busting.test.js && node tests/whatsapp.test.js && node tests/legal-pages.test.js && node tests/installable-app.test.js && node tests/share-preview.test.js",
     "bridge:worker": "node scripts/whatsapp-codex-worker.js",
     "test:generate": "node scripts/test-generate.js",
     "test:generate:no-image": "node scripts/test-generate.js --no-image"
