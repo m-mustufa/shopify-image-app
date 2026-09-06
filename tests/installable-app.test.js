@@ -146,10 +146,17 @@ async function testInputValidationAndPages() {
   assert.ok(!dashboard.includes('must-not-render'));
   assert.ok(!installPage({ shop: '<script>' }).includes('<script>'));
   const embedded = embeddedAppPage();
-  assert.match(embedded, /name="shopify-api-key"/);
+  assert.match(embedded, /name='shopify-api-key'/);
   assert.match(embedded, /shopifycloud\/app-bridge\.js/);
   assert.match(embedded, /shopify\.idToken\(\)/);
   assert.match(embedded, /Authorization/);
+  assert.match(embedded, /loading-state/);
+  assert.match(embedded, /retry-load/);
+  assert.match(embedded, /Saving\.\.\./);
+  assert.match(embedded, /shopify\.app\.extensions/);
+  assert.match(dashboard, /setup-progress/);
+  assert.match(dashboard, /settings-form/);
+  assert.match(dashboard, /form-notice/);
 
   const appConfig = fs.readFileSync('shopify.app.toml', 'utf8');
   assert.match(appConfig, /embedded = true/);
