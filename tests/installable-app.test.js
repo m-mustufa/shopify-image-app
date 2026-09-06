@@ -154,6 +154,8 @@ async function testInputValidationAndPages() {
   const appConfig = fs.readFileSync('shopify.app.toml', 'utf8');
   assert.match(appConfig, /embedded = true/);
   assert.ok(!appConfig.includes('use_legacy_install_flow'));
+  const embeddedAuth = fs.readFileSync('src/shopify/embeddedAuth.js', 'utf8');
+  assert.match(embeddedAuth, /expiring: '1'/);
 
   const liquid = fs.readFileSync('extensions/social-preview/blocks/social-preview.liquid', 'utf8');
   const browserScript = fs.readFileSync('extensions/social-preview/assets/social-preview.js', 'utf8');

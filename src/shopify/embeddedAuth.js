@@ -67,6 +67,7 @@ async function exchangeIdToken(shopDomain, idToken) {
     subject_token: idToken,
     subject_token_type: ID_TOKEN_TYPE,
     requested_token_type: OFFLINE_TOKEN_TYPE,
+    expiring: '1',
   });
 }
 
@@ -92,6 +93,9 @@ async function refreshOfflineToken(installation) {
 async function establishEmbeddedInstallation(idToken) {
   const payload = validateIdToken(idToken);
   const token = await exchangeIdToken(payload.shopDomain, idToken);
+  if (!token.refresh_token || !token.expires_in) {
+    throw new Error('Shopify did not return an expiring offline access token');
+  }
   const store = getInstallationStore();
   const existing = await store.get(payload.shopDomain);
   const draft = {
