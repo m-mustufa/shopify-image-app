@@ -4,6 +4,7 @@ application_url = "https://shopify-image-app-seven.vercel.app"
 embedded = false
 
 [access_scopes]
+use_legacy_install_flow = true
 scopes = "read_products,write_products,read_files,write_files"
 
 [auth]
