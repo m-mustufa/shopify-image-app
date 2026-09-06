@@ -3,6 +3,7 @@
 const assert = require('assert');
 const crypto = require('crypto');
 const fs = require('fs');
+const jwt = require('jsonwebtoken');
 const config = require('../src/config');
 const { createShopifyClient } = require('../src/shopify/client');
 const { MemoryInstallationStore } = require('../src/shopify/installations');
@@ -15,11 +16,11 @@ const {
   verifyOAuthHmac,
   verifySignedValue,
 } = require('../src/shopify/security');
-const { dashboardPage, installPage, normalizePublicDomain } = require('../src/pages/app');
-const { beginOAuth } = require('../src/shopify/oauth');
+const { dashboardPage, embeddedAppPage, installPage, normalizePublicDomain } = require('../src/pages/app');
+const { validateIdToken } = require('../src/shopify/embeddedAuth');
 const { ensureProductMetafieldDefinitions } = require('../src/shopify/metafields');
 
-async function testOAuthSecurity() {
+async function testAuthenticationSecurity() {
   const secret = 'test-client-secret';
   const query = {
     shop: 'alpha-store.myshopify.com',
@@ -42,29 +43,32 @@ async function testOAuthSecurity() {
 
   config.shopifyApiKey = 'oauth-test-key';
   config.shopifyApiSecret = secret;
-  config.appUrl = 'http://localhost:3000';
-  config.shopifyScopes = ['read_products', 'write_products'];
-  const response = {
-    cookies: [],
-    append(name, value) { this.cookies.push([name, value]); },
-    redirect(url) { this.redirectUrl = url; return this; },
-    status(code) { this.statusCode = code; return this; },
-    send(body) { this.body = body; return this; },
-  };
-  await beginOAuth({ query: { shop: 'Alpha.myshopify.com' } }, response);
-  const authorizationUrl = new URL(response.redirectUrl);
-  assert.strictEqual(authorizationUrl.hostname, 'alpha.myshopify.com');
-  assert.strictEqual(authorizationUrl.searchParams.get('client_id'), 'oauth-test-key');
-  assert.strictEqual(authorizationUrl.searchParams.get('scope'), 'read_products,write_products');
-  assert.ok(response.cookies[0][1].includes('HttpOnly'));
+  const now = Math.floor(Date.now() / 1000);
+  const idToken = jwt.sign({
+    aud: config.shopifyApiKey,
+    dest: 'https://alpha.myshopify.com',
+    exp: now + 60,
+    iss: 'https://alpha.myshopify.com/admin',
+    nbf: now - 1,
+    sub: '12345',
+  }, secret, { algorithm: 'HS256', noTimestamp: true });
+  assert.strictEqual(validateIdToken(idToken).shopDomain, 'alpha.myshopify.com');
+  assert.throws(() => validateIdToken(jwt.sign({
+    aud: 'wrong-key',
+    dest: 'https://alpha.myshopify.com',
+    exp: now + 60,
+    iss: 'https://alpha.myshopify.com/admin',
+    nbf: now - 1,
+  }, secret, { algorithm: 'HS256', noTimestamp: true })), /audience/);
 }
 
 async function testTenantIsolation() {
   const store = new MemoryInstallationStore();
   await store.save({ shopDomain: 'alpha.myshopify.com', accessToken: 'alpha-token', logoUrl: 'https://cdn.shopify.com/alpha.png' });
-  await store.save({ shopDomain: 'beta.myshopify.com', accessToken: 'beta-token', logoUrl: 'https://cdn.shopify.com/beta.png' });
+  await store.save({ shopDomain: 'beta.myshopify.com', accessToken: 'beta-token', refreshToken: 'beta-refresh', expiresAt: '2026-09-08T00:00:00.000Z', logoUrl: 'https://cdn.shopify.com/beta.png' });
   assert.strictEqual((await store.get('alpha.myshopify.com')).accessToken, 'alpha-token');
   assert.strictEqual((await store.get('beta.myshopify.com')).logoUrl, 'https://cdn.shopify.com/beta.png');
+  assert.strictEqual((await store.get('beta.myshopify.com')).refreshToken, 'beta-refresh');
 
   const alpha = createShopifyClient({ shopDomain: 'alpha.myshopify.com', accessToken: 'alpha-token' });
   const beta = createShopifyClient({ shopDomain: 'beta.myshopify.com', accessToken: 'beta-token' });
@@ -141,6 +145,15 @@ async function testInputValidationAndPages() {
   assert.match(dashboard, /alpha\.myshopify\.com/);
   assert.ok(!dashboard.includes('must-not-render'));
   assert.ok(!installPage({ shop: '<script>' }).includes('<script>'));
+  const embedded = embeddedAppPage();
+  assert.match(embedded, /name="shopify-api-key"/);
+  assert.match(embedded, /shopifycloud\/app-bridge\.js/);
+  assert.match(embedded, /shopify\.idToken\(\)/);
+  assert.match(embedded, /Authorization/);
+
+  const appConfig = fs.readFileSync('shopify.app.toml', 'utf8');
+  assert.match(appConfig, /embedded = true/);
+  assert.ok(!appConfig.includes('use_legacy_install_flow'));
 
   const liquid = fs.readFileSync('extensions/social-preview/blocks/social-preview.liquid', 'utf8');
   const browserScript = fs.readFileSync('extensions/social-preview/assets/social-preview.js', 'utf8');
@@ -151,7 +164,7 @@ async function testInputValidationAndPages() {
 }
 
 (async () => {
-  await testOAuthSecurity();
+  await testAuthenticationSecurity();
   await testTenantIsolation();
   await testMerchantMetafieldsArePinned();
   await testInputValidationAndPages();

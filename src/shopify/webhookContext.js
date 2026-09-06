@@ -5,6 +5,7 @@ const defaultClient = require('./client');
 const { createInstallationClient } = require('./client');
 const { getInstallationStore } = require('./installations');
 const { normalizeShopDomain } = require('./security');
+const { refreshOfflineToken } = require('./embeddedAuth');
 
 async function resolveWebhookContext(req) {
   const shopDomain = normalizeShopDomain(req.headers['x-shopify-shop-domain']);
@@ -20,11 +21,12 @@ async function resolveWebhookContext(req) {
 
   const installation = await getInstallationStore().get(shopDomain);
   if (installation?.status === 'active') {
+    const currentInstallation = await refreshOfflineToken(installation);
     return {
       shopDomain,
-      installation,
-      client: createInstallationClient(installation),
-      logoUrl: installation.logoUrl || null,
+      installation: currentInstallation,
+      client: createInstallationClient(currentInstallation),
+      logoUrl: currentInstallation.logoUrl || null,
     };
   }
 

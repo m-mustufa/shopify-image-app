@@ -8,13 +8,16 @@ const { handleProduct, extractProductData } = require('./webhooks/product');
 const { verifyWhatsAppWebhook, handleWhatsAppWebhook } = require('./webhooks/whatsapp');
 const { privacyPolicy, termsOfService, dataDeletionInstructions } = require('./pages/legal');
 const { router: appRouter } = require('./pages/app');
-const { beginOAuth, oauthCallback } = require('./shopify/oauth');
 const { getInstallationStore } = require('./shopify/installations');
 const { normalizeShopDomain } = require('./shopify/security');
 const { resolveWebhookContext } = require('./shopify/webhookContext');
 
 const app = express();
-const asyncRoute = handler => (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next);
+
+app.use((_req, res, next) => {
+  res.set('Content-Security-Policy', 'frame-ancestors https://admin.shopify.com https://*.myshopify.com;');
+  next();
+});
 
 function isShopifyWebhook(pathname) {
   return pathname.startsWith('/webhooks/products/') || pathname.startsWith('/webhooks/shopify/');
@@ -36,9 +39,6 @@ app.get('/health', (_req, res) => res.json({ status: 'ok', mode: 'installable' }
 app.get('/privacy', (_req, res) => res.type('html').send(privacyPolicy()));
 app.get('/terms', (_req, res) => res.type('html').send(termsOfService()));
 app.get('/data-deletion', (_req, res) => res.type('html').send(dataDeletionInstructions()));
-
-app.get('/auth', asyncRoute(beginOAuth));
-app.get('/auth/callback', asyncRoute(oauthCallback));
 
 app.get('/webhooks/whatsapp', verifyWhatsAppWebhook);
 app.post('/webhooks/whatsapp', (req, res) => {

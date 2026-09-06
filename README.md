@@ -13,15 +13,16 @@ After the app is distributed, a merchant only needs to:
 3. Open the provided theme-editor link, enable the Social preview metadata app embed, and save the theme.
 4. Set Enable promo image on a product and save it.
 
-The app handles OAuth, offline-token storage, product webhooks, metafield definitions, image upload, and version metadata. Merchants don't create webhooks or metafield definitions manually.
+The app handles Shopify-managed installation, embedded ID-token authentication, encrypted offline-token storage, product webhooks, metafield definitions, image upload, and version metadata. Merchants don't create webhooks or metafield definitions manually.
 
 ## Processing flow
 
 ```text
 Shopify app installation
         |
-        +-- OAuth callback validates state and HMAC
-        +-- Offline token is encrypted and stored per shop
+        +-- App Bridge supplies a signed Shopify ID token
+        +-- The backend validates it and exchanges it for an offline token
+        +-- Access and refresh tokens are encrypted and stored per shop
         +-- Product metafield definitions are created
         +-- Merchant uploads a logo to their own Shopify Files
 
@@ -50,7 +51,7 @@ The checked-in [shopify.app.toml](shopify.app.toml) declares:
 - mandatory customer/shop privacy webhooks
 - the theme app extension under `extensions/social-preview`
 
-The OAuth callback is `/auth/callback`. Shopify's CLI applies app-specific webhook subscriptions consistently to installed shops when a version is deployed.
+Shopify manages installation and scope grants. The embedded app authenticates backend requests with App Bridge ID tokens, while Shopify's CLI applies app-specific webhook subscriptions consistently to installed shops when a version is deployed.
 
 The app creates these merchant-owned product metafield definitions during installation:
 

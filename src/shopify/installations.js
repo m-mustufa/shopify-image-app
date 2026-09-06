@@ -22,6 +22,8 @@ function normalizeInstallation(input) {
   return {
     shopDomain,
     accessToken: input.accessToken,
+    refreshToken: input.refreshToken || null,
+    expiresAt: input.expiresAt || null,
     scopes: input.scopes || '',
     logoUrl: input.logoUrl || null,
     publicDomain: input.publicDomain || null,
@@ -34,12 +36,20 @@ function normalizeInstallation(input) {
 function serializeInstallation(input) {
   const record = normalizeInstallation(input);
   if (!record.accessToken) throw new Error('Shopify offline access token is required');
-  return { ...record, accessToken: encryptSecret(record.accessToken, encryptionSecret()) };
+  return {
+    ...record,
+    accessToken: encryptSecret(record.accessToken, encryptionSecret()),
+    refreshToken: record.refreshToken ? encryptSecret(record.refreshToken, encryptionSecret()) : null,
+  };
 }
 
 function deserializeInstallation(record) {
   if (!record) return null;
-  return { ...record, accessToken: decryptSecret(record.accessToken, encryptionSecret()) };
+  return {
+    ...record,
+    accessToken: decryptSecret(record.accessToken, encryptionSecret()),
+    refreshToken: record.refreshToken ? decryptSecret(record.refreshToken, encryptionSecret()) : null,
+  };
 }
 
 class MemoryInstallationStore {
@@ -133,13 +143,17 @@ class PostgresInstallationStore {
         CREATE TABLE IF NOT EXISTS shop_installations (
           shop_domain TEXT PRIMARY KEY,
           access_token TEXT NOT NULL,
+          refresh_token TEXT,
+          expires_at TIMESTAMPTZ,
           scopes TEXT NOT NULL DEFAULT '',
           logo_url TEXT,
           public_domain TEXT,
           status TEXT NOT NULL DEFAULT 'active',
           installed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
           updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        )
+        );
+        ALTER TABLE shop_installations ADD COLUMN IF NOT EXISTS refresh_token TEXT;
+        ALTER TABLE shop_installations ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ
       `);
     }
     await this.ready;
@@ -150,18 +164,20 @@ class PostgresInstallationStore {
     const record = serializeInstallation(input);
     const result = await this.pool.query(`
       INSERT INTO shop_installations
-        (shop_domain, access_token, scopes, logo_url, public_domain, status, installed_at, updated_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+        (shop_domain, access_token, refresh_token, expires_at, scopes, logo_url, public_domain, status, installed_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
       ON CONFLICT (shop_domain) DO UPDATE SET
         access_token = EXCLUDED.access_token,
+        refresh_token = COALESCE(EXCLUDED.refresh_token, shop_installations.refresh_token),
+        expires_at = EXCLUDED.expires_at,
         scopes = EXCLUDED.scopes,
         logo_url = COALESCE(EXCLUDED.logo_url, shop_installations.logo_url),
         public_domain = COALESCE(EXCLUDED.public_domain, shop_installations.public_domain),
         status = EXCLUDED.status,
         updated_at = NOW()
       RETURNING *
-    `, [record.shopDomain, record.accessToken, record.scopes, record.logoUrl,
-      record.publicDomain, record.status, record.installedAt]);
+    `, [record.shopDomain, record.accessToken, record.refreshToken, record.expiresAt,
+      record.scopes, record.logoUrl, record.publicDomain, record.status, record.installedAt]);
     return deserializeInstallation(this.fromRow(result.rows[0]));
   }
 
@@ -170,6 +186,8 @@ class PostgresInstallationStore {
     return {
       shopDomain: row.shop_domain,
       accessToken: row.access_token,
+      refreshToken: row.refresh_token,
+      expiresAt: row.expires_at?.toISOString?.() || row.expires_at,
       scopes: row.scopes,
       logoUrl: row.logo_url,
       publicDomain: row.public_domain,
