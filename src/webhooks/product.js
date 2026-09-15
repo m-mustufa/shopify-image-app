@@ -110,6 +110,7 @@ async function handleProduct(product, context = {}) {
     const {
       _storedHash,
       _storedOgVersion,
+      _storedOgImage,
       _storedShareVersion,
       _shareMetafields,
       _notFound,
@@ -143,7 +144,8 @@ async function handleProduct(product, context = {}) {
     //    This breaks the infinite loop caused by our own metafield updates
     //    triggering a new products/update webhook.
     const inputHash = computeInputHash(product, cleanOverrides, { logoUrl: context.logoUrl });
-    if (_storedHash === inputHash) {
+    // Duplicated products can inherit processing state without an image URL.
+    if (_storedHash === inputHash && _storedOgImage && _storedOgVersion) {
       if (shareVersionChanged) {
         await updateProductShareVersion(product.id, shareVersion, context.client);
         console.log(`[product] share version updated — ${shareVersion}`);
@@ -160,7 +162,7 @@ async function handleProduct(product, context = {}) {
     console.log('[product] image buffer ready, size:', buffer.length);
 
     const ogVersion = computeOgVersion(buffer);
-    if (_storedOgVersion === ogVersion) {
+    if (_storedOgVersion === ogVersion && _storedOgImage) {
       await updateProductProcessingState(product.id, shareVersion, inputHash, context.client);
       console.log(`[product] processing state updated — share ${shareVersion}, input ${inputHash}`);
       console.log(`[product] skipping — generated image unchanged (OG version ${ogVersion})`);

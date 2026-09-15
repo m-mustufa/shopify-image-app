@@ -178,6 +178,7 @@ async function fetchProductOverrides(productId, client = defaultClient) {
     }
     result._storedHash = metafields.find(item => item.key === 'og_image_input_hash')?.value ?? null;
     result._storedOgVersion = metafields.find(item => item.key === 'og_version')?.value ?? null;
+    result._storedOgImage = metafields.find(item => item.key === 'og_image')?.value?.trim() || null;
     result._storedShareVersion = metafields.find(item => item.key === 'share_version')?.value ?? null;
     result._shareMetafields = metafields
       .filter(item => !APP_MANAGED_KEYS.has(item.key))

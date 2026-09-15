@@ -23,6 +23,7 @@ async function testProductIdempotency() {
   const expectedVersion = crypto.createHash('sha256').update(imageBuffer).digest('hex').slice(0, 12);
   let storedHash = null;
   let storedVersion = null;
+  let storedImage = null;
   let storedShareVersion = null;
   let generationCalls = 0;
   let uploadCalls = 0;
@@ -51,10 +52,15 @@ async function testProductIdempotency() {
       deal_enabled: dealEnabled,
       _storedHash: storedHash,
       _storedOgVersion: storedVersion,
+      _storedOgImage: storedImage,
       _storedShareVersion: storedShareVersion,
       _shareMetafields: [{ namespace: 'custom', key: 'deal_title', type: 'single_line_text_field', value: 'Deal' }],
     }),
-    updateProductMetafields: async (...args) => { metafieldCalls += 1; lastMetafieldArgs = args; },
+    updateProductMetafields: async (...args) => {
+      metafieldCalls += 1;
+      lastMetafieldArgs = args;
+      storedImage = args[1];
+    },
     updateProductProcessingState: async (...args) => {
       metafieldCalls += 1;
       lastProcessingArgs = args;
@@ -135,6 +141,7 @@ async function testProductIdempotency() {
   assert.strictEqual(uploadCalls, 2, 'default-enabled products generate for installed shops');
 
   dealEnabled = false;
+  storedImage = null;
   const callsBeforeDisabled = generationCalls;
   await handleProduct(product, { installation: { shopDomain: 'installed.myshopify.com' } });
   assert.strictEqual(generationCalls, callsBeforeDisabled, 'explicit False must prevent generation');
@@ -143,6 +150,19 @@ async function testProductIdempotency() {
   const disabledForInstalledShop = await handleProduct(product, { installation: { shopDomain: 'installed.myshopify.com' } });
   assert.strictEqual(disabledForInstalledShop, undefined);
   assert.strictEqual(uploadCalls, 2, 'unavailable overrides must not enable generation');
+
+  dealEnabled = true;
+  storedHash = computeInputHash(product, { deal_enabled: true });
+  storedVersion = expectedVersion;
+  storedImage = null;
+  const callsBeforeRepair = generationCalls;
+  const repaired = await handleProduct(product, { installation: { shopDomain: 'installed.myshopify.com' } });
+  assert.strictEqual(repaired.imageUrl, 'https://cdn.example/og.jpg');
+  assert.strictEqual(generationCalls, callsBeforeRepair + 1, 'copied input hash must not skip a missing image');
+  assert.strictEqual(uploadCalls, 3, 'copied image version must not skip uploading a missing image');
+  await handleProduct(product, { installation: { shopDomain: 'installed.myshopify.com' } });
+  assert.strictEqual(generationCalls, callsBeforeRepair + 1, 'repaired image must prevent repeat generation');
+  assert.strictEqual(uploadCalls, 3);
 }
 
 async function testDefaultPromoEnabled() {
@@ -153,6 +173,9 @@ async function testDefaultPromoEnabled() {
     post: async () => ({ data: { data: { product: { metafields: { nodes } } } } }),
   });
   assert.strictEqual((await read([])).deal_enabled, true, 'missing flag defaults to enabled');
+  assert.strictEqual((await read([]))._storedOgImage, null);
+  assert.strictEqual((await read([{ key: 'og_image', value: '   ' }]))._storedOgImage, null);
+  assert.strictEqual((await read([{ key: 'og_image', value: ' https://cdn.example/og.jpg ' }]))._storedOgImage, 'https://cdn.example/og.jpg');
   assert.strictEqual((await read([{ key: 'deal_enabled', value: 'true' }])).deal_enabled, true);
   assert.strictEqual((await read([{ key: 'deal_enabled', value: 'false' }])).deal_enabled, false);
   assert.strictEqual((await read([{ key: 'deal_enabled', value: '' }])).deal_enabled, true);
