@@ -127,12 +127,43 @@ async function testProductIdempotency() {
   assert.strictEqual(uploadCalls, 1);
   assert.strictEqual(metafieldCalls, 2);
 
-  dealEnabled = null;
+  dealEnabled = true;
+  storedHash = null;
   storedVersion = null;
   storedShareVersion = expectedShareVersion;
+  await handleProduct(product, { installation: { shopDomain: 'installed.myshopify.com' } });
+  assert.strictEqual(uploadCalls, 2, 'default-enabled products generate for installed shops');
+
+  dealEnabled = false;
+  const callsBeforeDisabled = generationCalls;
+  await handleProduct(product, { installation: { shopDomain: 'installed.myshopify.com' } });
+  assert.strictEqual(generationCalls, callsBeforeDisabled, 'explicit False must prevent generation');
+
+  dealEnabled = null;
   const disabledForInstalledShop = await handleProduct(product, { installation: { shopDomain: 'installed.myshopify.com' } });
   assert.strictEqual(disabledForInstalledShop, undefined);
-  assert.strictEqual(uploadCalls, 1, 'new installations require deal_enabled=true');
+  assert.strictEqual(uploadCalls, 2, 'unavailable overrides must not enable generation');
+}
+
+async function testDefaultPromoEnabled() {
+  const metafieldsPath = require.resolve('../src/shopify/metafields');
+  delete require.cache[metafieldsPath];
+  const { fetchProductOverrides } = require(metafieldsPath);
+  const read = nodes => fetchProductOverrides(123, {
+    post: async () => ({ data: { data: { product: { metafields: { nodes } } } } }),
+  });
+  assert.strictEqual((await read([])).deal_enabled, true, 'missing flag defaults to enabled');
+  assert.strictEqual((await read([{ key: 'deal_enabled', value: 'true' }])).deal_enabled, true);
+  assert.strictEqual((await read([{ key: 'deal_enabled', value: 'false' }])).deal_enabled, false);
+  assert.strictEqual((await read([{ key: 'deal_enabled', value: '' }])).deal_enabled, true);
+  const missing = await fetchProductOverrides(123, {
+    post: async () => ({ data: { data: { product: null } } }),
+  });
+  assert.strictEqual(missing._notFound, true);
+  const failed = await fetchProductOverrides(123, {
+    post: async () => { throw new Error('API unavailable'); },
+  });
+  assert.strictEqual(failed.deal_enabled, undefined, 'failed reads must not default to enabled');
 }
 
 async function testBatchedMetafields() {
@@ -195,6 +226,7 @@ async function testSafeProductImageTrimming() {
   await testHmacVerification();
   await testProductIdempotency();
   await testBatchedMetafields();
+  await testDefaultPromoEnabled();
   await testSafeProductImageTrimming();
   console.log('cache-busting tests passed');
 })().catch(err => {

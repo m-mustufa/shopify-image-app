@@ -57,7 +57,7 @@ The app creates these merchant-owned product metafield definitions during instal
 
 | Metafield | Type | Purpose |
 | --- | --- | --- |
-| `custom.deal_enabled` | Boolean | Enables generation for the product. |
+| `custom.deal_enabled` | Boolean | Defaults to enabled when unset. Set False to disable generation for the product. |
 | `custom.deal_badge_text` | Single line text | Badge override; `hide` removes it. |
 | `custom.deal_sale_price` | Single line text | Sale-price override; `hide` removes prices. |
 | `custom.deal_reg_price` | Single line text | Regular-price override. |
