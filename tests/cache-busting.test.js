@@ -245,12 +245,44 @@ async function testSafeProductImageTrimming() {
   assert.strictEqual(preserved.buffer, visualBackground);
 }
 
+async function testAutomaticNoPriceText() {
+  const { resolvePromoText } = require('../src/image/promoText');
+  const base = { title: 'Verizon: Free $5 Starbucks Gift Card!' };
+  for (const price of [undefined, null, '', '0', '0.00', 0]) {
+    const resolved = resolvePromoText({ ...base, price });
+    assert.strictEqual(resolved.deal_title, base.title);
+    assert.strictEqual(resolved.deal_badge_text, 'hide');
+  }
+  for (const price of ['0.01', '8.84', 149.99]) {
+    const product = { ...base, price };
+    assert.strictEqual(resolvePromoText(product), product, 'priced products must remain unchanged');
+  }
+  for (const override of [
+    { deal_title: 'Custom title' }, { deal_badge_text: 'FREE' },
+    { deal_sale_price: 'hide' }, { deal_sale_price: '5.00' }, { deal_reg_price: '10' },
+  ]) {
+    const product = { ...base, price: '0.00', ...override };
+    assert.strictEqual(resolvePromoText(product), product, 'explicit overrides must remain unchanged');
+  }
+
+  const { generateProductImage } = require('../src/image/generator');
+  const image = await sharp({ create: { width: 80, height: 100, channels: 3, background: '#4477aa' } }).png().toBuffer();
+  const product = { ...base, price: '0.00', image_buffer: image };
+  const automatic = await generateProductImage(product, { logoUrl: null });
+  const titleOnly = await generateProductImage({ ...product, deal_title: base.title, deal_badge_text: 'hide' }, { logoUrl: null });
+  assert.deepStrictEqual(automatic, titleOnly, 'automatic text must use the unchanged existing title-only renderer');
+  const metadata = await sharp(automatic).metadata();
+  assert.strictEqual(metadata.width, 1200);
+  assert.strictEqual(metadata.height, 628);
+}
+
 (async () => {
   await testHmacVerification();
   await testProductIdempotency();
   await testBatchedMetafields();
   await testDefaultPromoEnabled();
   await testSafeProductImageTrimming();
+  await testAutomaticNoPriceText();
   console.log('cache-busting tests passed');
 })().catch(err => {
   console.error(err);

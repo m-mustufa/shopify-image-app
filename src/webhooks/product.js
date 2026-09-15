@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const { resolvePromoText } = require('../image/promoText');
 
 const { generateProductImage }                          = require('../image/generator');
 const { uploadBufferToShopify }                         = require('../shopify/files');
@@ -23,6 +24,9 @@ function computeInputHash(product, overrides, brand = {}) {
     overrides.deal_title       ?? '',
     brand.logoUrl              ?? '',
   ];
+  const renderInput = { ...product, ...overrides };
+  // Invalidate only automatic no-price images; priced-product hashes stay unchanged.
+  if (resolvePromoText(renderInput) !== renderInput) parts.push('automatic-title-v1');
   return crypto.createHash('sha256').update(parts.join('|')).digest('hex').slice(0, 16);
 }
 

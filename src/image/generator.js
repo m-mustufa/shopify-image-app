@@ -7,6 +7,7 @@ const axios = require('axios');
 const path  = require('path');
 const fs    = require('fs');
 const { normalizeShopifyCdnUrl } = require('../shopify/security');
+const { resolvePromoText } = require('./promoText');
 
 // ─── Canvas ───────────────────────────────────────────────────────────────────
 const W = 1200;
@@ -212,7 +213,7 @@ async function generateProductImage(product, options = {}) {
     deal_sale_price  = null,
     deal_reg_price   = null,
     deal_title       = null,
-  } = product;
+  } = resolvePromoText(product);
 
   const composites = [];
 
