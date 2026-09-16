@@ -26,7 +26,7 @@ function computeInputHash(product, overrides, brand = {}) {
   ];
   const renderInput = { ...product, ...overrides };
   // Invalidate only automatic no-price images; priced-product hashes stay unchanged.
-  if (resolvePromoText(renderInput) !== renderInput) parts.push('automatic-title-v1');
+  if (resolvePromoText(renderInput) !== renderInput) parts.push('automatic-title-v2');
   return crypto.createHash('sha256').update(parts.join('|')).digest('hex').slice(0, 16);
 }
 

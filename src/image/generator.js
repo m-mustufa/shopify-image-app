@@ -322,6 +322,8 @@ module.exports = {
   generateProductImage,
   detectTrimmableBackground,
   trimPlainProductBackground,
+  wrapTitleOnlyText,
+  fitTitleOnlyText,
 };
 
 // ─── Image download ───────────────────────────────────────────────────────────
@@ -479,6 +481,33 @@ function wrapText(text, maxWidth, fontSize, maxLines = 3) {
   return lines;
 }
 
+// Full-width greedy wrapping keeps related words together in title-only mode.
+function wrapTitleOnlyText(text, maxWidth, fontSize) {
+  const font = fontBold();
+  const lines = [];
+  let current = '';
+  for (const word of text.trim().split(/\s+/)) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (textWidth(candidate, fontSize, font, 0) <= maxWidth) {
+      current = candidate;
+    } else {
+      if (current) lines.push(current);
+      current = word;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
+function fitTitleOnlyText(text, maxWidth, initialFontSize, targetLines, minFontSize = 36) {
+  for (let fontSize = initialFontSize; fontSize >= minFontSize; fontSize -= 1) {
+    const lines = wrapTitleOnlyText(text, maxWidth, fontSize);
+    const awkwardLineStart = lines.slice(1).some(line => /^(?:of|and|or|to|for|in|on|at|by)\b/i.test(line));
+    if (lines.length <= targetLines && !awkwardLineStart) return { fontSize, lines };
+  }
+  return { fontSize: minFontSize, lines: wrapTitleOnlyText(text, maxWidth, minFontSize) };
+}
+
 function formatCurrency(value, roundUp = false) {
   if (value === null || value === undefined || value === '') return '';
   const amount = Number(String(value).replace(/[^\d.-]/g, ''));
@@ -522,9 +551,14 @@ function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden
 
   // Title-only: auto-size font so up to 60 chars fits within the blue area
   // Short text → big font; longer text → smaller font, more lines allowed
-  const titleOnlyFS = dealTitleCapped.length <= 20 ? 80
-                    : dealTitleCapped.length <= 40 ? 64
-                    :                                50;
+  const titleOnlyInitialFS = dealTitleCapped.length <= 20 ? 80
+                           : dealTitleCapped.length <= 40 ? 64
+                           :                                50;
+  const titleOnlyTargetLines = dealTitleCapped.length <= 40 ? 3 : 6;
+  const titleOnlyLayout = titleOnlyMode
+    ? fitTitleOnlyText(dealTitleCapped, TITLE_ONLY_MAX_W, titleOnlyInitialFS, titleOnlyTargetLines)
+    : { fontSize: titleOnlyInitialFS, lines: [] };
+  const titleOnlyFS = titleOnlyLayout.fontSize;
   const titleOnlyLH = Math.round(titleOnlyFS * 1.3);
   const titleOnlyMaxLines = dealTitleCapped.length <= 20 ? 3
                            : dealTitleCapped.length <= 40 ? 5
@@ -532,8 +566,7 @@ function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden
   // Short text uses wider column (340px) so "Free $10" fits on one line at 80px
   const titleOnlyMaxW = TITLE_ONLY_MAX_W;
 
-  const titleOnlyLines = titleOnlyMode
-    ? (wrapText(dealTitleCapped, titleOnlyMaxW, titleOnlyFS, titleOnlyMaxLines) || []) : [];
+  const titleOnlyLines = titleOnlyLayout.lines.slice(0, titleOnlyMaxLines);
   const titleOnlyBlockH = titleOnlyLines.length > 0
     ? (titleOnlyLines.length - 1) * titleOnlyLH + titleOnlyFS : 0;
   const titleOnlyStartY = Math.floor((H - titleOnlyBlockH) / 2) + 15;
