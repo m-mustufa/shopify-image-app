@@ -265,10 +265,22 @@ async function testAutomaticNoPriceText() {
     assert.strictEqual(resolvePromoText(product), product, 'explicit overrides must remain unchanged');
   }
 
-  const { generateProductImage, fitTitleOnlyText } = require('../src/image/generator');
-  const fittedTitle = fitTitleOnlyText('Verizon: Free Hour Of TopGolf!', 350, 64, 3);
-  assert.deepStrictEqual(fittedTitle.lines, ['Verizon:', 'Free Hour Of', 'TopGolf!']);
-  assert(fittedTitle.fontSize < 64 && fittedTitle.fontSize >= 36);
+  const { generateProductImage, layoutTitleOnlyText } = require('../src/image/generator');
+  const topGolfTitle = layoutTitleOnlyText('Verizon: Free Hour Of TopGolf!');
+  assert.deepStrictEqual(topGolfTitle, {
+    fontSize: 56,
+    lines: ['Verizon:', 'Free Hour Of', 'TopGolf!'],
+  });
+  const starbucksTitle = layoutTitleOnlyText('Verizon: Free $5 Starbucks Gift Card!');
+  assert.deepStrictEqual(starbucksTitle, {
+    fontSize: 74,
+    lines: ['Verizon:', 'Free $5', 'Starbucks', 'Gift Card!'],
+  });
+  const ultaTitle = layoutTitleOnlyText('Verizon: Free $5 Ulta Beauty eGift Card!');
+  assert.deepStrictEqual(ultaTitle, {
+    fontSize: 62,
+    lines: ['Verizon:', 'Free $5', 'Ulta Beauty', 'eGift Card!'],
+  });
   const image = await sharp({ create: { width: 80, height: 100, channels: 3, background: '#4477aa' } }).png().toBuffer();
   const product = { ...base, price: '0.00', image_buffer: image };
   const automatic = await generateProductImage(product, { logoUrl: null });

@@ -324,6 +324,7 @@ module.exports = {
   trimPlainProductBackground,
   wrapTitleOnlyText,
   fitTitleOnlyText,
+  layoutTitleOnlyText,
 };
 
 // ─── Image download ───────────────────────────────────────────────────────────
@@ -508,6 +509,14 @@ function fitTitleOnlyText(text, maxWidth, initialFontSize, targetLines, minFontS
   return { fontSize: minFontSize, lines: wrapTitleOnlyText(text, maxWidth, minFontSize) };
 }
 
+function layoutTitleOnlyText(text, maxWidth = TITLE_ONLY_MAX_W) {
+  const initialFontSize = text.length <= 45 ? 80 : 50;
+  const targetLines = text.length <= 32 ? 3
+                    : text.length <= 45 ? 4
+                    :                     6;
+  return fitTitleOnlyText(text, maxWidth, initialFontSize, targetLines);
+}
+
 function formatCurrency(value, roundUp = false) {
   if (value === null || value === undefined || value === '') return '';
   const amount = Number(String(value).replace(/[^\d.-]/g, ''));
@@ -549,24 +558,14 @@ function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden
   // Apply 60-char cap before wrapping
   const dealTitleCapped = deal_title ? truncateText(deal_title.trim(), 60) : '';
 
-  // Title-only: auto-size font so up to 60 chars fits within the blue area
-  // Short text → big font; longer text → smaller font, more lines allowed
-  const titleOnlyInitialFS = dealTitleCapped.length <= 20 ? 80
-                           : dealTitleCapped.length <= 40 ? 64
-                           :                                50;
-  const titleOnlyTargetLines = dealTitleCapped.length <= 40 ? 3 : 6;
+  // Title-only: keep short titles to three lines, use larger four-line type for
+  // medium titles, and retain the existing six-line fallback for long titles.
   const titleOnlyLayout = titleOnlyMode
-    ? fitTitleOnlyText(dealTitleCapped, TITLE_ONLY_MAX_W, titleOnlyInitialFS, titleOnlyTargetLines)
-    : { fontSize: titleOnlyInitialFS, lines: [] };
+    ? layoutTitleOnlyText(dealTitleCapped)
+    : { fontSize: 80, lines: [] };
   const titleOnlyFS = titleOnlyLayout.fontSize;
   const titleOnlyLH = Math.round(titleOnlyFS * 1.3);
-  const titleOnlyMaxLines = dealTitleCapped.length <= 20 ? 3
-                           : dealTitleCapped.length <= 40 ? 5
-                           :                                6;
-  // Short text uses wider column (340px) so "Free $10" fits on one line at 80px
-  const titleOnlyMaxW = TITLE_ONLY_MAX_W;
-
-  const titleOnlyLines = titleOnlyLayout.lines.slice(0, titleOnlyMaxLines);
+  const titleOnlyLines = titleOnlyLayout.lines;
   const titleOnlyBlockH = titleOnlyLines.length > 0
     ? (titleOnlyLines.length - 1) * titleOnlyLH + titleOnlyFS : 0;
   const titleOnlyStartY = Math.floor((H - titleOnlyBlockH) / 2) + 15;
