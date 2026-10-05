@@ -215,7 +215,7 @@ async function fetchProductOverrides(productId, client = defaultClient) {
     for (const key of OVERRIDE_KEYS) {
       const metafield = metafields.find(item => item.key === key);
       result[key] = key === 'deal_enabled'
-        ? parseBoolean(metafield?.value)
+        ? (parseBoolean(metafield?.value) ?? true)
         : metafield?.value?.trim() || null;
     }
     result._storedHash = metafields.find(item => item.key === 'og_image_input_hash')?.value ?? null;

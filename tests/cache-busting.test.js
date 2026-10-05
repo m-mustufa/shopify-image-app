@@ -23,7 +23,7 @@ async function testProductIdempotency() {
   const expectedVersion = crypto.createHash('sha256').update(imageBuffer).digest('hex').slice(0, 12);
   let storedHash = null;
   let storedVersion = null;
-  let storedOgImage = null;
+  let storedImage = null;
   let storedShareVersion = null;
   let generationCalls = 0;
   let uploadCalls = 0;
@@ -52,11 +52,15 @@ async function testProductIdempotency() {
       deal_enabled: dealEnabled,
       _storedHash: storedHash,
       _storedOgVersion: storedVersion,
-      _storedOgImage: storedOgImage,
+      _storedOgImage: storedImage,
       _storedShareVersion: storedShareVersion,
       _shareMetafields: [{ namespace: 'custom', key: 'deal_title', type: 'single_line_text_field', value: 'Deal' }],
     }),
-    updateProductMetafields: async (...args) => { metafieldCalls += 1; lastMetafieldArgs = args; storedOgImage = args[1]; },
+    updateProductMetafields: async (...args) => {
+      metafieldCalls += 1;
+      lastMetafieldArgs = args;
+      storedImage = args[1];
+    },
     updateProductProcessingState: async (...args) => {
       metafieldCalls += 1;
       lastProcessingArgs = args;
@@ -131,31 +135,67 @@ async function testProductIdempotency() {
 
   // og_image cleared outside the app (stale admin save): same hash and image
   // version must still regenerate and write the image back.
-  storedOgImage = null;
+  storedImage = null;
   const healed = await handleProduct(product);
   assert.strictEqual(healed.imageUrl, 'https://cdn.example/og.jpg');
   assert.strictEqual(generationCalls, 3, 'missing og_image must bypass the input-hash skip');
   assert.strictEqual(uploadCalls, 2, 'missing og_image must bypass the image-version skip');
-  assert.strictEqual(storedOgImage, 'https://cdn.example/og.jpg');
+  assert.strictEqual(storedImage, 'https://cdn.example/og.jpg');
 
-  dealEnabled = null;
+  dealEnabled = true;
   storedHash = null;
   storedVersion = null;
   storedShareVersion = expectedShareVersion;
-  const unsetForInstalledShop = await handleProduct(product, { installation: { shopDomain: 'installed.myshopify.com' } });
-  assert.strictEqual(unsetForInstalledShop.ogVersion, expectedVersion);
-  assert.strictEqual(uploadCalls, 3, 'installed shops generate by default when deal_enabled is unset');
+  await handleProduct(product, { installation: { shopDomain: 'installed.myshopify.com' } });
+  assert.strictEqual(uploadCalls, 3, 'default-enabled products generate for installed shops');
 
   dealEnabled = false;
-  storedHash = null;
-  storedVersion = null;
+  storedImage = null;
+  const callsBeforeDisabled = generationCalls;
+  await handleProduct(product, { installation: { shopDomain: 'installed.myshopify.com' } });
+  assert.strictEqual(generationCalls, callsBeforeDisabled, 'explicit False must prevent generation');
+
+  dealEnabled = null;
   const disabledForInstalledShop = await handleProduct(product, { installation: { shopDomain: 'installed.myshopify.com' } });
   assert.strictEqual(disabledForInstalledShop, undefined);
-  assert.strictEqual(uploadCalls, 3, 'deal_enabled=false must skip generation');
+  assert.strictEqual(uploadCalls, 3, 'unavailable overrides must not enable generation');
 
-  const disabledForLegacyShop = await handleProduct(product);
-  assert.strictEqual(disabledForLegacyShop, undefined);
-  assert.strictEqual(uploadCalls, 3, 'deal_enabled=false must skip generation without an installation');
+  dealEnabled = true;
+  storedHash = computeInputHash(product, { deal_enabled: true });
+  storedVersion = expectedVersion;
+  storedImage = null;
+  const callsBeforeRepair = generationCalls;
+  const repaired = await handleProduct(product, { installation: { shopDomain: 'installed.myshopify.com' } });
+  assert.strictEqual(repaired.imageUrl, 'https://cdn.example/og.jpg');
+  assert.strictEqual(generationCalls, callsBeforeRepair + 1, 'copied input hash must not skip a missing image');
+  assert.strictEqual(uploadCalls, 4, 'copied image version must not skip uploading a missing image');
+  await handleProduct(product, { installation: { shopDomain: 'installed.myshopify.com' } });
+  assert.strictEqual(generationCalls, callsBeforeRepair + 1, 'repaired image must prevent repeat generation');
+  assert.strictEqual(uploadCalls, 4);
+}
+
+async function testDefaultPromoEnabled() {
+  const metafieldsPath = require.resolve('../src/shopify/metafields');
+  delete require.cache[metafieldsPath];
+  const { fetchProductOverrides } = require(metafieldsPath);
+  const read = nodes => fetchProductOverrides(123, {
+    post: async () => ({ data: { data: { product: { metafields: { nodes } } } } }),
+  });
+  assert.strictEqual((await read([])).deal_enabled, true, 'missing flag defaults to enabled');
+  assert.strictEqual((await read([]))._storedOgImage, null);
+  assert.strictEqual((await read([{ key: 'og_image', value: '   ' }]))._storedOgImage, null);
+  assert.strictEqual((await read([{ key: 'og_image', value: ' https://cdn.example/og.jpg ' }]))._storedOgImage, 'https://cdn.example/og.jpg');
+  assert.strictEqual((await read([{ key: 'deal_enabled', value: 'true' }])).deal_enabled, true);
+  assert.strictEqual((await read([{ key: 'deal_enabled', value: 'false' }])).deal_enabled, false);
+  assert.strictEqual((await read([{ key: 'deal_enabled', value: '' }])).deal_enabled, true);
+  const missing = await fetchProductOverrides(123, {
+    post: async () => ({ data: { data: { product: null } } }),
+  });
+  assert.strictEqual(missing._notFound, true);
+  const failed = await fetchProductOverrides(123, {
+    post: async () => { throw new Error('API unavailable'); },
+  });
+  assert.strictEqual(failed.deal_enabled, undefined, 'failed reads must not default to enabled');
 }
 
 async function testBatchedMetafields() {
@@ -214,11 +254,59 @@ async function testSafeProductImageTrimming() {
   assert.strictEqual(preserved.buffer, visualBackground);
 }
 
+async function testAutomaticNoPriceText() {
+  const { resolvePromoText } = require('../src/image/promoText');
+  const base = { title: 'Verizon: Free $5 Starbucks Gift Card!' };
+  for (const price of [undefined, null, '', '0', '0.00', 0]) {
+    const resolved = resolvePromoText({ ...base, price });
+    assert.strictEqual(resolved.deal_title, base.title);
+    assert.strictEqual(resolved.deal_badge_text, 'hide');
+  }
+  for (const price of ['0.01', '8.84', 149.99]) {
+    const product = { ...base, price };
+    assert.strictEqual(resolvePromoText(product), product, 'priced products must remain unchanged');
+  }
+  for (const override of [
+    { deal_title: 'Custom title' }, { deal_badge_text: 'FREE' },
+    { deal_sale_price: 'hide' }, { deal_sale_price: '5.00' }, { deal_reg_price: '10' },
+  ]) {
+    const product = { ...base, price: '0.00', ...override };
+    assert.strictEqual(resolvePromoText(product), product, 'explicit overrides must remain unchanged');
+  }
+
+  const { generateProductImage, layoutTitleOnlyText } = require('../src/image/generator');
+  const topGolfTitle = layoutTitleOnlyText('Verizon: Free Hour Of TopGolf!');
+  assert.deepStrictEqual(topGolfTitle, {
+    fontSize: 56,
+    lines: ['Verizon:', 'Free Hour Of', 'TopGolf!'],
+  });
+  const starbucksTitle = layoutTitleOnlyText('Verizon: Free $5 Starbucks Gift Card!');
+  assert.deepStrictEqual(starbucksTitle, {
+    fontSize: 74,
+    lines: ['Verizon:', 'Free $5', 'Starbucks', 'Gift Card!'],
+  });
+  const ultaTitle = layoutTitleOnlyText('Verizon: Free $5 Ulta Beauty eGift Card!');
+  assert.deepStrictEqual(ultaTitle, {
+    fontSize: 62,
+    lines: ['Verizon:', 'Free $5', 'Ulta Beauty', 'eGift Card!'],
+  });
+  const image = await sharp({ create: { width: 80, height: 100, channels: 3, background: '#4477aa' } }).png().toBuffer();
+  const product = { ...base, price: '0.00', image_buffer: image };
+  const automatic = await generateProductImage(product, { logoUrl: null });
+  const titleOnly = await generateProductImage({ ...product, deal_title: base.title, deal_badge_text: 'hide' }, { logoUrl: null });
+  assert.deepStrictEqual(automatic, titleOnly, 'automatic text must use the unchanged existing title-only renderer');
+  const metadata = await sharp(automatic).metadata();
+  assert.strictEqual(metadata.width, 1200);
+  assert.strictEqual(metadata.height, 628);
+}
+
 (async () => {
   await testHmacVerification();
   await testProductIdempotency();
   await testBatchedMetafields();
+  await testDefaultPromoEnabled();
   await testSafeProductImageTrimming();
+  await testAutomaticNoPriceText();
   console.log('cache-busting tests passed');
 })().catch(err => {
   console.error(err);

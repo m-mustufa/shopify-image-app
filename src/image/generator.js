@@ -7,6 +7,7 @@ const axios = require('axios');
 const path  = require('path');
 const fs    = require('fs');
 const { normalizeShopifyCdnUrl } = require('../shopify/security');
+const { resolvePromoText } = require('./promoText');
 
 // ─── Canvas ───────────────────────────────────────────────────────────────────
 const W = 1200;
@@ -229,7 +230,7 @@ function normalizeDealOverrides(product) {
 
 async function generateProductImage(rawProduct, options = {}) {
   console.log('[generator] entered generateProductImage');
-  const product = normalizeDealOverrides(rawProduct);
+  const product = normalizeDealOverrides(resolvePromoText(rawProduct));
 
   console.log('[generator] step 1: parsing product data');
   const {
@@ -361,6 +362,9 @@ module.exports = {
   svgPath,
   truncateText,
   wrapText,
+  wrapTitleOnlyText,
+  fitTitleOnlyText,
+  layoutTitleOnlyText,
 };
 
 // ─── Image download ───────────────────────────────────────────────────────────
@@ -518,6 +522,41 @@ function wrapText(text, maxWidth, fontSize, maxLines = 3) {
   return lines;
 }
 
+// Full-width greedy wrapping keeps related words together in title-only mode.
+function wrapTitleOnlyText(text, maxWidth, fontSize) {
+  const font = fontBold();
+  const lines = [];
+  let current = '';
+  for (const word of text.trim().split(/\s+/)) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (textWidth(candidate, fontSize, font, 0) <= maxWidth) {
+      current = candidate;
+    } else {
+      if (current) lines.push(current);
+      current = word;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
+function fitTitleOnlyText(text, maxWidth, initialFontSize, targetLines, minFontSize = 36) {
+  for (let fontSize = initialFontSize; fontSize >= minFontSize; fontSize -= 1) {
+    const lines = wrapTitleOnlyText(text, maxWidth, fontSize);
+    const awkwardLineStart = lines.slice(1).some(line => /^(?:of|and|or|to|for|in|on|at|by)\b/i.test(line));
+    if (lines.length <= targetLines && !awkwardLineStart) return { fontSize, lines };
+  }
+  return { fontSize: minFontSize, lines: wrapTitleOnlyText(text, maxWidth, minFontSize) };
+}
+
+function layoutTitleOnlyText(text, maxWidth = TITLE_ONLY_MAX_W) {
+  const initialFontSize = text.length <= 45 ? 80 : 50;
+  const targetLines = text.length <= 32 ? 3
+                    : text.length <= 45 ? 4
+                    :                     6;
+  return fitTitleOnlyText(text, maxWidth, initialFontSize, targetLines);
+}
+
 function formatCurrency(value, roundUp = false) {
   if (value === null || value === undefined || value === '') return '';
   const amount = Number(String(value).replace(/[^\d.-]/g, ''));
@@ -559,20 +598,14 @@ function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden
   // Apply 60-char cap before wrapping
   const dealTitleCapped = deal_title ? truncateText(deal_title.trim(), 60) : '';
 
-  // Title-only: auto-size font so up to 60 chars fits within the blue area
-  // Short text → big font; longer text → smaller font, more lines allowed
-  const titleOnlyFS = dealTitleCapped.length <= 20 ? 80
-                    : dealTitleCapped.length <= 40 ? 64
-                    :                                50;
+  // Title-only: keep short titles to three lines, use larger four-line type for
+  // medium titles, and retain the existing six-line fallback for long titles.
+  const titleOnlyLayout = titleOnlyMode
+    ? layoutTitleOnlyText(dealTitleCapped)
+    : { fontSize: 80, lines: [] };
+  const titleOnlyFS = titleOnlyLayout.fontSize;
   const titleOnlyLH = Math.round(titleOnlyFS * 1.3);
-  const titleOnlyMaxLines = dealTitleCapped.length <= 20 ? 3
-                           : dealTitleCapped.length <= 40 ? 5
-                           :                                6;
-  // Short text uses wider column (340px) so "Free $10" fits on one line at 80px
-  const titleOnlyMaxW = TITLE_ONLY_MAX_W;
-
-  const titleOnlyLines = titleOnlyMode
-    ? (wrapText(dealTitleCapped, titleOnlyMaxW, titleOnlyFS, titleOnlyMaxLines) || []) : [];
+  const titleOnlyLines = titleOnlyLayout.lines;
   const titleOnlyBlockH = titleOnlyLines.length > 0
     ? (titleOnlyLines.length - 1) * titleOnlyLH + titleOnlyFS : 0;
   const titleOnlyStartY = Math.floor((H - titleOnlyBlockH) / 2) + 15;

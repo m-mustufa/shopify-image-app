@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const { resolvePromoText } = require('../image/promoText');
 
 const { generateProductImage }                          = require('../image/generator');
 const { uploadBufferToShopify }                         = require('../shopify/files');
@@ -91,6 +92,9 @@ function computeInputHash(product, overrides, brand = {}) {
     brand.logoUrl              ?? '',
   ];
   if (brand.roundup) parts.push(JSON.stringify(roundupInputSnapshot(brand.roundup)));
+  const renderInput = { ...product, ...overrides };
+  // Invalidate only automatic no-price images; priced-product hashes stay unchanged.
+  if (resolvePromoText(renderInput) !== renderInput) parts.push('automatic-title-v3');
   return crypto.createHash('sha256').update(parts.join('|')).digest('hex').slice(0, 16);
 }
 
@@ -212,11 +216,15 @@ async function handleProduct(product, context = {}) {
     );
     const shareVersionChanged = Boolean(shareVersion && _storedShareVersion !== shareVersion);
 
-    // On by default for every shop: only an explicit "false" opts a product out.
-    const generationDisabled = !isRoundup && cleanOverrides.deal_enabled === false;
+    // fetchProductOverrides defaults an unset flag to true, so only an explicit
+    // "false" opts a product out. A failed read leaves it undefined; installed
+    // shops then skip rather than render an image without the overrides.
+    const generationDisabled = context.installation
+      ? cleanOverrides.deal_enabled === undefined || (!isRoundup && cleanOverrides.deal_enabled !== true)
+      : !isRoundup && cleanOverrides.deal_enabled === false;
     if (generationDisabled) {
       if (shareVersionChanged) await updateProductShareVersion(product.id, shareVersion, context.client);
-      console.log('[product] skipping - deal_enabled is false');
+      console.log(`[product] skipping - deal_enabled is ${cleanOverrides.deal_enabled}`);
       return;
     }
 
@@ -227,10 +235,10 @@ async function handleProduct(product, context = {}) {
       logoUrl: context.logoUrl,
       roundup,
     });
-    // A missing og_image (e.g. cleared by a stale admin save) must not be
-    // masked by a matching hash or image version, or the product stays stuck.
+    // A missing og_image (stale admin save, or a duplicated product that copied
+    // processing state without an image) must not be masked by a matching hash.
     const hasStoredImage = Boolean(_storedOgImage);
-    if (_storedHash === inputHash && hasStoredImage) {
+    if (_storedHash === inputHash && hasStoredImage && _storedOgVersion) {
       if (shareVersionChanged) {
         await updateProductShareVersion(product.id, shareVersion, context.client);
         console.log(`[product] share version updated — ${shareVersion}`);
