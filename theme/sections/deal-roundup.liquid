@@ -1,0 +1,217 @@
+{%- comment -%}
+  Deal Roundup
+  Used by templates/product.deal-roundup.json
+{%- endcomment -%}
+
+{%- liquid
+  assign roundup_title = product.metafields.custom.roundup_page_title.value | strip
+  assign desc_check = product.description | strip_html | strip
+  assign deals = product.metafields.custom.roundup_deals.value
+  assign btn_text = product.metafields.custom.roundup_button_text.value | strip
+  assign btn_url = product.metafields.custom.roundup_button_url.value
+  assign vendor_logos = shop.metaobjects.vendor_logo.values
+  assign share_version = product.metafields.custom.share_version.value | strip
+  assign roundup_share_title = roundup_title | default: product.title
+  assign roundup_share_path = product.url
+  if share_version != blank
+    assign roundup_share_path = roundup_share_path | append: '?pv=' | append: share_version
+  endif
+
+  assign outlink_active = true
+  if shop.metafields.outlink['isInactive'] != blank and shop.metafields.outlink['isInactive'] != 0
+    assign outlink_active = false
+  endif
+-%}
+
+<section
+  class="dr"
+  style="--dr-accent: {{ settings.color_primary_color }}; --dr-accent-text: {{ settings.color_primary_button_text }}; --dr-badge: {{ settings.color_sale_badge }};"
+>
+  <header class="dr-head">
+    {%- if roundup_title != blank -%}
+      <h1 class="dr-h1">{{ roundup_title }}</h1>
+    {%- else -%}
+      <h1 class="visually-hidden">{{ product.title }}</h1>
+    {%- endif -%}
+
+    {%- if desc_check != blank -%}
+      <div class="dr-desc rte">{{ product.description }}</div>
+    {%- endif -%}
+
+    <p class="dr-meta-line">Posted on: {{ product.published_at | time_tag: format: 'date_at_time' }}</p>
+    <p class="dr-meta-line">Links may earn us commission, <a href="/pages/Advertiser-Disclosure">advertiser disclosure.</a></p>
+  </header>
+
+  {%- if deals != blank and deals.size > 0 -%}
+    <ul class="dr-list" role="list">
+      {%- for p in deals -%}
+        {%- if p == blank -%}{%- continue -%}{%- endif -%}
+
+        {%- liquid
+          assign price = p.price
+          assign compare = p.compare_at_price
+          assign disc = 0
+          if compare > price
+            assign disc = compare | minus: price | times: 100.0 | divided_by: compare | round
+          endif
+
+          assign expired = false
+          if p.metafields.custom.deal_expired.value == true
+            assign expired = true
+          endif
+
+          assign inst = p.metafields.custom.instructions.value | strip
+
+          assign img_href = p.url
+          assign img_external = false
+          if outlink_active and p.metafields.outlink['isOutlink'] == 1 and p.metafields.outlink['url'] != blank
+            assign img_href = p.metafields.outlink['url']
+            assign img_external = true
+          endif
+          assign deal_btn_text = p.metafields.outlink['linktext'] | strip | default: 'Get Deal'
+
+          assign img_loading = 'lazy'
+          if forloop.index <= 2
+            assign img_loading = 'eager'
+          endif
+
+          assign img_alt = p.featured_image.alt | default: p.title
+          assign vendor_key = p.vendor | downcase | strip
+          assign logo_found = false
+        -%}
+
+        <li class="dr-card{% if expired %} is-expired{% endif %}">
+          <a
+            class="dr-media"
+            href="{{ img_href }}"
+            {% if img_external %}target="_blank" rel="sponsored nofollow noopener"{% endif %}
+            aria-label="{% if img_external %}Get deal: {% endif %}{{ p.title | escape }}"
+          >
+            {%- if p.featured_image -%}
+              {{ p.featured_image | image_url: width: 480 | image_tag: loading: img_loading, widths: '160, 240, 320, 480', sizes: '(min-width: 750px) 140px, 112px', alt: img_alt, class: 'dr-img' }}
+            {%- endif -%}
+
+            {%- if disc > 0 and expired == false -%}
+              <span class="dr-badge">-{{ disc }}%</span>
+            {%- endif -%}
+
+            {%- if expired -%}
+              <span class="dr-stamp"><span>Expired</span></span>
+            {%- endif -%}
+          </a>
+
+          <div class="dr-body">
+            <a class="dr-title" href="{{ p.url }}">{{ p.title }}</a>
+
+            {%- if p.vendor != blank -%}
+              <div class="dr-store-row">
+                {%- for logo in vendor_logos -%}
+                  {%- assign logo_key = logo.name | downcase | strip -%}
+                  {%- if logo_key == vendor_key -%}
+                    {{ logo.vendor_image | image_url: height: 48 | image_tag: class: 'dr-logo', alt: p.vendor, loading: 'lazy' }}
+                    {%- assign logo_found = true -%}
+                    {%- break -%}
+                  {%- endif -%}
+                {%- endfor -%}
+                {%- unless logo_found -%}
+                  <span class="dr-store">{{ p.vendor }}</span>
+                {%- endunless -%}
+              </div>
+            {%- endif -%}
+
+            {%- if price > 0 or compare > price -%}
+              <div class="dr-prices">
+                <span class="dr-sale">{{ price | money }}</span>
+                {%- if compare > price -%}
+                  <s class="dr-reg"><span class="visually-hidden">Regular price </span>{{ compare | money }}</s>
+                {%- endif -%}
+              </div>
+            {%- endif -%}
+
+            <p class="dr-date">Posted on: {{ p.published_at | time_tag: format: 'date_at_time' }}</p>
+
+            {%- comment -%} Same destination as the deal page's own Get Deal button (Outlink). {%- endcomment -%}
+            <a
+              class="dr-deal"
+              href="{{ img_href }}"
+              {% if img_external %}target="_blank" rel="sponsored nofollow noopener"{% endif %}
+            >
+              {{- deal_btn_text -}}
+            </a>
+          </div>
+
+          {%- if inst != blank -%}
+            <p class="dr-note">{{ inst | escape | newline_to_br }}</p>
+          {%- endif -%}
+        </li>
+      {%- endfor -%}
+    </ul>
+  {%- elsif request.design_mode -%}
+    <p class="dr-empty">No deals selected yet. Add them in the product's "Roundup: Deals" field.</p>
+  {%- endif -%}
+
+  {%- if btn_url != blank -%}
+    <div class="dr-cta">
+      <a class="dr-btn" href="{{ btn_url }}" target="_blank" rel="sponsored nofollow noopener">
+        {{- btn_text | default: 'Get Deal' -}}
+      </a>
+    </div>
+  {%- endif -%}
+
+  <div class="dr-share">
+    {% include 'social-sharing', share_title: roundup_share_title, share_permalink: roundup_share_path, share_image: product, whatsapp_url: section.settings.whatsapp_url, disable_shortener: true %}
+  </div>
+</section>
+
+<style>
+  .dr { max-width: 980px; margin: 0 auto; padding: 8px 0 28px; }
+  .dr-head { margin: 0 0 16px; }
+  .dr-h1 { font-size: clamp(22px, 5vw, 30px); line-height: 1.2; margin: 0 0 8px; }
+  .dr-desc { font-size: 16px; line-height: 1.5; color: #444; margin: 0 0 10px; max-width: 65ch; }
+  .dr-desc p:last-child { margin-bottom: 0; }
+  .dr-meta-line { font-size: 13px; color: #6b6b6b; margin: 0; }
+  .dr-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  @media (min-width: 750px) { .dr-list { grid-template-columns: 1fr 1fr; gap: 16px; } }
+  .dr-card { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 12px; padding: 12px; background: #fff; border: 1px solid #e3e5ea; border-radius: 10px; }
+  @media (min-width: 750px) { .dr-card { grid-template-columns: 140px minmax(0, 1fr); } }
+  .dr-media { position: relative; display: block; aspect-ratio: 1 / 1; border-radius: 6px; overflow: hidden; background: #f6f7f9; }
+  .dr-img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .dr-badge { position: absolute; top: 6px; left: 6px; padding: 5px 7px; border-radius: 4px; background: var(--dr-badge); color: #fff; font-size: 13px; font-weight: 700; line-height: 1; }
+  .dr-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .dr-title { color: #1f1f1f; font-size: 15px; font-weight: 600; line-height: 1.35; text-decoration: none; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .dr-title:hover { text-decoration: underline; }
+  .dr-store-row { display: flex; align-items: center; min-height: 20px; }
+  .dr-logo { display: block; height: 18px; width: auto; }
+  .dr-store { font-size: 13px; font-weight: 600; color: #555; }
+  .dr-prices { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+  .dr-sale { font-size: 20px; font-weight: 800; color: #0a8a2a; line-height: 1.1; }
+  .dr-reg { font-size: 14px; color: #8a8f98; }
+  .dr-date { font-size: 12px; color: #6b6b6b; margin: 0; }
+  .dr-deal { align-self: flex-end; margin-top: auto; padding: 8px 16px; border-radius: 999px; background: #0a8a2a; color: #fff; font-size: 13px; font-weight: 800; letter-spacing: .03em; line-height: 1.2; text-transform: uppercase; text-decoration: none; white-space: nowrap; }
+  .dr-deal:hover { filter: brightness(1.1); color: #fff; }
+  .dr-note { grid-column: 1 / -1; margin: 0; padding: 8px 10px; border-radius: 4px; background: #fff8e1; border-left: 3px solid #f5b400; color: #3d3200; font-size: 14px; line-height: 1.4; }
+  .dr-card.is-expired .dr-img,
+  .dr-card.is-expired .dr-body { opacity: .55; filter: grayscale(1); }
+  .dr-stamp { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .dr-stamp span { transform: rotate(-14deg); padding: 3px 8px; border: 2px solid #c62828; border-radius: 3px; background: rgba(255, 255, 255, .9); color: #c62828; font-size: 14px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+  .dr-cta { margin: 22px 0 8px; }
+  .dr-btn { display: block; box-sizing: border-box; width: 100%; max-width: 420px; margin: 0 auto; padding: 14px 18px; border-radius: 8px; background: var(--dr-accent); color: var(--dr-accent-text); font-size: 16px; font-weight: 700; text-align: center; text-decoration: none; }
+  .dr-btn:hover { filter: brightness(1.08); }
+  .dr-share { margin-top: 16px; }
+  .dr-empty { padding: 16px; border: 1px dashed #c9ccd3; border-radius: 8px; color: #555; }
+  .dr a:focus-visible { outline: 2px solid var(--dr-accent); outline-offset: 2px; }
+</style>
+
+{% schema %}
+{
+  "name": "Deal roundup",
+  "settings": [
+    {
+      "type": "text",
+      "id": "whatsapp_url",
+      "label": "WhatsApp group link (used in share text)",
+      "default": "https://chat.whatsapp.com/D3wIBxGndgD3LplNW34T7i"
+    }
+  ]
+}
+{% endschema %}

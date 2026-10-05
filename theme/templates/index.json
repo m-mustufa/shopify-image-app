@@ -1,0 +1,27 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "redirect": {
+      "type": "main-index-redirect",
+      "settings": {}
+    },
+    "1548707464220": {
+      "type": "featured-products",
+      "settings": {
+        "title": "NEW DEALS"
+      }
+    }
+  },
+  "order": [
+    "redirect",
+    "1548707464220"
+  ]
+}

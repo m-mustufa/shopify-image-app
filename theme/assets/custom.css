@@ -1,0 +1,724 @@
+.gridproduct > * {
+  width: 100%;
+  max-width: 100%;
+}
+
+@media (max-width: 767px) {
+  .product-single__featured-image-wrapper {
+    margin: 40px auto !important;
+    width: 85% !important;
+    margin-bottom: 0px !important;
+  }
+  .product-single__featured-image-wrapper img {
+    height: 90% !important;
+    object-fit: contain;
+  }
+}
+.product-single__featured-image-wrapper {
+  margin: 40px auto !important;
+  width: 90% !important;
+  margin-bottom: 0px !important;
+}
+.product-single__featured-image-wrapper img {
+  height: 95% !important;
+  width: 95% !important;
+  object-fit: contain;
+}
+
+@media (min-width: 768px) {
+  #shopify-section-collection-template .product__image {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    top: 0 !important;
+    transform: unset !important;
+  }
+  .product-single__photo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .product-single__photos {
+    height: 100%;
+    width: 100%;
+  }
+  .product-single__photos img {
+    height: 100%;
+    width: 100%;
+    object-fit: contain;
+    max-height: auto !important;
+    max-width: auto !important;
+  }
+  #ProductImage-29240260755542 {
+    max-width: 400px !important;
+    max-height: 400px !important;
+    height: 400px;
+    width: 400px;
+  }
+  .supports-js .product-single__photo {
+    max-height: 100% !important;
+    max-width: 100% !important;
+  }
+  .page-content {
+    padding-top: 110px;
+  }
+}
+a.product__image-wrapper {
+  padding-top: 100% !important;
+}
+.product__image {
+  width: 100%;
+  object-fit: contain;
+  height: 100%;
+}
+#shopify-section-collection-template .product__image-wrapper {
+  display: block !important;
+}
+.product-single__photos {
+  padding-top: 100% !important;
+  display: flex;
+  align-items: center;
+}
+@media (max-width: 749px) {
+  #ProductImage-29346855911510 {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain;
+  }
+}
+section.related-products {
+  margin: 50px;
+}
+/* amazon logo - improved styling for general product */
+.product__vendor img {
+  display: block;
+  max-width: 60px; /* prevents stretching on wider screens */
+  height: auto;
+  padding-top: 10px;
+  margin: 0 auto; /* top margin for space, auto centers */
+  padding-bottom: 5px; /* optional spacing below */
+  object-fit: contain; /* ensures aspect ratio */
+}
+
+.product__vendor-pdp {
+  text-align: left; /* make sure container aligns content to left */
+}
+
+.product__vendor-pdp img {
+  display: block;
+  max-width: 60px;
+  height: auto;
+  margin: 10px 0 0 0; /* top margin only */
+  padding-bottom: 5px;
+  object-fit: contain;
+}
+
+.product-single__meta .product__vendor-pdp img {
+  margin: 10px auto 0;
+}
+
+/* Wrapper styling */
+div[style*='font-family: Arial'] {
+  /* background-color: #fff3f3;
+  border: 1px solid #ffc2c2; */
+  border-radius: 8px;
+  padding: 16px;
+  /* margin: 20px 0; */
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+
+/* Headline styling */
+div[style*='font-family: Arial'] strong {
+  font-size: 18px;
+  margin-right: 6px;
+}
+
+/* Message text */
+div[style*='font-family: Arial'] span {
+  font-size: 16px;
+}
+
+/* Social button styling */
+div[style*='font-family: Arial'] a {
+  padding: 8px 16px;
+  border-radius: 20px;
+  text-decoration: none;
+  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 5px 0;
+  transition: background-color 0.3s ease;
+}
+
+/* WhatsApp */
+div[style*='font-family: Arial'] a[href*='whatsapp'] {
+  padding: 0 !important;
+  /*background-color: #25D366;
+  color: white;*/
+}
+
+/* Twitter */
+div[style*='font-family: Arial'] a[href*='twiter'] {
+  background-color: black;
+  color: white;
+}
+
+/* Hover effect */
+div[style*='font-family: Arial'] a:hover {
+  opacity: 0.9;
+}
+@media screen and (min-width: 1024px) {
+  .product-single__cart-submit-wrapper {
+    display: flex;
+    align-items: center;
+  }
+  .product-single__meta .product__vendor-pdp img {
+    margin: 10px 0 0;
+  }
+}
+.deal-live .expired,
+.loginPopup button {
+  display: inline-block;
+  padding: 8px 16px;
+  border: 2px solid #f1c40f; /* yellow border */
+  color: #f1c40f; /* yellow text */
+  font-weight: bold;
+  border-radius: 25px;
+  background-color: white;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  text-decoration: none;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* Hover effect */
+.deal-live .expired:hover,
+.loginPopup button:hover {
+  background-color: #f1c40f; /* yellow background on hover */
+  color: white;
+}
+
+/* Overlay background */
+.popupOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* Popup box styling */
+.loginPopup {
+  background: white;
+  border: 2px solid #999;
+  border-radius: 4px;
+  padding: 20px 30px;
+  width: 320px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  position: relative;
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+
+/* Close button */
+.loginPopup .close-btn {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 20px;
+  cursor: pointer;
+  color: #333;
+}
+
+/* Heading */
+.loginPopup h3 {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+/* Subtext */
+.loginPopup p {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 16px;
+}
+
+/* Label */
+.loginPopup label {
+  font-weight: bold;
+  font-size: 13px;
+  display: block;
+  margin: 10px 0 6px;
+  text-align: center;
+}
+
+/* Email input */
+.loginPopup input[type='email'] {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1.8px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+  outline: none;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+  margin-top: 5px;
+}
+
+/* Optional: highlight on focus */
+.loginPopup input[type='email']:focus {
+  border-color: #f15a24;
+  box-shadow: 0 0 3px rgba(241, 90, 36, 0.4);
+}
+
+/* Note message */
+.loginPopup .note {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #666;
+  text-align: left;
+  margin-bottom: 16px;
+}
+
+/* Send button */
+.loginPopup button {
+  padding: 8px 24px;
+  font-weight: bold;
+  font-size: 14px;
+  width: 100%;
+}
+
+/* .loginPopup button:hover {
+  background-color: #d84e1f;
+} */
+
+.promo-wrapper {
+  text-align: left;
+  margin-top: 15px;
+}
+
+.promo-title {
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.promo-code-box {
+  display: inline-flex;
+  border: 1px dashed #ccc;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.promo-code-box span {
+  font-weight: bold;
+  color: red;
+  padding: 10px 15px;
+  font-size: 18px;
+  background-color: #fff;
+}
+
+.promo-code-box button {
+  background-color: #2d8cf0;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.promo-code-box button.copied {
+  background-color: #28a745; /* green */
+}
+
+/* Parent Wrapper */
+.product-slider-wrapper {
+  margin: 20px auto;
+  padding: 10px 0;
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Slick Slide Items */
+.product-slider-wrapper .product.grid__item {
+  background-color: #f9f9f9;
+  padding: 10px;
+  margin: 0 10px;
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+  text-align: center;
+}
+
+.product-slider-wrapper .product.grid__item:hover {
+  transform: translateY(-5px);
+}
+
+/* Optional Slide Animation */
+.slide-up-animation.animated {
+  animation: slideUp 0.5s ease-in-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* Make sure the actual arrow content is visible */
+.product-slider-wrapper .slick-prev::before,
+.product-slider-wrapper .slick-next::before {
+  content: '‹'; /* Left arrow for prev */
+  font-size: 24px;
+  color: #000;
+  line-height: 1;
+  opacity: 1;
+  font-family: Arial, sans-serif;
+}
+
+/* Right arrow */
+.product-slider-wrapper .slick-next::before {
+  content: '›'; /* Right arrow */
+}
+
+/* Optional: Make arrow buttons clickable and styled */
+.product-slider-wrapper .slick-prev,
+.product-slider-wrapper .slick-next {
+  width: 40px;
+  height: 40px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  z-index: 10;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 1;
+  position: absolute;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Positioning */
+.product-slider-wrapper .slick-prev {
+  left: 20px;
+}
+
+.product-slider-wrapper .slick-next {
+  right: 20px;
+}
+
+.product-slider .grid__item .product__title a {
+  color: #333;
+  /*height: 45px !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;*/
+  overflow: hidden;
+}
+
+.product-slider .grid__item .product__vendor {
+  height: 28px !important;
+}
+.product-slider .grid__item .product__prices {
+  height: 26px !important;
+}
+
+.tabs {
+  margin: 0 30px 0;
+}
+.product-single__description {
+  margin: 0;
+}
+
+.product-form {
+  margin-top: unset;
+}
+
+.oc_featuredproduct {
+  margin: 20px 0;
+}
+
+.product-container {
+  display: flex;
+  align-items: flex-start;
+}
+
+.product-image {
+  margin-right: 20px;
+}
+
+.product-image img {
+  max-width: 100%;
+  height: auto;
+}
+
+.product-details {
+  max-width: 600px;
+  font-size: 16px;
+}
+.oc_featuredproduct h3 {
+  color: red;
+  font-size: 16px;
+}
+.product-details a {
+  color: blue;
+}
+.oc_featuredproduct h2 {
+  margin-top: 0;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.product-details p {
+  margin: 10px 0 0;
+}
+.product-details ul,
+.product-details ol {
+  list-style: initial;
+}
+.product-coupon-wrapper {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.product-coupon-wrapper {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.coupon-label {
+  font-weight: bold;
+  color: gray;
+  margin-bottom: 5px;
+}
+
+.coupon-box {
+  display: inline-flex;
+  border: 1px dashed #ccc;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.coupon-code {
+  color: red;
+  font-weight: bold;
+  padding: 0;
+  background-color: white;
+  font-size: 18px;
+}
+
+.copy-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0 16px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.2s ease;
+}
+
+.copy-btn:hover {
+  background-color: #0056b3;
+}
+
+@media only screen and (max-width: 767px) {
+  .product-container {
+    flex-direction: column;
+  }
+  .product-image {
+    margin: 0 auto;
+  }
+}
+.promo-wrapper {
+  border: 2px solid #ff4c4c;
+  padding: 16px;
+  max-width: 400px;
+  background-color: #fffefc;
+  margin: 20px 0;
+  font-family: Arial, sans-serif;
+}
+
+.promo-title {
+  color: #ff4c4c;
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.promo-instructions {
+  list-style: disc inside;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+.promo-code {
+  font-weight: bold;
+  color: #ff4c4c;
+  background-color: #f0f0f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+/* ===== Social Share Buttons ===== */
+.ss-share {
+  margin: 28px 0 18px;
+  padding: 0;
+}
+.ss-share__heading {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #555;
+  margin: 0 0 12px;
+}
+.ss-share__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.ss-share__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.15s ease;
+  -webkit-font-smoothing: antialiased;
+  font-family: inherit;
+}
+.ss-share__btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+  opacity: 0.92;
+  text-decoration: none;
+  color: #fff;
+}
+.ss-share__btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+.ss-share__btn svg {
+  flex-shrink: 0;
+}
+.ss-share__btn span {
+  white-space: nowrap;
+}
+
+/* Brand colors */
+.ss-share__btn--facebook {
+  background: #1877f2;
+}
+.ss-share__btn--x {
+  background: #000;
+}
+.ss-share__btn--whatsapp {
+  background: #25d366;
+}
+.ss-share__btn--telegram {
+  background: #0088cc;
+}
+.ss-share__btn--pinterest {
+  background: #e60023;
+}
+.ss-share__btn--linkedin {
+  background: #0a66c2;
+}
+.ss-share__btn--email {
+  background: #555;
+}
+.ss-share__btn--copy {
+  background: #6c63ff;
+  color: #fff;
+}
+.ss-share__btn--native {
+  background: #333;
+}
+
+/* Responsive: stack on small screens, hide labels */
+@media screen and (max-width: 480px) {
+  .ss-share__btn {
+    padding: 10px;
+    border-radius: 50%;
+  }
+  .ss-share__btn span {
+    display: none;
+  }
+  .ss-share__buttons {
+    gap: 10px;
+  }
+}
+
+/* @media screen and (min-width:767px) {
+	.product-single .product-form { display: flex; align-items: center; }
+} */
+/* Universal Center for Announcement Bar */
+.announcement-bar, 
+.announcement-bar__message, 
+.announcement-bar p {
+  text-align: center !important;
+  justify-content: center !important;
+  display: flex !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+/* Final fix for centering and vertical spacing */
+.pagination, 
+.cc-button-container {
+  display: block !important; /* Changed from flex to block to respect margins */
+  text-align: center !important;
+  width: 100% !important;
+}
+
+/* Space for the pagination links */
+.pagination {
+  margin-bottom: 50px !important; /* Pushes the banner DOWN */
+}
+
+/* Fix for side-by-side links on Page 2 */
+.pagination a, .pagination span {
+  display: inline-block !important;
+  margin: 0 10px !important;
+}
+
+/* Ensuring the banner has its own space */
+.cc-button-container {
+  margin-top: 50px !important; 
+  margin-bottom: 40px !important;
+  clear: both;
+}

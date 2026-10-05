@@ -1,0 +1,70 @@
+{% comment %}
+  Reusable Coupon Code Snippet - Original Design
+  Usage: {% render 'coupon-code', product: product %}
+{% endcomment %}
+
+{% if product.metafields.custom.coupon_code != blank %}
+<style>
+.text-black {
+  color: #000;
+}
+</style>
+
+<div class="coupon-code" style="margin: {{ margin_top | default: '0' }} 0 {{ margin_bottom | default: '0' }} 0;">
+  <div class="coupon-wrapper" style="font-family: sans-serif;">
+    <p>
+      <span style="margin-right:6px; color:#000;">•</span>
+<span class="text-black" style="font-weight: normal;">{{ text_before | default: 'Use promo code' }}</span>
+      
+      <span id="couponCode-{{ product.id }}" onclick="copyCoupon{{ product.id | replace: '-', '_' }}()" style="
+        padding: 0 5px;
+        margin: 0 5px;
+        border: 1px dashed #cc0000;
+        color: #cc0000;
+        font-weight: bold;
+        cursor: pointer;
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      ">
+        {{ product.metafields.custom.coupon_code.value }}
+        <span id="copiedMsg-{{ product.id }}" style="
+          position: absolute; 
+          left: 50%; 
+          transform: translateX(-50%); 
+          top: -120%; 
+          color: green; 
+          font-size: 0.9em; 
+          display: none;
+        ">Copied</span>
+      </span>
+
+      <span class="text-black" style="font-weight: normal;">{{ text_after | default: 'at checkout.' }}</span>
+    </p>
+  </div>
+</div>
+
+<style>
+.coupon-code .coupon-wrapper p span.text-black {
+  font-family: inherit;
+  font-weight: normal;
+  font-style: normal;
+  color: #333;
+  font-size: 17px;
+  line-height: 1.4;
+}
+</style>
+
+<script>
+  function copyCoupon{{ product.id | replace: '-', '_' }}() {
+    const codeElem = document.getElementById('couponCode-{{ product.id }}');
+    const copiedMsg = document.getElementById('copiedMsg-{{ product.id }}');
+    const code = codeElem.innerText.trim();
+    navigator.clipboard.writeText(code).then(() => {
+      copiedMsg.style.display = 'inline';
+      setTimeout(() => copiedMsg.style.display = 'none', 1500);
+    });
+  }
+</script>
+{% endif %}

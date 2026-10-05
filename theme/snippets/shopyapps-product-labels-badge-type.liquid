@@ -1,0 +1,34 @@
+  {% if product.title and product.compare_at_price%}
+  {%- assign compare_at_price = product.compare_at_price -%}
+  {%- assign price = product.price -%}
+  {%- assign price_varies = product.price_varies -%}
+  {%- assign price_diff = compare_at_price | minus: price -%}
+  {%- assign available = product.available -%}
+  {%- assign discountPercent = compare_at_price | minus: price | times: 100.0 | divided_by: compare_at_price %}
+  {% else %}
+  {%- assign compare_at_price = 1999 -%}
+  {%- assign price = 1999 -%}
+  {%- assign price_varies = false -%}
+  {%- assign price_diff = 0 -%}
+  {%- assign available = true -%}
+  {%- assign discountPercent = 0 %}
+  {% endif %}
+  {%- assign sale_value = discountPercent %}
+
+  {% assign date_published = product.published_at | date:'%s' | plus: 0 %}
+  {% assign date_now = 'now' | date:'%s' %}
+  {% assign new_value = date_now | minus: date_published %}
+
+  {% assign popular_value = 10000000 %}
+  {% for itProduct in collections.shopyapps-product-labels-best-selling.products %}
+  {% if itProduct.handle == product.handle %}
+  {% assign popular_value = forloop.index %}
+  {% endif %}
+  {% endfor %}
+
+
+[ 
+{% if popular_value <= 10000 %} 
+"shopyapps-product-labels-badge-294"
+{% endif %} 
+]

@@ -1,0 +1,70 @@
+{% comment %}
+  New product template – vendor list page
+  Purpose:
+  - Hide FULL slider (images, arrows, dots, JS spacing)
+  - Only on this product page
+  - No effect on header, footer, or other pages
+{% endcomment %}
+
+<script>
+  /* Mark ONLY this product page */
+  document.documentElement.classList.add('tpl-vendor-list');
+</script>
+
+<style>
+  /* =========================================
+     HIDE COMPLETE SLIDER (TEMPLATE ONLY)
+     ========================================= */
+
+  /* Common Slick / slider wrappers */
+  .tpl-vendor-list .product-slider-wrapper,
+  .tpl-vendor-list .product-slider,
+  .tpl-vendor-list .slick-slider,
+  .tpl-vendor-list .slick-track,
+  .tpl-vendor-list .slick-list,
+  .tpl-vendor-list .slick-prev,
+  .tpl-vendor-list .slick-next,
+  .tpl-vendor-list .slick-arrow,
+  .tpl-vendor-list .slick-dots,
+
+  
+
+  /* Theme-specific slider hooks */
+  .tpl-vendor-list [data-slider],
+  .tpl-vendor-list [data-slick],
+  .tpl-vendor-list [data-product-recommendations],
+  .tpl-vendor-list .featured-products,
+  .tpl-vendor-list .related-products,
+  .tpl-vendor-list .product-recommendations {
+    display: none !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .tpl-vendor-list .sidebar,
+  .tpl-vendor-list #sidebar,
+  .tpl-vendor-list aside,
+  .tpl-vendor-list .collection-sidebar,
+  .tpl-vendor-list .site-nav,
+  .tpl-vendor-list [class*="sidebar"],
+  .tpl-vendor-list [class*="Sidebar"] {
+    display: none !important;
+  }
+
+{% comment %}
+  /* Center align the Vendor Product List heading */
+#shopify-section-vendor-product-list .vpl-heading,
+.tpl-vendor-list .vpl-heading {
+  text-align: center !important;
+  margin-left: auto;
+  margin-right: auto;
+}
+{% endcomment %}
+</style>
+
+{% schema %}
+{
+  "name": "Vendor List Styles",
+  "settings": []
+}
+{% endschema %}

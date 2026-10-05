@@ -4,3 +4,4 @@ extensions/
 shopify.app*.toml
 .env*
 *.log
+theme/

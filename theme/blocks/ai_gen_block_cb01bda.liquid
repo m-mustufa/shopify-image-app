@@ -1,0 +1,218 @@
+{% doc %}
+  @prompt
+    A heading with an animated glowing effect
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-glow-heading-{{ ai_gen_id }} {
+    display: block;
+    width: {{ block.settings.desktop_width_percent }}%;
+    max-width: 100%;
+  }
+
+  .ai-glow-heading__text-{{ ai_gen_id }} {
+    font-size: {{ block.settings.font_size }}px;
+    font-family: {{ block.settings.heading_font.family }}, {{ block.settings.heading_font.fallback_families }};
+    font-weight: {{ block.settings.heading_font.weight }};
+    font-style: {{ block.settings.heading_font.style }};
+    color: {{ block.settings.text_color }};
+    text-align: {{ block.settings.text_alignment }};
+    margin: 0;
+    padding: {{ block.settings.padding }}px;
+    position: relative;
+    animation: ai-glow-pulse-{{ ai_gen_id }} {{ block.settings.animation_speed }}s ease-in-out infinite;
+  }
+
+  @keyframes ai-glow-pulse-{{ ai_gen_id }} {
+    0%, 100% {
+      text-shadow: 
+        0 0 {{ block.settings.glow_intensity }}px {{ block.settings.glow_color }},
+        0 0 calc({{ block.settings.glow_intensity }}px * 1.5) {{ block.settings.glow_color }},
+        0 0 calc({{ block.settings.glow_intensity }}px * 2) {{ block.settings.glow_color }};
+    }
+    50% {
+      text-shadow: 
+        0 0 calc({{ block.settings.glow_intensity }}px * 1.5) {{ block.settings.glow_color }},
+        0 0 calc({{ block.settings.glow_intensity }}px * 2.5) {{ block.settings.glow_color }},
+        0 0 calc({{ block.settings.glow_intensity }}px * 3.5) {{ block.settings.glow_color }};
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-glow-heading__text-{{ ai_gen_id }} {
+      font-size: calc({{ block.settings.font_size }}px * 0.7);
+    }
+  }
+{% endstyle %}
+
+<div class="ai-glow-heading-{{ ai_gen_id }}" {{ block.shopify_attributes }}>
+  {% if block.settings.heading_tag == 'h1' %}
+    <h1 class="ai-glow-heading__text-{{ ai_gen_id }}">{{ block.settings.heading_text }}</h1>
+  {% elsif block.settings.heading_tag == 'h2' %}
+    <h2 class="ai-glow-heading__text-{{ ai_gen_id }}">{{ block.settings.heading_text }}</h2>
+  {% elsif block.settings.heading_tag == 'h3' %}
+    <h3 class="ai-glow-heading__text-{{ ai_gen_id }}">{{ block.settings.heading_text }}</h3>
+  {% elsif block.settings.heading_tag == 'h4' %}
+    <h4 class="ai-glow-heading__text-{{ ai_gen_id }}">{{ block.settings.heading_text }}</h4>
+  {% elsif block.settings.heading_tag == 'h5' %}
+    <h5 class="ai-glow-heading__text-{{ ai_gen_id }}">{{ block.settings.heading_text }}</h5>
+  {% else %}
+    <h6 class="ai-glow-heading__text-{{ ai_gen_id }}">{{ block.settings.heading_text }}</h6>
+  {% endif %}
+</div>
+
+{% schema %}
+{
+  "name": "Glowing heading",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "heading_text",
+      "label": "Heading text",
+      "default": "Welcome to our store"
+    },
+    {
+      "type": "select",
+      "id": "heading_tag",
+      "label": "Heading tag",
+      "options": [
+        {
+          "value": "h1",
+          "label": "H1"
+        },
+        {
+          "value": "h2",
+          "label": "H2"
+        },
+        {
+          "value": "h3",
+          "label": "H3"
+        },
+        {
+          "value": "h4",
+          "label": "H4"
+        },
+        {
+          "value": "h5",
+          "label": "H5"
+        },
+        {
+          "value": "h6",
+          "label": "H6"
+        }
+      ],
+      "default": "h2"
+    },
+    {
+      "type": "header",
+      "content": "Style"
+    },
+    {
+      "type": "font_picker",
+      "id": "heading_font",
+      "label": "Font",
+      "default": "helvetica_n7"
+    },
+    {
+      "type": "range",
+      "id": "font_size",
+      "label": "Font size",
+      "min": 20,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "default": 50
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "Text alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "padding",
+      "label": "Padding",
+      "min": 0,
+      "max": 50,
+      "step": 5,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "desktop_width_percent",
+      "label": "Desktop width",
+      "min": 50,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 100
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "glow_color",
+      "label": "Glow",
+      "default": "#0008ff"
+    },
+    {
+      "type": "header",
+      "content": "Glow effect"
+    },
+    {
+      "type": "range",
+      "id": "glow_intensity",
+      "label": "Glow intensity",
+      "min": 5,
+      "max": 50,
+      "step": 5,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "animation_speed",
+      "label": "Animation speed",
+      "min": 1,
+      "max": 5,
+      "step": 1,
+      "unit": "s",
+      "default": 2
+    }
+  ],
+  "presets": [
+    {
+      "name": "Glowing heading"
+    }
+  ]
+}
+{% endschema %}

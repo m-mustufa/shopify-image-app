@@ -1,0 +1,392 @@
+{% assign sid = section.id %}
+
+<section class="vpl-{{ sid }}">
+  <div class="vpl-wrap">
+
+    {% if section.settings.heading != blank %}
+      <h2 class="vpl-heading">{{ section.settings.heading }}</h2>
+    {% endif %}
+
+    {% if section.blocks.size == 0 %}
+      <div class="vpl-empty">
+        Add blocks in the Customizer (Add block → Product) to show products here.
+      </div>
+    {% else %}
+      <div class="vpl-list">
+        {% for block in section.blocks %}
+          {% assign p = block.settings.product %}
+          {% if p != blank %}
+
+            {% assign details_url = p.metafields.custom.see_details.value %}
+            {% assign inst = p.metafields.custom.instructions.value %}
+
+            {% assign compare = p.compare_at_price %}
+            {% assign price = p.price %}
+            {% assign has_discount = false %}
+            {% if compare and compare > price %}
+              {% assign has_discount = true %}
+              {% assign disc = compare | minus: price | times: 100 | divided_by: compare %}
+            {% endif %}
+
+            {%- comment -%}
+              Automatic vendor logo:
+              Upload to Content > Files with names like:
+              amazon.png, walmart.png, best-buy.png, target.png
+            {%- endcomment -%}
+            {% assign vendor_name = p.vendor | strip %}
+            {% assign vendor_key = vendor_name | downcase | replace: '&', 'and' | replace: ' ', '-' | replace: '.', '' | replace: '/', '-' %}
+            {% assign vendor_filename = vendor_key | append: '.png' %}
+            {% assign vendor_text_id = 'vplv-' | append: sid | append: '-' | append: p.id %}
+
+            <article class="vpl-card" {{ block.shopify_attributes }}>
+
+              <!-- LEFT: Image + centered price/discount under image -->
+              <div class="vpl-left">
+                <a class="vpl-img" href="{{ p.url }}" aria-label="{{ p.title | escape }}">
+                  {% if p.featured_image %}
+                    {{ p.featured_image | image_url: width: 520 | image_tag: loading: 'lazy', class: 'vpl-img-el', alt: p.title }}
+                  {% else %}
+                    <div class="vpl-img-ph">No image</div>
+                  {% endif %}
+                </a>
+
+                <div class="vpl-under">
+                  {% if has_discount %}
+                    <span class="vpl-disc">-{{ disc }}%</span>
+                  {% endif %}
+                  <span class="vpl-money">{{ price | money }}</span>
+                </div>
+              </div>
+
+              <!-- MIDDLE: Title + Instructions -->
+              <div class="vpl-mid">
+                <div class="vpl-name">{{ p.title }}</div>
+
+                {% if inst != blank %}
+                  <button
+                    type="button"
+                    class="vpl-inst-btn"
+                    aria-expanded="false"
+                    aria-controls="vpl-inst-{{ sid }}-{{ p.id }}"
+                    data-vpl-toggle>
+                    {{ section.settings.instructions_label }}
+                  </button>
+
+                  <div id="vpl-inst-{{ sid }}-{{ p.id }}" class="vpl-inst-box" hidden>
+                    {% if inst contains '<' %}
+                      {{ inst }}
+                    {% else %}
+                      {{ inst | newline_to_br }}
+                    {% endif %}
+                  </div>
+                {% endif %}
+              </div>
+
+              <!-- RIGHT: Vendor logo ABOVE the button (top-center) -->
+              <div class="vpl-right">
+                <div class="vpl-actions">
+
+                  {% if section.settings.show_vendor_logo and vendor_name != blank %}
+                    <div class="vpl-vendor">
+                      <img
+                        class="vpl-vendor-logo"
+                        src="{{ vendor_filename | file_url }}"
+                        alt="{{ vendor_name | escape }}"
+                        loading="lazy"
+                        onload="var t=document.getElementById('{{ vendor_text_id }}'); if(t) t.style.display='none';"
+                        onerror="this.style.display='none'; var t=document.getElementById('{{ vendor_text_id }}'); if(t) t.style.display='inline-flex';">
+                      {% if section.settings.show_vendor_text %}
+                        <span id="{{ vendor_text_id }}" class="vpl-vendor-text" style="display:none;">
+                          {{ vendor_name }}
+                        </span>
+                      {% endif %}
+                    </div>
+                  {% endif %}
+
+                  {% if details_url != blank %}
+                    <a class="vpl-btn" href="{{ details_url }}" target="_blank" rel="noopener">
+                      {{ section.settings.button_label }}
+                    </a>
+                  {% else %}
+                    <a class="vpl-btn" href="{{ p.url }}">
+                      {{ section.settings.button_fallback }}
+                    </a>
+                  {% endif %}
+
+                </div>
+              </div>
+
+            </article>
+
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% if section.settings.show_end_button and section.settings.end_button_link != blank %}
+      <div class="vpl-end">
+        <a class="vpl-end-btn" href="{{ section.settings.end_button_link }}">
+          {{ section.settings.end_button_text }}
+        </a>
+      </div>
+    {% endif %}
+
+  </div>
+</section>
+
+<style>
+  .vpl-{{ sid }}{
+    background: {{ section.settings.bg_color }};
+    padding: {{ section.settings.pad_y }}px 18px;
+  }
+  .vpl-wrap{
+    max-width: {{ section.settings.max_width }}px;
+    margin: 0 auto;
+  }
+  .vpl-heading{
+    margin: 0 0 14px;
+    font-size: 26px;
+    font-weight: 900;
+    color: {{ section.settings.heading_color }};
+    letter-spacing: .2px;
+  }
+
+  .vpl-empty{
+    background: {{ section.settings.card_bg }};
+    padding: 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(0,0,0,.08);
+    color: {{ section.settings.text_color }};
+    opacity: .85;
+  }
+
+  .vpl-list{ display:grid; gap: 16px; }
+
+  .vpl-card{
+    display:grid;
+    grid-template-columns: 220px 1fr 260px;
+    gap: 18px;
+    align-items:center;
+    background: {{ section.settings.card_bg }};
+    border-radius: 14px;
+    padding: 14px;
+    border: 1px solid rgba(0,0,0,.08);
+    box-shadow: 0 6px 18px rgba(0,0,0,.08);
+  }
+
+  .vpl-left{ display:flex; flex-direction:column; gap: 10px; }
+  .vpl-img{ display:block; }
+  .vpl-img-el{
+    width:100%;
+    height: {{ section.settings.image_h }}px;
+    object-fit: contain;
+    background:#fff;
+    border-radius: 12px;
+    border: 1px solid rgba(0,0,0,.07);
+  }
+  .vpl-img-ph{
+    height: {{ section.settings.image_h }}px;
+    display:flex; align-items:center; justify-content:center;
+    background:#fff;
+    border-radius: 12px;
+    border: 1px solid rgba(0,0,0,.07);
+    color:#777;
+    font-size: 13px;
+  }
+
+  .vpl-under{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    width: 100%;
+  }
+  .vpl-disc{ color: {{ section.settings.discount_color }}; font-weight: 900; font-size: 14px; }
+  .vpl-money{ color: {{ section.settings.price_color }}; font-weight: 900; font-size: 16px; }
+
+  .vpl-mid{ min-width:0; }
+  .vpl-name{
+    color: {{ section.settings.text_color }};
+    font-size: 18px;
+    font-weight: 750;
+    line-height: 1.25;
+    margin-bottom: 10px;
+  }
+
+  .vpl-inst-btn{
+    border: 1px solid rgba(0,0,0,.14);
+    background: transparent;
+    color: {{ section.settings.text_color }};
+    padding: 8px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    cursor:pointer;
+  }
+  .vpl-inst-box{
+    margin-top: 10px;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(0,0,0,.04);
+    color: {{ section.settings.text_color }};
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  /* ✅ RIGHT: logo above button, centered */
+  .vpl-right{ display:flex; justify-content:flex-end; }
+  .vpl-actions{
+    display:flex;
+    flex-direction: column;  /* was row */
+    align-items:center;      /* center align */
+    justify-content:flex-start;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .vpl-vendor{
+    display:flex;
+    align-items:center;
+    justify-content:center;  /* center the logo */
+    width: 100%;
+    min-height: 0;
+  }
+
+  /* ✅ Logo size controlled from Customizer */
+  .vpl-vendor-logo{
+    height: {{ section.settings.vendor_logo_height }}px;
+    width: auto;
+    object-fit: contain;
+    display:block;
+  }
+  .vpl-vendor-text{
+    font-size: 12px;
+    font-weight: 900;
+    color: {{ section.settings.text_color }};
+    opacity:.75;
+    text-transform: uppercase;
+    letter-spacing:.6px;
+    white-space: nowrap;
+  }
+
+  .vpl-btn{
+    display:inline-flex;
+    align-items:center; justify-content:center;
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-weight: 900;
+    font-size: 13px;
+    text-decoration:none;
+    background: {{ section.settings.btn_bg }};
+    color: {{ section.settings.btn_text }};
+    border: 1px solid rgba(0,0,0,.12);
+    white-space: nowrap;
+  }
+
+  .vpl-end{ display:flex; justify-content:center; margin-top: 18px; }
+  .vpl-end-btn{
+    display:inline-flex;
+    align-items:center; justify-content:center;
+    padding: 12px 18px;
+    border-radius: 999px;
+    font-weight: 900;
+    font-size: 14px;
+    text-decoration:none;
+    background: {{ section.settings.end_btn_bg }};
+    color: {{ section.settings.end_btn_text }};
+    border: 1px solid rgba(0,0,0,.14);
+  }
+
+  @media (max-width: 900px){
+    .vpl-card{
+      grid-template-columns: 180px 1fr;
+      grid-template-rows: auto auto;
+    }
+    .vpl-right{
+      grid-column: 1 / -1;
+      justify-content: center;
+    }
+    .vpl-actions{
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
+
+<script>
+  (function(){
+    document.addEventListener('click', function(e){
+      var btn = e.target.closest('[data-vpl-toggle]');
+      if(!btn) return;
+
+      var id = btn.getAttribute('aria-controls');
+      var box = id ? document.getElementById(id) : null;
+      if(!box) return;
+
+      var open = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!open));
+      box.hidden = open;
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Vendor product list",
+  "max_blocks": 100,
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Products" },
+
+    { "type": "range", "id": "max_width", "label": "Max width", "min": 900, "max": 1900, "step": 50, "default": 1400 },
+    { "type": "range", "id": "pad_y", "label": "Padding (top/bottom)", "min": 0, "max": 80, "step": 2, "default": 22 },
+    { "type": "range", "id": "image_h", "label": "Image height", "min": 90, "max": 220, "step": 5, "default": 140 },
+
+    /* ✅ NEW: logo size option */
+    { "type": "range", "id": "vendor_logo_height", "label": "Vendor logo height", "min": 14, "max": 70, "step": 2, "default": 28 },
+
+    { "type": "color", "id": "bg_color", "label": "Background", "default": "#e6e6e6" },
+    { "type": "color", "id": "card_bg", "label": "Card background", "default": "#ffffff" },
+    { "type": "color", "id": "heading_color", "label": "Heading color", "default": "#222222" },
+    { "type": "color", "id": "text_color", "label": "Text color", "default": "#1f1f1f" },
+
+    { "type": "color", "id": "price_color", "label": "Price color", "default": "#0a8a2a" },
+    { "type": "color", "id": "discount_color", "label": "Discount color", "default": "#d40000" },
+
+    { "type": "text", "id": "button_label", "label": "Details button label", "default": "SEE DETAILS" },
+    { "type": "text", "id": "button_fallback", "label": "Fallback label", "default": "SEE DETAILS" },
+    { "type": "color", "id": "btn_bg", "label": "Button background", "default": "#0b7a1f" },
+    { "type": "color", "id": "btn_text", "label": "Button text", "default": "#ffffff" },
+
+    { "type": "text", "id": "instructions_label", "label": "Instructions button label", "default": "Instructions" },
+
+    { "type": "checkbox", "id": "show_vendor_logo", "label": "Show vendor logo", "default": true },
+    { "type": "checkbox", "id": "show_vendor_text", "label": "Show vendor text if logo missing", "default": true },
+
+    { "type": "header", "content": "End button" },
+    { "type": "checkbox", "id": "show_end_button", "label": "Show end button", "default": false },
+    { "type": "text", "id": "end_button_text", "label": "End button text", "default": "View all" },
+    { "type": "url", "id": "end_button_link", "label": "End button link" },
+    { "type": "color", "id": "end_btn_bg", "label": "End button background", "default": "transparent" },
+    { "type": "color", "id": "end_btn_text", "label": "End button text color", "default": "#1f1f1f" }
+  ],
+  "blocks": [
+    {
+      "type": "item",
+      "name": "Product",
+      "settings": [
+        { "type": "product", "id": "product", "label": "Select product" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Vendor product list",
+      "blocks": [
+        { "type": "item" },
+        { "type": "item" },
+        { "type": "item" }
+      ]
+    }
+  ]
+}
+{% endschema %}

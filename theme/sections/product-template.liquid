@@ -1,0 +1,784 @@
+<div class="elfsight-sapp-f922fe90-a128-11e9-9e2b-b303e3ee8cfb"></div>
+
+<!-- /templates/product.liquid -->
+<div itemscope itemtype="http://schema.org/Product" id="ProductSection" data-section-id="{{ section.id }}" data-section-type="product-template" data-image-zoom-type="{{ section.settings.product_image_zoom_type }}" data-show-extra-tab="{{ section.settings.show_extra_tab }}" data-extra-tab-content="{{ section.settings.extra_tab_content }}" data-cart-enable-ajax="{{ settings.cart_enable_ajax }}" data-enable-history-state="true">
+
+  <meta itemprop="name" content="{{ product.title }}">
+  <meta itemprop="url" content="{{ shop.url }}{{ product.url }}">
+  <meta itemprop="image" content="{{ product.featured_image.src | img_url: 'grande' }}">
+  <meta itemprop="price" content="{{  current_variant.price | money }}">
+
+  {% comment %}
+    Get first variant in stock, or deep linked one
+  {% endcomment %}
+  {% assign current_variant = product.selected_or_first_available_variant %}
+  {%- assign featured_image = current_variant.featured_image | default: product.featured_image -%}
+
+  <div class="grid product-single">
+
+    <div class="grid__item medium-up--one-half">
+      {% for image in product.images %}
+        {% capture img_id %}ProductImage-{{ image.id }}{% endcapture %}
+        {% capture wrapper_id %}ProductImageWrapper-{{ image.id }}{% endcapture %}
+        {%- assign img_url = image | img_url: '1x1' | replace: '_1x1.', '_{width}x.' -%}
+
+        {% include 'image-style' with image, image: image, width: 720, height: 600, small_style: true, wrapper_id: wrapper_id, img_id: img_id %}
+
+        <div id="{{ wrapper_id }}" class="product-single__featured-image-wrapper supports-js{% unless featured_image == image %} hidden{% endunless %}" data-image-id="{{ image.id }}">
+          <div class="product-single__photos" data-image-id="{{ image.id }}" style="padding-top:{{ 1 | divided_by: image.aspect_ratio | times: 100}}%;">
+             {% unless product.available %}
+        <div class="sold-out"></div>
+        {% endunless %}
+           
+            <img id="{{ img_id }}"
+                 class="product-single__photo {% if section.settings.product_image_zoom_type == 'lightbox' %} lightbox{% endif %}"
+                 {% if section.settings.product_image_zoom_type == 'zoom-in' %} data-zoom="{{ image | img_url: '1024x1024' }}"{% endif %}
+                 src="{{ image | img_url: '800x'}}"
+                 
+                 alt="{{ image.alt | escape }}">
+          </div>
+                <link itemprop="thumbnailUrl" href="{{ image | img_url: '300x'}}"> 
+      <span itemprop="thumbnail" itemscope itemtype="http://schema.org/ImageObject"> 
+        <link itemprop="url" href="{{ image | img_url: '300x'}}"> 
+      </span>
+          {% comment %} Added by Josh J - Shopify Theme Support | July 05 2019 {% endcomment %}
+          {% if settings.hide_sale_badge %}
+            {% if product.compare_at_price_max > product.price %}
+              <span class="badge badge--sale"><span>{{ 'products.product.on_sale' | t }}</span></span>
+            {% endif %}
+          {% endif %}
+
+        </div>
+      {% endfor %}
+
+      <noscript>
+        <img src="{{ featured_image | img_url: 'grande' }}" alt="{{ featured_image.alt | escape }}">
+      </noscript>
+
+      {% if product.images.size > 1 %}
+        <ul class="product-single__thumbnails grid grid--uniform" id="ProductThumbs">
+
+          {% case product.images.size %}
+            {% when 2 %}
+              {% assign thumbnail_width = 'small--one-half medium-up--push-one-sixth medium-up--one-third' %}
+            {% when 4 %}
+              {% assign thumbnail_width = 'small--one-half medium-up--one-quarter' %}
+            {% else %}
+              {% assign thumbnail_width = 'small--one-third medium-up--one-third' %}
+          {% endcase %}
+
+          {% for image in product.images %}
+            <li class="grid__item {{ thumbnail_width }}">
+              <a href="{{ image.src | img_url: 'grande' }}" class="product-single__thumbnail" data-image-id="{{ image.id }}">
+                <img src="{{ image.src | img_url: 'compact' }}" alt="{{ image.alt | escape }}">
+              </a>
+            </li>
+          {% endfor %}
+
+        </ul>
+      {% endif %}
+
+      {% if section.settings.product_image_zoom_type == 'lightbox' %}
+        <ul class="gallery hidden">
+          {% for image in product.images %}
+            <li data-image-id="{{ image.id }}" class="gallery__item" data-mfp-src="{{ image | img_url: '2048x2048' }}"></li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+          
+
+    <div class="grid__item medium-up--one-half{% if product.images.size == 0%} medium-up--push-one-half{% endif %}">
+      <div class="product-single__meta small--text-center">
+
+        {% if section.settings.new_desc_box_position == 'above_title' %}
+    {% render 'new-description-box', product: product %}
+  {% endif %}
+
+  {% if section.settings.coupon_position == 'above_title' %}
+  {% render 'coupon-code', product: product %}
+{% endif %}
+
+        <h1 class="product-single__title" itemprop="name">{{ product.title }}</h1>
+
+		{% if section.settings.new_desc_box_position == 'under_title' %}
+  {% render 'new-description-box', product: product %}
+{% endif %}
+
+{% if section.settings.coupon_position == 'under_title' %}
+  {% render 'coupon-code', product: product %}
+{% endif %}
+
+   {% if section.settings.vendor_show %}
+  <div class="product__vendor-pdp text-center">
+    {% assign current_vendor = product.vendor | downcase %}
+
+    {% for logo in shop.metaobjects.vendor_logo.values %}
+      {% assign logo_vendor = logo.name | downcase %}
+      {% if logo_vendor == current_vendor %}
+        <img src="{{ logo.vendor_image | image_url }}" alt="{{ logo.name }}">
+        {% break %}
+      {% endif %}
+    {% endfor %}
+  </div>
+{% endif %}
+
+{% if section.settings.new_desc_box_position == 'under_vendor' %}
+  {% render 'new-description-box', product: product %}
+{% endif %}
+
+{% if section.settings.coupon_position == 'under_vendor' %}
+  {% render 'coupon-code', product: product %}
+{% endif %}
+
+        <div itemprop="offers" itemscope itemtype="http://schema.org/Offer">
+          <meta itemprop="priceCurrency" content="{{ shop.currency }}">
+
+          <link itemprop="availability" href="http://schema.org/{% if current_variant.available %}InStock{% else %}OutOfStock{% endif %}">
+        <div class="product-price" style="display: flex;justify-content: space-between;">
+          
+          <p class="product-single__prices">
+            {% if product.compare_at_price_max > product.price %}
+              <span id="ComparePriceA11y" class="visually-hidden">{{ 'products.product.sale_price' | t }}</span>
+            {% else %}
+              <span class="visually-hidden">{{ 'products.product.regular_price' | t }}</span>
+            {% endif %}
+            {% if current_variant.price == 0 %}
+            {% else %}
+            <span id="ProductPrice" class="product-single__price" itemprop="price" content="{{ current_variant.price | divided_by: 100.00 }}">
+              {{ current_variant.price | money }}
+            </span>
+            {% endif %}
+            {% if product.compare_at_price_max > product.price %}
+              <span id="PriceA11y" class="visually-hidden">{{ 'products.product.regular_price' | t }}</span>
+              <s class="product-single__price--compare" id="ComparePrice">
+                {{ current_variant.compare_at_price | money }}
+              </s>
+            {% endif %}
+            </p>
+            <div class="deal-live">
+              {% render 'expired', product:product %}
+            </div>
+        </div>
+    
+
+        {% if section.settings.new_desc_box_position == 'under_price' %}
+  {% render 'new-description-box', product: product %}
+{% endif %}
+
+{% if section.settings.coupon_position == 'under_price' %}
+  {% render 'coupon-code', product: product %}
+{% endif %}
+
+          <p id="popupSuccessMessage" style="display:none; color: green; margin-bottom: 0px;">
+            Thank you! Your message has been sent successfully.
+          </p>
+              {% if product.selected_or_first_available_variant.available != true %}
+              <div class="mobile-only" style="font-family: Arial, sans-serif;">
+                <strong style="color: red;">UPDATE:</strong>
+                <span style="color: red;">GONE! Don’t miss it if it returns. Sign up for WhatsApp deal alerts! </span>
+                Join our
+            
+                <a href="{{ section.settings.whatsapp-url }}" target="_blank">
+                  WhatsApp!
+                </a>
+              </div>
+            
+              <style>
+                @media (min-width: 768px) {
+                  .mobile-only {
+                    display: none !important;
+                  }
+                }
+              </style>
+          {% endif %}
+
+      {% if product.selected_or_first_available_variant.available != true %}
+  <div class="desktop-only" style="font-family: Arial, sans-serif; padding: 16px 0; text-align: left;">
+    <strong style="color: red;">UPDATE:</strong>
+    <span style="color: red;">GONE! Don’t miss it if it returns. Sign up for WhatsApp deal alerts! </span>
+    Join our<a href="{{ section.settings.whatsapp-url }}" target="_blank">
+      WhatsApp!
+    </a>
+  </div>
+
+  <style>
+    /* Hide on mobile: show only on desktop */
+    @media (max-width: 767px) {
+      .desktop-only {
+        display: none !important;
+      }
+    }
+  </style>
+{% endif %}    
+             <p style="margin-bottom: 0px; font-size: 15px;"><small>Posted on: {{product.published_at | time_tag: format: 'date_at_time' }} {% unless template contains 'no-moreinfo' %}<a id="size-chart-trigger" href="#size-chart">More info</a>{% endunless %}</small></p> 
+
+             {% if section.settings.new_desc_box_position == 'after_posted_on' %}
+  {% render 'new-description-box', product: product %}
+{% endif %}
+
+{% if section.settings.coupon_position == 'after_posted_on' %}
+  {% render 'coupon-code', product: product %}
+{% endif %}
+
+   <p style="margin-bottom: 0px; font-size: 13px;"><small>Links may earn us commission, <a href="/pages/Advertiser-Disclosure">advertiser disclosure.</a> We really appreciate your support!</small></p> 
+            
+   {% if section.settings.new_desc_box_position == 'after_disclosure' %}
+  {% render 'new-description-box', product: product %}
+{% endif %}
+
+{% if section.settings.coupon_position == 'after_disclosure' %}
+  {% render 'coupon-code', product: product %}
+{% endif %}
+
+   <div style="font-size: 16px;"
+<p>  🔔 Catch every price drop in real-time. Join our <a target="_blank" href="https://api.whatsapp.com/send?phone=19292762388&text=Please%20add%20me%20to%20Simplex%20Deals%20WhatsApp%20group%20(I'm%20saving%20this%20number)%20">WhatsApp</a> for live deal alerts.</p> 
+
+{% if section.settings.new_desc_box_position == 'after_whatsapp' %}
+  {% render 'new-description-box', product: product %}
+{% endif %}
+
+{% if section.settings.coupon_position == 'after_whatsapp' %}
+  {% render 'coupon-code', product: product %}
+{% endif %}
+
+          {%- if shop.taxes_included or shop.shipping_policy.body != blank -%}
+            <div class="product-single__policies rte">
+              {%- if shop.taxes_included -%}
+                {{ 'products.product.include_taxes' | t }}
+              {%- endif -%}
+              {%- if shop.shipping_policy.body != blank -%}
+                {{ 'products.product.shipping_policy_html' | t: link: shop.shipping_policy.url }}
+              {%- endif -%}
+            </div>
+            
+          {%- endif -%}
+         {% if section.settings.product_description_position == 'right' %}
+          {%- assign position = 'right' -%}
+         
+ {% if section.settings.new_desc_box_position == 'above_product_description' %}
+    {% render 'new-description-box', product: product %}
+  {% endif %}
+
+  {% if section.settings.coupon_position == 'above_product_description' %}
+  {% render 'coupon-code', product: product %}
+{% endif %}
+
+          {% include 'product-description' %}
+          
+           {% if section.settings.new_desc_box_position == 'below_product_description' %}
+    {% render 'new-description-box', product: product %}
+  {% endif %}
+
+  {% if section.settings.coupon_position == 'below_product_description' %}
+  {% render 'coupon-code', product: product %}
+{% endif %}
+
+        {% endif %}
+
+          {% form 'product', product, class:'product-form' %}
+            <select name="id" id="ProductSelect-{{ section.id }}" class="product-single__variants">
+              {% for variant in product.variants %}
+                {% if variant.available %}
+                  <option {% if variant == product.selected_or_first_available_variant %} selected="selected" {% endif %} data-sku="{{ variant.sku }}" value="{{ variant.id }}">{{ variant.title }} - {{ variant.price | money_with_currency }}</option>
+                {% else %}
+                  <option disabled="disabled">
+                    {{ variant.title }} - {{ 'products.product.sold_out' | t }}
+                  </option>
+                {% endif %}
+              {% endfor %}
+            </select>
+
+            {% if section.settings.product_quantity_enable %}
+              <div class="product-single__quantity">
+                <label for="Quantity">{{ 'products.product.quantity' | t }}</label>
+                <input type="number" id="Quantity" name="quantity" value="1" min="1">
+              </div>
+            {% endif %}
+
+
+
+
+
+            
+<div class="product-single__cart-submit-wrapper{% if section.settings.enable_payment_button %} product-single__shopify-payment-btn{% endif %}{% if section.settings.add_to_cart_width == 'full_width' %} product-form--full{% endif %}">
+            
+{% include 'outlink-custom' %}
+{% if enable_outlink == true %}
+
+    <a id="{{ outlink_link_id }}" name="OutlinkLink" onclick="OutlinkButtonClick{{product.id}}()" href="{{ outlink_url }}" target="_blank" class="btn product-single__cart-submit{% if section.settings.add_to_cart_width == 'full_width' %} btn--full{% endif %}{% if section.settings.enable_payment_button %} shopify-payment-btn btn--secondary{% endif %}" rel="nofollow">{{ outlink_button_text }}</a>
+
+                {% else %}
+  
+{% include 'spreadr-custom' %}
+{% if enable_spreadr == true %}
+    <a id="{{ spreadr_link_id }}" name="SpreadrLink" href="{{ spreadr_redirect_url }}" target="_blank" class="btn product-single__cart-submit{% if section.settings.add_to_cart_width == 'full_width' %} btn--full{% endif %}{% if section.settings.enable_payment_button %} shopify-payment-btn btn--secondary{% endif %}" rel="nofollow">{{ spreadr_button_text }}</a>
+{% else %}
+     <button type="submit" name="add" id="AddToCart"class="btn product-single__cart-submit{% if section.settings.add_to_cart_width == 'full_width' %} btn--full{% endif %}{% if section.settings.enable_payment_button %} shopify-payment-btn btn--secondary{% endif %}">
+                <span id="AddToCartText">{{ 'products.product.add_to_cart' | t }}</span>
+              </button>   
+              {% if section.settings.enable_payment_button %}
+                {{ form | payment_button }}
+              {% endif %}
+{% endif %} </div>
+
+{% endif %}
+
+<!-- Social sharing component right after Get deal button -->
+{% if section.settings.social_sharing_products %}
+  {% include 'social-sharing', share_title: product.title, share_permalink: product.url, share_image: product, share_price: current_variant.price, share_compare_price: current_variant.compare_at_price, whatsapp_url: section.settings.whatsapp-url %}
+{% endif %}
+
+  </div>
+
+  {% if section.settings.new_desc_box_position == 'after_buttons' %}
+  {% render 'new-description-box', product: product %}
+{% endif %}
+
+{% if section.settings.coupon_position == 'after_buttons' %}
+  {% render 'coupon-code', product: product %}
+{% endif %}
+
+
+
+                {% comment %}
+
+              {% if product.selected_or_first_available_variant.available != true %}
+        <!-- Font Awesome CDN for icons -->
+<div style="font-family: Arial, sans-serif;">
+  <strong style="color: red;">UPDATE:</strong>
+  <span style="color: red;">GONE! Don’t miss it if it returns. Sign up for WhatsApp deal alerts! </span>
+  Join our
+
+  <!-- WhatsApp Link with SVG -->
+  <a href="{{ section.settings.whatsapp-url }}" target="_blank"
+     style="background-color: #25D366; color: white; padding: 6px 12px; border-radius: 20px; text-decoration: none; font-weight: bold; margin: 0 5px; display: inline-flex; align-items: center;">
+    WhatsApp
+    <svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 448 512" width="16" height="16" style="margin-right: 6px;">
+      <path d="M380.9 97.1C339.8 56 286.4 32 229.1 32 102.9 32 0 134.4 0 260.6c0 45.9 12.3 90.9 35.7 130.1L2.2 480l92.7-33.2c36.1 19.7 76.6 30.1 117.6 30.2h.5c126.1 0 229.1-102.4 229.1-228.6 0-57.3-24-110.7-65.2-151.8zM229.1 438.1h-.4c-35.1-.1-69.5-9.3-99.6-26.7l-7.1-4.2-55.1 19.7 18.5-53.4-4.6-7.3c-21.6-34.1-32.9-73.5-32.9-113.6 0-112.3 91.6-203.7 204.4-203.7 54.6 0 105.9 21.3 144.5 60 38.5 38.7 59.7 90.2 59.7 145 0 112.3-91.6 204-204.4 204zm117.2-138.6c-6.4-3.2-38.1-18.8-44-20.9-5.9-2.2-10.2-3.2-14.5 3.2s-16.6 20.9-20.4 25.2c-3.8 4.3-7.5 4.8-13.9 1.6s-27.1-10-51.6-31.8c-19.1-17-32.1-38-35.8-44.4-3.8-6.4-.4-9.9 2.8-13 2.9-2.8 6.4-7.5 9.6-11.2 3.2-3.7 4.3-6.4 6.4-10.6s1.1-8-0.5-11.2c-1.6-3.2-14.5-35.1-19.9-48.2-5.3-12.8-10.7-11.1-14.5-11.3-3.7-.2-8-.2-12.3-.2s-11.2 1.6-17 8c-5.9 6.4-22.2 21.7-22.2 52.8 0 31.1 22.8 61.1 26 65.3 3.2 4.3 44.9 68.5 108.7 96 15.2 6.6 27 10.5 36.2 13.4 15.2 4.8 29 4.1 39.9 2.5 12.2-1.8 38.1-15.5 43.5-30.5 5.3-14.9 5.3-27.7 3.7-30.5-1.6-2.7-5.9-4.3-12.3-7.5z"/>
+    </svg>
+    
+  </a>
+
+  
+
+</div>
+{% endif %}
+
+{% endcomment %}
+
+
+ 
+              </div>
+
+          </div>
+      
+            
+          {% endform %}
+
+        </div>
+         
+         </div>
+      </div>
+    </div>
+
+  
+
+  {% if section.settings.product_description_position == 'below' %}
+    {%- assign position = 'below' -%}
+    {% include 'product-description' %}
+  {% endif %}
+
+    <hr>     
+  <div class="oc_featuredproduct">
+    <h3>{{ settings.top_line }}</h3>
+     <h2>{{ settings.product_title }}</h2>
+    <div class="product-container">
+        <div class="product-image">
+            {% if settings.product_image %}
+              <a href="{{ settings.product_link }}">
+              <img src="{{ settings.product_image | img_url: 'large' }}" alt="{{ settings.product_title }}">
+              </a>
+            {% endif %}
+        </div>
+        <div class="product-details">
+            <div>
+            {{ settings.product_description }}
+              </div>
+        </div>
+    </div>
+</div>
+            <div style="font-size: 16px;"
+  {% include 'related-products' %}
+</div>
+
+{% unless product == empty %}
+  <script type="application/json" id="ProductJson-{{ section.id }}">
+    {{ product | json }}
+  </script>
+{% endunless %}
+
+{% javascript %}
+  // Override default values of shop.strings for each template.
+  // Alternate product templates can change values of
+  // add to cart button, sold out, and unavailable states heres.
+  window.productStrings = {
+    addToCart: {{ 'products.product.add_to_cart' | t | json }},
+    soldOut: {{ 'products.product.sold_out' | t | json }},
+    unavailable: {{ 'products.product.unavailable' | t | json }}
+  }
+  function copyCoupon() {
+    const couponText = document.getElementById(couponCode).innerText;
+    navigator.clipboard.writeText(couponText).then(() => {
+      alert(Coupon copied:  + couponText);
+    });
+  }
+  {% endjavascript %}
+
+<div class="elfsight-sapp-d345c560-9eb5-11e9-a91c-4948e382c7b0"></div>
+
+{% schema %}
+{
+  "name": {
+    "de": "Produktseiten",
+    "en": "Product pages",
+    "es": "Páginas de productos",
+    "fr": "Pages de produits",
+    "it": "Pagine di prodotto",
+    "ja": "商品ページ",
+    "pt-BR": "Páginas de produtos"
+  },
+  "settings": [
+    {
+  "type": "select",
+  "id": "coupon_position",
+  "label": "Coupon code position",
+  "default": "under_price",
+  "options": [
+    { "value": "above_title", "label": "Above title" },
+    { "value": "under_title", "label": "Under title" },
+    { "value": "under_vendor", "label": "Under vendor logo" },
+    { "value": "under_price", "label": "Under price" },
+    { "value": "after_posted_on", "label": "After Posted on line" },
+    { "value": "after_disclosure", "label": "After advertiser disclosure" },
+    { "value": "after_whatsapp", "label": "After WhatsApp group text" },
+    { "value": "above_product_description", "label": "Above product description" },
+    { "value": "below_product_description", "label": "Below product description" },
+    { "value": "after_buttons", "label": "After GET DEAL + WhatsApp button" }
+  ]
+},
+
+    {
+      "type": "checkbox",
+      "id": "product_quantity_enable",
+      "label": {
+        "de": "Mengenauswahl anzeigen",
+        "en": "Show quantity selector",
+        "es": "Mostrar selector de cantidad",
+        "fr": "Afficher le sélecteur de quantité",
+        "it": "Mostra selettore quantità",
+        "ja": "数量セレクターを表示する",
+        "pt-BR": "Exiba um seletor de quantidade"
+      }
+    },
+    {
+      "type": "text",
+      "id": "whatsapp-url",
+      "label": "Whatsapp URL",
+      "default": "https://wa.me/19176526730?text=Hi%20Please%20add%20me%20to%20the%20SimplexDeals%20WhatsApp%20group%20%26%20status."
+    },
+    {
+      "type": "checkbox",
+      "id": "vendor_show",
+      "label": {
+        "de": "Produktverkäufer anzeigen",
+        "en": "Show product vendor",
+        "es": "Mostrar proveedor del producto",
+        "fr": "Afficher le distributeur du produit",
+        "it": "Mostra fornitore prodotto",
+        "ja": "商品の販売元を表示する",
+        "pt-BR": "Exiba o fornecedor do produto"
+      }
+    },
+    {
+      "type": "checkbox",
+      "id": "social_sharing_products",
+      "label": {
+        "de": "Teilen von Produkten aktivieren",
+        "en": "Enable sharing for products",
+        "es": "Habilitar compartir para los productos",
+        "fr": "Activer le partage pour les produits",
+        "it": "Permetti condivisione prodotti",
+        "ja": "商品の共有を有効にする",
+        "pt-BR": "Ativar compartilhamento para produtos"
+      },
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": {
+        "de": "Beschreibung",
+        "en": "Description",
+        "es": "Descripción",
+        "fr": "Description",
+        "it": "Descrizione",
+        "ja": "説明",
+        "pt-BR": "Descrição"
+      }
+    },
+    {
+      "type": "select",
+      "id": "product_description_position",
+      "label": {
+        "de": "Position",
+        "en": "Position",
+        "es": "Posición",
+        "fr": "Position",
+        "it": "Posizione",
+        "ja": "位置",
+        "pt-BR": "Posição"
+      },
+      "default": "below",
+      "options": [
+        {
+          "value": "right",
+          "label": {
+            "de": "Rechte von Bildern",
+            "en": "Right of images",
+            "es": "A la derecha de las imágenes",
+            "fr": "Droit d'images",
+            "it": "A destra delle immagini",
+            "ja": "画像の右",
+            "pt-BR": "Direito de imagens"
+          }
+        },
+        {
+          "value": "below",
+          "label": {
+            "de": "Unter Bildern",
+            "en": "Below images",
+            "es": "Debajo de las imágenes",
+            "fr": "Sous les images",
+            "it": "Sotto le immagini",
+            "ja": "画像の下",
+            "pt-BR": "Imagens abaixo"
+          }
+        }
+      ]
+    },
+
+    {
+      "type": "select",
+      "id": "new_desc_box_position",
+      "label": "New description box position",
+      "default": "under_title",
+      "options": [
+        { "value": "above_title", "label": "Above title" },
+        { "value": "under_title", "label": "Under title" },
+        { "value": "under_vendor", "label": "Under vendor logo" },
+        { "value": "under_price", "label": "Under price" },
+        { "value": "after_posted_on", "label": "After Posted on line" },
+        { "value": "after_disclosure", "label": "After advertiser disclosure" },
+        { "value": "after_whatsapp", "label": "After WhatsApp group text" },
+        { "value": "above_product_description", "label": "Above product description" },
+        { "value": "below_product_description", "label": "Below product description" },
+        { "value": "after_buttons", "label": "After GET DEAL + WhatsApp button" }
+      ]
+    },
+
+    {
+      "type": "checkbox",
+      "id": "show_extra_tab",
+      "label": {
+        "de": "Ein Tab neben Ihrer Produktbeschreibung anzeigen",
+        "en": "Show a tab next to your product description",
+        "es": "Mostrar una pestaña al lado de la descripción de tu producto",
+        "fr": "Afficher un onglet en regard de la description de votre produit",
+        "it": "Mostra una scheda accanto alla descrizione del prodotto",
+        "ja": "商品説明の横にタブを表示する",
+        "pt-BR": "Exibir uma guia ao lado da descrição do seu produto"
+      },
+      "default": false
+    },
+    {
+      "type": "page",
+      "id": "extra_tab_content",
+      "label": {
+        "de": "Tab-Inhalt",
+        "en": "Tab content",
+        "es": "Contenido de la pestaña",
+        "fr": "Contenu de l'onglet",
+        "it": "Contenuto della scheda",
+        "ja": "タブのコンテンツ",
+        "pt-BR": "Conteúdo da guia"
+      },
+      "info": {
+        "de": "Der Inhalt dieser Seite wird auf der zusätzlichen Registerkarte angezeigt.",
+        "en": "This page content will appear in the extra tab.",
+        "es": "El contenido de esta página aparecerá en la pestaña adicional.",
+        "fr": "Le contenu de cette page s'affichera dans l'onglet supplémentaire.",
+        "it": "Il contenuto di questa pagina verrà visualizzato nella scheda aggiuntiva.",
+        "ja": "このページのコンテンツは追加のタブに表示されます。",
+        "pt-BR": "O conteúdo dessa página aparecerá na guia extra."
+      }
+    },
+    {
+      "type": "header",
+      "content": {
+        "de": "Feature-Bild",
+        "en": "Featured image",
+        "es": "Imagen destacada",
+        "fr": "Image en vedette",
+        "it": "Immagine in evidenza",
+        "ja": "記事のサムネイル",
+        "pt-BR": "Imagem em destaque"
+      }
+    },
+    {
+      "type": "select",
+      "id": "product_image_zoom_type",
+      "label": {
+        "de": "Zoomtyp",
+        "en": "Zoom type",
+        "es": "Tipo de zoom",
+        "fr": "Type de zoom",
+        "it": "Tipo di zoom",
+        "ja": "ズームタイプ",
+        "pt-BR": "Tipo de zoom"
+      },
+      "options": [
+        {
+          "value": "lightbox",
+          "label": {
+            "de": "Leuchtkasten",
+            "en": "Lightbox",
+            "es": "Lightbox",
+            "fr": "Visionneuse d'image",
+            "it": "Lightbox",
+            "ja": "Lightbox",
+            "pt-BR": "Lightbox"
+          }
+        },
+        {
+          "value": "zoom-in",
+          "label": {
+            "de": "Heranzoomen",
+            "en": "Zoom-in",
+            "es": "Acercar",
+            "fr": "Zoom avant",
+            "it": "Zoom avanti",
+            "ja": "ズームイン",
+            "pt-BR": "Mais zoom"
+          }
+        },
+        {
+          "value": "none",
+          "label": {
+            "de": "Nicht zoomen",
+            "en": "No zoom",
+            "es": "Sin zoom",
+            "fr": "Pas de zoom",
+            "it": "Nessun zoom",
+            "ja": "ズームなし",
+            "pt-BR": "Sem zoom"
+          }
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": {
+        "de": "Schaltfläche In den Warenkorb",
+        "en": "Add to cart button",
+        "es": "Añadir al carrito",
+        "fr": "Bouton d'ajout au panier",
+        "it": "Pulsante \"Aggiungi al carrello\"",
+        "ja": "カートボタンに追加する",
+        "pt-BR": "Botão Adicionar ao carrinho"
+      }
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_payment_button",
+      "label": {
+        "de": "Dynamischen Checkout Button anzeigen",
+        "en": "Show dynamic checkout button",
+        "es": "Mostrar botón de pago dinámico",
+        "fr": "Afficher le bouton de passage à la caisse dynamique",
+        "it": "Mostra pulsante di check-out dinamico",
+        "ja": "ダイナミックチェックアウトボタンを表示する",
+        "pt-BR": "Exibir botão dinâmico de finalização da compra"
+      },
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "add_to_cart_width",
+      "label": {
+        "de": "Schaltflächengröße",
+        "en": "Button size",
+        "es": "Tamaño del botón",
+        "fr": "Taille du bouton",
+        "it": "Dimensione pulsante",
+        "ja": "ボタンのサイズ",
+        "pt-BR": "Tamanho do botão"
+      },
+      "options": [
+        {
+          "value": "regular",
+          "label": {
+            "de": "Regulär",
+            "en": "Regular",
+            "es": "Normal",
+            "fr": "Normal",
+            "it": "Regolare",
+            "ja": "通常",
+            "pt-BR": "Regular"
+          }
+        },
+        {
+          "value": "full_width",
+          "label": {
+            "de": "Volle Breite",
+            "en": "Full width",
+            "es": "Ancho completo",
+            "fr": "Pleine largeur",
+            "it": "Intera larghezza",
+            "ja": "全幅",
+            "pt-BR": "Largura completa"
+          }
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "whatsapp_url",
+      "label": "Add WhatsApp Url"
+    },
+    {
+      "type": "text",
+      "id": "telegram_url",
+      "label": "Add Telegram Url"
+    },
+    {
+      "type": "text",
+      "id": "discount_code",
+      "label": "Discount Code",
+      "default": "50EUTMHD"
+    }
+  ]
+}
+{% endschema %}
+
+{% comment %}
+
+This file has been rewritten to preserve the original behavior.
+
+---
+Changes:
+- from: "{% include 'image-style' with image: image, width: 720, height: 600, small_style:
+    true, wrapper_id: wrapper_id, img_id: img_id %}"
+  to: "{% include 'image-style' with image, image: image, width: 720, height: 600,
+    small_style: true, wrapper_id: wrapper_id, img_id: img_id %}"
+  position: 1464..1600
+{% endcomment %}

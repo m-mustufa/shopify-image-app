@@ -1,0 +1,67 @@
+ /* Overall slider container */
+.product-slider {
+  margin: 20px auto;
+  padding: 0 10px;
+}
+
+/* Slick slide spacing */
+.product-slider .slick-slide {
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+
+/* Product card */
+.product-slider .product-item {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 15px;
+  text-align: center;
+  transition: box-shadow 0.3s ease;
+  height: 100%;
+}
+
+/* Hover effect */
+.product-slider .product-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Product image */
+.product-slider .product-item img {
+  width: 100%;
+  height: auto;
+  max-height: 150px;
+  object-fit: contain;
+  margin-bottom: 10px;
+  border-radius: 4px;
+}
+
+.product-slider  {
+  font-size: 14px;
+  font-weight: 600;
+  color: #000000;
+  margin: 10px 0 5px;
+}
+
+.product-slider .price {
+  font-size: 14px;
+  font-weight: bold;
+  color: green;
+}
+.product-slider-wrapper .product-title{
+  font-size: 14px;
+  font-weight: 600;
+  color: #000000;
+  margin: 10px 0 5px;
+}
+
+/* Optional tag (e.g., "New") */
+.product-slider .tag {
+  display: inline-block;
+  background: #ff0099;
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin-top: 6px;
+}

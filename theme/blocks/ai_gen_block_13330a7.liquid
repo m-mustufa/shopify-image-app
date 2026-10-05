@@ -1,0 +1,247 @@
+{% doc %}
+  @prompt
+    A heading with an animated glowing effect, i want to be able to add in the back end a huper link, when someone clicks on it it shuld click on the link i added in the backend, make a box around it, in mobile view make the block a little smaller, it should not be so much space from the words to the box around
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-glow-heading-{{ ai_gen_id }} {
+    display: block;
+    width: {{ block.settings.desktop_width_percent }}%;
+    max-width: 100%;
+    text-align: {{ block.settings.text_alignment }};
+    padding: 40px 20px;
+    border: {{ block.settings.border_width }}px solid {{ block.settings.border_color }};
+    border-radius: {{ block.settings.border_radius }}px;
+    background-color: {{ block.settings.background_color }};
+    box-shadow: 0 0 {{ block.settings.box_glow }}px {{ block.settings.border_color }};
+  }
+
+  .ai-glow-heading__link-{{ ai_gen_id }} {
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .ai-glow-heading__text-{{ ai_gen_id }} {
+    font-family: {{ block.settings.heading_font.family }}, {{ block.settings.heading_font.fallback_families }};
+    font-weight: {{ block.settings.heading_font.weight }};
+    font-size: {{ block.settings.font_size }}px;
+    color: {{ block.settings.text_color }};
+    margin: 0;
+    position: relative;
+    display: inline-block;
+    text-shadow: 
+      0 0 {{ block.settings.glow_intensity }}px {{ block.settings.glow_color }},
+      0 0 {{ block.settings.glow_intensity | times: 2 }}px {{ block.settings.glow_color }},
+      0 0 {{ block.settings.glow_intensity | times: 3 }}px {{ block.settings.glow_color }};
+    cursor: pointer;
+  }
+
+  @keyframes ai-glow-pulse-{{ ai_gen_id }} {
+    0%, 100% {
+      text-shadow: 
+        0 0 {{ block.settings.glow_intensity }}px {{ block.settings.glow_color }},
+        0 0 {{ block.settings.glow_intensity | times: 2 }}px {{ block.settings.glow_color }},
+        0 0 {{ block.settings.glow_intensity | times: 3 }}px {{ block.settings.glow_color }};
+    }
+    50% {
+      text-shadow: 
+        0 0 {{ block.settings.glow_intensity | times: 1.5 }}px {{ block.settings.glow_color }},
+        0 0 {{ block.settings.glow_intensity | times: 3 }}px {{ block.settings.glow_color }},
+        0 0 {{ block.settings.glow_intensity | times: 4.5 }}px {{ block.settings.glow_color }};
+    }
+  }
+
+  .ai-glow-heading__text-{{ ai_gen_id }} {
+    animation: ai-glow-pulse-{{ ai_gen_id }} {{ block.settings.animation_speed }}s ease-in-out infinite;
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-glow-heading-{{ ai_gen_id }} {
+      padding: 20px 15px;
+    }
+
+    .ai-glow-heading__text-{{ ai_gen_id }} {
+      font-size: {{ block.settings.font_size | times: 0.7 }}px;
+    }
+  }
+{% endstyle %}
+
+<div class="ai-glow-heading-{{ ai_gen_id }}" {{ block.shopify_attributes }}>
+  {% if block.settings.heading_link != blank %}
+    <a href="{{ block.settings.heading_link }}" class="ai-glow-heading__link-{{ ai_gen_id }}">
+      {% if block.settings.heading_text != blank %}
+        <h2 class="ai-glow-heading__text-{{ ai_gen_id }}">{{ block.settings.heading_text }}</h2>
+      {% else %}
+        <h2 class="ai-glow-heading__text-{{ ai_gen_id }}">Add your heading text</h2>
+      {% endif %}
+    </a>
+  {% else %}
+    {% if block.settings.heading_text != blank %}
+      <h2 class="ai-glow-heading__text-{{ ai_gen_id }}">{{ block.settings.heading_text }}</h2>
+    {% else %}
+      <h2 class="ai-glow-heading__text-{{ ai_gen_id }}">Add your heading text</h2>
+    {% endif %}
+  {% endif %}
+</div>
+
+{% schema %}
+{
+  "name": "Glowing heading",
+  "tag": null,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "text",
+      "id": "heading_text",
+      "label": "Heading text",
+      "default": "Welcome to our store"
+    },
+    {
+      "type": "url",
+      "id": "heading_link",
+      "label": "Heading link"
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "Text alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "desktop_width_percent",
+      "label": "Desktop width",
+      "min": 50,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 100
+    },
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "font_picker",
+      "id": "heading_font",
+      "label": "Font",
+      "default": "helvetica_n7"
+    },
+    {
+      "type": "range",
+      "id": "font_size",
+      "label": "Font size",
+      "min": 20,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "default": 50
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Glow effect"
+    },
+    {
+      "type": "color",
+      "id": "glow_color",
+      "label": "Glow color",
+      "default": "#0008ff"
+    },
+    {
+      "type": "range",
+      "id": "glow_intensity",
+      "label": "Glow intensity",
+      "min": 5,
+      "max": 50,
+      "step": 5,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "animation_speed",
+      "label": "Animation speed",
+      "min": 1,
+      "max": 5,
+      "step": 1,
+      "unit": "s",
+      "default": 2
+    },
+    {
+      "type": "header",
+      "content": "Box style"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "border_color",
+      "label": "Border color",
+      "default": "#0008ff"
+    },
+    {
+      "type": "range",
+      "id": "border_width",
+      "label": "Border width",
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "unit": "px",
+      "default": 2
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "label": "Border radius",
+      "min": 0,
+      "max": 50,
+      "step": 5,
+      "unit": "px",
+      "default": 10
+    },
+    {
+      "type": "range",
+      "id": "box_glow",
+      "label": "Box glow",
+      "min": 0,
+      "max": 50,
+      "step": 5,
+      "unit": "px",
+      "default": 15
+    }
+  ],
+  "presets": [
+    {
+      "name": "Glowing heading"
+    }
+  ]
+}
+{% endschema %}

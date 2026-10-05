@@ -1,0 +1,36 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "product-template",
+      "settings": {
+        "coupon_position": "below_product_description",
+        "product_quantity_enable": false,
+        "whatsapp-url": "https://chat.whatsapp.com/D3wIBxGndgD3LplNW34T7i",
+        "vendor_show": true,
+        "social_sharing_products": true,
+        "product_description_position": "right",
+        "new_desc_box_position": "below_product_description",
+        "show_extra_tab": true,
+        "extra_tab_content": "",
+        "product_image_zoom_type": "none",
+        "enable_payment_button": false,
+        "add_to_cart_width": "regular",
+        "whatsapp_url": "https://chat.whatsapp.com/BAKCvFAbSwO9eM1mwXMsGR",
+        "telegram_url": "https://t.me/simplexdeals",
+        "discount_code": "50EUTMHD"
+      }
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

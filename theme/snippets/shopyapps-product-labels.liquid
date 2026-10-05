@@ -1,0 +1,45 @@
+{% assign badgeToApply = false %}
+{% if template contains 'search' %}
+{% assign type = "SEARCH-PAGE" %}
+{% elsif template contains 'collection' or template contains 'index' %}
+{% assign type = "COLLECTION-PAGE" %}
+{% elsif template contains 'product' %}
+{% capture applyBadgeResult %}
+{% include 'shopyapps-product-labels-badge-type' with product %}
+{% endcapture %}
+{% assign badgeToApply = applyBadgeResult  | replace: '\n', '' | replace: '\t', '' | replace: ' ', '' %}
+{% assign type = "PRODUCT-PAGE" %}
+{% else %}
+{% assign type = "TYPE-NONE" %}
+{% endif %}
+
+
+ {% if type == 'SEARCH-PAGE' %} 
+
+ {% assign type = 'TYPE-NONE' %} 
+
+ {% endif %} 
+
+
+<script type="text/javascript">
+
+window.shopyappsProductLabels = {}
+window.shopyappsProductLabels.productBadgeMap = { "{{ product.handle }}" : {{ badgeToApply | strip_newlines | downcase }} }
+window.shopyappsProductLabels.type = "{{ type | strip_newlines }}"
+
+if(typeof jQuery=='undefined') {
+  var headTag = document.getElementsByTagName("head")[0];
+  var jqTag = document.createElement('script');
+  jqTag.type = 'text/javascript';
+  jqTag.src = 'https://code.jquery.com/jquery-3.2.1.min.js ';
+  jqTag.onload = function(){
+    jQuery.noConflict();
+    if (window.setupShopyAppsProductLabels){
+      window.setupShopyAppsProductLabels();
+    }
+  };
+  headTag.appendChild(jqTag);
+}
+
+</script>
+

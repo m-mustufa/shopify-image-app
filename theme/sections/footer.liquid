@@ -1,0 +1,617 @@
+<div class="product-slider-wrapper site-wrapper">
+  <div class="product-slider">
+    {% for block in section.blocks %}
+    {% case block.type %}
+    {% when 'product' %}
+      {% assign product = block.settings.product %}
+      {% if product %}
+       {% include 'product-grid-item' %}
+      {% endif %}
+    {% endcase %}
+    {% endfor %}
+  </div>
+</div>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<!-- new 1 -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-2117859206272045"
+     data-ad-slot="6726236749"
+     data-ad-format="horizontal"
+     data-full-width-responsive="false"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+<footer class="site-footer" role="contentinfo" data-section-id="{{ section.id }}" data-section-type="footer-section">
+
+  <div class="grid">
+
+    {% case section.blocks.size %}
+    {% when 0 %}
+    {% when 1 %}
+    {% assign column_width = 'text-left' %}
+    {% when 2 %}
+    {% assign column_width = 'medium-up--one-half small--one-whole' %}
+    {% when 3 %}
+    {% assign column_width = 'medium-up--one-third small--one-whole' %}
+    {% when 4 %}
+    {% assign column_width = 'medium-up--one-quarter small--one-whole' %}
+    {% endcase %}
+
+    {% for block in section.blocks %}
+    {% case block.type %}
+    {% when 'menu' %}
+    <div class="grid__item {{ column_width }}">
+      {% if block.settings.title %}
+      <h3 class="site-footer__section-title">{{ block.settings.title | escape }}</h3>
+      {% endif %}
+      <ul class="site-footer__menu">
+        {% for link in linklists[block.settings.menu].links %}
+        <li><a href="{{ link.url }}">{{ link.title }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    {% when 'text' %}
+    <div class="grid__item {{ column_width }}">
+      {% if block.settings.title %}
+      <h3 class="site-footer__section-title">{{ block.settings.title | escape }}</h3>
+      {% endif %}
+      <div class="rte">{{ block.settings.richtext }}</div>
+    </div>
+
+    {% comment %} Adjusted by Salvatore D @ Shopify Theme Support on July 31, 2019 {% endcomment %}
+    {% when 'social' %}
+    <div class="grid__item medium-up--one-whole small--one-whole">
+      {% if block.settings.title %}
+      <h3 class="site-footer__section-title">{{ block.settings.title | escape }}</h3>
+      {% endif %}
+      <div class="custom_social grid">
+        {% if block.settings.footer_logo_1 != blank %}
+        <div class="footer-logo grid__item one-half">
+          {% if block.settings.footer_logo_1_url != blank %}
+          <a href="{{ block.settings.footer_logo_1_url }}">
+            {% endif %}
+            <img class="footer-logo-width" src="{{ block.settings.footer_logo_1 | img_url: '300x300' }}"
+                 data-src="{{ img_url }}"
+                 data-widths="[360, 540, 720, 900, 1080, 1296, 1512, 1728, 1944, 2048]"
+                 data-aspectratio="{{ block.settings.footer_logo_1.aspect_ratio }}"
+                 data-sizes="auto"
+                 alt="{{ block.settings.footer_logo_1.alt | escape }}">
+            {% if block.settings.footer_logo_1_url != blank %}
+          </a>
+          {% endif %}
+        </div>
+        {% endif %}
+        {% if block.settings.footer_logo_2 != blank %}
+        <div class="footer-logo grid__item one-half">
+          {% if block.settings.footer_logo_2_url != blank %}
+          <a href="{{ block.settings.footer_logo_2_url }}">
+            {% endif %}
+            <img class="footer-logo-width" src="{{ block.settings.footer_logo_2 | img_url: '300x300' }}"
+                 data-src="{{ img_url }}"
+                 data-widths="[360, 540, 720, 900, 1080, 1296, 1512, 1728, 1944, 2048]"
+                 data-aspectratio="{{ block.settings.footer_logo_2.aspect_ratio }}"
+                 data-sizes="auto"
+                 alt="{{ block.settings.footer_logo_2.alt | escape }}">
+            {% if block.settings.footer_logo_2_url != blank %}
+          </a>
+          {% endif %}
+        </div>
+        {% endif %}
+        {% if block.settings.footer_logo_3 != blank %}
+        <div class="footer-logo grid__item one-half">
+          {% if block.settings.footer_logo_3_url != blank %}
+          <a href="{{ block.settings.footer_logo_3_url }}">
+            {% endif %}
+            <img class="footer-logo-width" src="{{ block.settings.footer_logo_3 | img_url: '300x300' }}"
+                 data-src="{{ img_url }}"
+                 data-widths="[360, 540, 720, 900, 1080, 1296, 1512, 1728, 1944, 2048]"
+                 data-aspectratio="{{ block.settings.footer_logo_3.aspect_ratio }}"
+                 data-sizes="auto"
+                 alt="{{ block.settings.footer_logo_3.alt | escape }}">
+            {% if block.settings.footer_logo_3_url != blank %}
+          </a>
+          {% endif %}
+        </div>
+        {% endif %}
+        {% if block.settings.footer_logo_4 != blank %}
+        <div class="footer-logo grid__item one-half">
+          {% if block.settings.footer_logo_4_url != blank %}
+          <a href="{{ block.settings.footer_logo_4_url }}">
+            {% endif %}
+            <img class="footer-logo-width" src="{{ block.settings.footer_logo_4 | img_url: '300x300' }}"
+                 data-src="{{ img_url }}"
+                 data-widths="[360, 540, 720, 900, 1080, 1296, 1512, 1728, 1944, 2048]"
+                 data-aspectratio="{{ block.settings.footer_logo_4.aspect_ratio }}"
+                 data-sizes="auto"
+                 alt="{{ block.settings.footer_logo_4.alt | escape }}">
+            {% if block.settings.footer_logo_4_url != blank %}
+          </a>
+          {% endif %}
+        </div>
+        {% endif %}
+        {% if block.settings.footer_logo_5 != blank %}
+        <div class="footer-logo grid__item one-half">
+          {% if block.settings.footer_logo_5_url != blank %}
+          <a href="{{ block.settings.footer_logo_5_url }}">
+            {% endif %}
+            <img class="footer-logo-width" src="{{ block.settings.footer_logo_5 | img_url: '300x300' }}"
+                 data-src="{{ img_url }}"
+                 data-widths="[360, 540, 720, 900, 1080, 1296, 1512, 1728, 1944, 2048]"
+                 data-aspectratio="{{ block.settings.footer_logo_5.aspect_ratio }}"
+                 data-sizes="auto"
+                 alt="{{ block.settings.footer_logo_5.alt | escape }}">
+            {% if block.settings.footer_logo_5_url != blank %}
+          </a>
+          {% endif %}
+        </div>
+        {% endif %}
+        {% if block.settings.footer_logo_6 != blank %}
+        <div class="footer-logo grid__item one-half">
+          {% if block.settings.footer_logo_6_url != blank %}
+          <a href="{{ block.settings.footer_logo_6_url }}">
+            {% endif %}
+            <img class="footer-logo-width" src="{{ block.settings.footer_logo_6 | img_url: '300x300' }}"
+                 data-src="{{ img_url }}"
+                 data-widths="[360, 540, 720, 900, 1080, 1296, 1512, 1728, 1944, 2048]"
+                 data-aspectratio="{{ block.settings.footer_logo_6.aspect_ratio }}"
+                 data-sizes="auto"
+                 alt="{{ block.settings.footer_logo_6.alt | escape }}">
+            {% if block.settings.footer_logo_6_url != blank %}
+          </a>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% when 'newsletter' %}
+    <div class="grid__item medium-up--one-whole small--one-whole">
+      <div class="sxrs-footo">
+      {% if block.settings.title %}
+      <h3 class="site-footer__section-title">{{ block.settings.title | escape }}</h3>
+      {% endif %}
+      <h3 class="site-footer__section-title">{{ 'general.newsletter_form.newsletter_heading' | t }}</h3>
+      {% include 'newsletter', label: block.settings.subtext %}
+    </div>
+    </div>
+    {% endcase %}
+    {% endfor %}
+
+  </div>
+
+  {% if section.blocks.size > 0 %}
+  <hr>
+  {% endif %}
+
+
+  <div class="footer_linklist">
+    <div class="grid medium-up--grid--table sub-footer text-center">
+      <div class="grid__item medium-up--one-whole">
+        {%- assign footer_linklist = section.settings.footer_linklist -%}
+        <ul class="site-footer__linklist list--inline">
+          {%- for link in linklists[footer_linklist].links -%}
+          <li class="site-footer__linklist-item">
+            <a href="{{ link.url }}"
+               {% if link.current %} aria-current="page"{% endif %}
+               >
+              {{ link.title | escape }}
+            </a>
+          </li>
+          {%- endfor -%}
+        </ul>
+      </div>
+    </div>
+  </div>
+  <hr>
+  <div class="grid medium-up--grid--table sub-footer small--text-center">
+
+
+    <div class="grid__item medium-up--one-half">
+      <small>{{ 'layout.footer.copyright' | t }} &copy; {{ 'now' | date: "%Y" }}, {{ shop.name | link_to: '/' }}. {{ powered_by_link }}</small>
+    </div>
+    {%- if section.settings.show_payment_icons -%}
+    {%- unless shop.enabled_payment_types == empty -%}
+    <div class="grid__item medium-up--one-half medium-up--text-right">
+      <span class="visually-hidden">{{ 'general.payment.method' | t }}</span>
+      <ul class="list--inline payment-icons">
+        {%- for type in shop.enabled_payment_types -%}
+        <li>
+          {{ type | payment_type_svg_tag: class: 'icon icon--full-color' }}
+        </li>
+        {%- endfor -%}
+      </ul>
+    </div>
+    {%- endunless -%}
+    {%- endif -%}
+  </div>
+</footer>
+
+
+<style>
+  .site-footer hr {
+    margin: 10px 0;
+  }
+  .footer_linklist > .grid {
+    padding: 0;
+  }
+  .footer_linklist > .grid ul{
+    margin: 0;
+  }
+  .footer_linklist > .grid ul > .site-footer__linklist-item {
+    padding-bottom: 0;
+    line-height: 1;
+  }
+
+
+  .custom_social.grid {
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+
+
+  @media only screen and (min-device-width : 768px){ 
+
+    .custom_social.grid > .one-half {
+      width: 16%;
+    }
+  } 
+  @media only screen and (min-device-width : 500px){ 
+
+    .footer_linklist > .grid ul > .site-footer__linklist-item {
+      width: 33%;
+    }
+  }
+
+  @media only screen and (max-device-width : 767px){ 
+
+    .custom_social.grid > .one-half {
+      width: 33%;
+    }
+  }  
+
+
+  @media only screen and (max-device-width : 449px){ 
+
+    .custom_social.grid > .one-half {
+      width: 50%;
+    }
+  } 
+
+
+  @media only screen and (max-device-width : 499px){ 
+    .footer_linklist > .grid ul > .site-footer__linklist-item {
+      width: 100%;
+    }
+    .footer_linklist > .grid ul > .site-footer__linklist-item > a {
+      font-size: 18px;
+      margin: 8px 0;
+      display: block;
+    }
+  }
+</style>
+
+
+{% schema %}
+{
+  "name": {
+    "de": "Fußzeile",
+    "en": "Footer",
+    "es": "Pie de página",
+    "fr": "Pied de page",
+    "it": "Footer",
+    "ja": "フッター",
+    "pt-BR": "Rodapé"
+  },
+  "max_blocks": 15,
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_payment_icons",
+      "label": {
+        "de": "Zahlungs-Buttons anzeigen",
+        "en": "Show payment icons",
+        "es": "Mostrar iconos de pago",
+        "fr": "Afficher les icônes de paiement",
+        "it": "Mostra le icone di pagamento",
+        "ja": "支払いアイコンを表示する",
+        "pt-BR": "Exibir ícones de pagamento"
+      },
+      
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "vendor_show",
+      "label": {
+        "de": "Produktverkäufer anzeigen",
+        "en": "Show product vendor",
+        "es": "Mostrar proveedor del producto",
+        "fr": "Afficher le distributeur du produit",
+        "it": "Mostra fornitore prodotto",
+        "ja": "商品の販売元を表示する",
+        "pt-BR": "Exiba o fornecedor do produto"
+      }
+    },
+    {
+      "type": "link_list",
+      "id": "footer_linklist",
+      "label": "Advertiser Disclosure button"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "menu",
+      "name": {
+        "de": "Menü",
+        "en": "Menu",
+        "es": "Menú",
+        "fr": "Menu",
+        "it": "Menu",
+        "ja": "メニュー",
+        "pt-BR": "Menu"
+      },
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": {
+            "de": "Titel",
+            "en": "Heading",
+            "es": "Título",
+            "fr": "Titre",
+            "it": "Heading",
+            "ja": "見出し",
+            "pt-BR": "Título"
+          },
+          "default": {
+            "de": "Links",
+            "en": "Links",
+            "es": "Enlaces",
+            "fr": "Liens",
+            "it": "Links",
+            "ja": "リンク",
+            "pt-BR": "Links"
+          }
+        },
+        {
+          "type": "link_list",
+          "id": "menu",
+          "label": {
+            "de": "Menü",
+            "en": "Menu",
+            "es": "Menú",
+            "fr": "Menu",
+            "it": "Menu",
+            "ja": "メニュー",
+            "pt-BR": "Menu"
+          },
+          "info": {
+            "de": "Dieses Menü zeigt keine Dropdowns an",
+            "en": "This menu won't show dropdown items",
+            "es": "Este menú no mostrará elementos desplegables",
+            "fr": "Ce menu n'affichera pas les éléments des menus déroulants",
+            "it": "Questo menu non mostrerà elementi a discesa",
+            "ja": "このメニューにはドロップダウンアイテムは表示されません",
+            "pt-BR": "Este menu não mostra itens suspensos"
+          }
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "name": {
+        "de": "Text",
+        "en": "Text",
+        "es": "Texto",
+        "fr": "Texte",
+        "it": "Testo",
+        "ja": "テキスト",
+        "pt-BR": "Texto"
+      },
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": {
+            "de": "Titel",
+            "en": "Heading",
+            "es": "Título",
+            "fr": "Titre",
+            "it": "Heading",
+            "ja": "見出し",
+            "pt-BR": "Título"
+          },
+          "default": {
+            "de": "Kontaktieren Sie uns",
+            "en": "Contact us",
+            "es": "Ponte en contacto con nosotros",
+            "fr": "Contactez-nous",
+            "it": "Contattaci",
+            "ja": "お問い合わせ",
+            "pt-BR": "Fale conosco"
+          }
+        },
+        {
+          "type": "richtext",
+          "id": "richtext",
+          "label": {
+            "de": "Text",
+            "en": "Text",
+            "es": "Texto",
+            "fr": "Texte",
+            "it": "Testo",
+            "ja": "テキスト",
+            "pt-BR": "Texto"
+          },
+          "default": {
+            "de": "<p>Mit diesem Text können Sie Ihre Kunden über Ihre Marke informieren.</p>",
+            "en": "<p>Use this text to share information about your brand with your customers.</p>",
+            "es": "<p>Usa este texto para compartir información sobre tu marca con tus clientes.</p>",
+            "fr": "<p>Utilisez ce texte pour partager des informations sur votre marque avec vos clients.</p>",
+            "it": "<p>Utilizza questo spazio per condividere informazioni sul tuo brand con i clienti.</p>",
+            "ja": "<p>このテキストを使用して、あなたのブランドに関する情報をお客様と共有します。</p>",
+            "pt-BR": "<p>Use este texto para compartilhar informações sobre sua marca com seus clientes.</p>"
+          }
+        }
+      ]
+    },
+    {
+      "type": "social",
+      "name": "Social",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": {
+            "de": "Titel",
+            "en": "Heading",
+            "es": "Título",
+            "fr": "Titre",
+            "it": "Heading",
+            "ja": "見出し",
+            "pt-BR": "Título"
+          },
+          "default": "Follow us"
+        },
+        {
+         "type": "image_picker",
+         "id": "footer_logo_1",
+         "label": "Footer Logo 1"
+        },
+        {
+          "type": "url",
+          "id": "footer_logo_1_url",
+          "label": "Link Logo 1"
+        },
+        {
+         "type": "image_picker",
+         "id": "footer_logo_2",
+         "label": "Footer Logo 2"
+        },
+        {
+          "type": "url",
+          "id": "footer_logo_2_url",
+          "label": "Link Logo 2"
+        },
+        {
+         "type": "image_picker",
+         "id": "footer_logo_3",
+         "label": "Footer Logo 3"
+        },
+        {
+          "type": "url",
+          "id": "footer_logo_3_url",
+          "label": "Link Logo 3"
+        },
+        {
+         "type": "image_picker",
+         "id": "footer_logo_4",
+         "label": "Footer Logo 4"
+        },
+        {
+          "type": "url",
+          "id": "footer_logo_4_url",
+          "label": "Link Logo 4"
+        },
+        {
+         "type": "image_picker",
+         "id": "footer_logo_5",
+         "label": "Footer Logo 5"
+        },
+        {
+          "type": "url",
+          "id": "footer_logo_5_url",
+          "label": "Link Logo 5"
+        },
+        {
+         "type": "image_picker",
+         "id": "footer_logo_6",
+         "label": "Footer Logo 6"
+        },
+        {
+          "type": "url",
+          "id": "footer_logo_6_url",
+          "label": "Link Logo 6"
+        }
+      ]
+    },
+    {
+      "type": "product",
+      "name": "Product Block",
+      "settings": [
+        {
+          "type": "product",
+          "id": "product",
+          "label": "Select Product"
+        }
+      ]
+    },
+    {
+      "type": "newsletter",
+      "name": {
+        "de": "Newsletter-Anmeldung",
+        "en": "Newsletter signup",
+        "es": "Suscripción al boletín",
+        "fr": "Inscription",
+        "it": "Iscrizione newsletter",
+        "ja": "メールマガジンの登録",
+        "pt-BR": "Assinatura da newsletter"
+      },
+      "limit": 1,
+      "settings": [
+        {
+          "type": "richtext",
+          "id": "subtext",
+          "label": {
+            "de": "Subtext",
+            "en": "Subtext",
+            "es": "Subtexto",
+            "fr": "Sous-texte",
+            "it": "Sottotesto",
+            "ja": "サブテキスト",
+            "pt-BR": "Subtexto"
+          },
+          "default": {
+            "de": "<p>Werbeaktionen, neue Produkte und Sonderangebote. Direkt in Ihrem Posteingang.</p>",
+            "en": "<p>Promotions, new products and sales. Directly to your inbox.</p>",
+            "es": "<p>Promociones, nuevos productos y ofertas. Directamente a tu bandeja de entrada.</p>",
+            "fr": "<p>Promotions, nouveaux produits et soldes. Directement dans votre boîte de réception.</p>",
+            "it": "<p>Promozioni, nuovi prodotti e offerte. Direttamente nella tua inbox.</p>",
+            "ja": "<p>プロモーション、新商品、セールについて、あなたの受信箱に直接知らせる。</p>",
+            "pt-BR": "<p>Promoções, novos produtos e vendas. Diretamente para sua caixa de entrada.</p>"
+          }
+        },
+        {
+          "type": "paragraph",
+          "content": {
+            "de": "Alle Kunden, die sich eintragen, bekommen ein Konto in Shopify. [Kunden ansehen](/admin/customers?query=&accepts_marketing=1)",
+            "en": "Any customers who sign up will have an account created for them in Shopify. [View customers](/admin/customers?query=&accepts_marketing=1)",
+            "es": "Todos los clientes que se registren tendrán una cuenta creada para ellos en Shopify. [Ver clientes](/admin/customers?query=&accepts_marketing=1)",
+            "fr": "Les clients qui s'inscrivent auront un compte créé pour eux sur Shopify. [Afficher les clients](/admin/customers?query=&accepts_marketing=1)",
+            "it": "Qualsiasi cliente che si iscrive avrà un account creato appositamente su Shopify. [Visualizza clienti](/admin/customers?query=&accepts_marketing=1)",
+            "ja": "サインアップしたお客様は、Shopifyでアカウントが作成されます。[お客様を表示](/admin/customers?query=&accepts_marketing=1)",
+            "pt-BR": "Todos os clientes que se inscreverem terão uma conta criada para eles na Shopify. [View customers](/admin/customers?query=&accepts_marketing=1)"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
+
+<script type="text/javascript">
+    var vglnk = {key: '68b7d93b781505261a66c80c4ad5c18d'};
+    (function(d, t) {
+        var s = d.createElement(t);
+            s.type = 'text/javascript';
+            s.async = true;
+            s.src = '//cdn.viglink.com/api/vglnk.js';
+        var r = d.getElementsByTagName(t)[0];
+            r.parentNode.insertBefore(s, r);
+    }(document, 'script'));
+</script>

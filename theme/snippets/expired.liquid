@@ -1,0 +1,74 @@
+<!-- ટ્રિગર બટન -->
+<a id="loginPopupTrigger" class="expired">REPORT</a>
+
+
+<!-- જાવાસ્ક્રિપ્ટ કોડ -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Check URL for success message
+if (window.location.href.includes('contact_posted=true')) {
+  document.getElementById('popupSuccessMessage').style.display = 'block';
+}
+
+    const trigger = document.getElementById('loginPopupTrigger');
+
+    trigger.addEventListener('click', function () {
+      const overlay = document.createElement('div');
+      overlay.id = 'popupOverlay';
+      Object.assign(overlay.style, {
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: '1000'
+      });
+
+      const popup = document.createElement('div');
+      popup.id = 'loginPopup';
+      Object.assign(popup.style, {
+        backgroundColor: '#fff',
+        padding: '20px',
+        borderRadius: '8px',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.26)',
+        width: '300px',
+        position: 'relative'
+      });
+
+     popup.innerHTML = `
+  <div class="popupOverlay">
+    <div class="loginPopup">
+      <span class="close-btn" id="closePopup">&times;</span>
+      <h3>Is This Deal Dead?</h3>
+      <p>Report it to help us keep things accurate and up-to-date for everyone in the community.</p>
+      <form method="POST" action="/contact#contact_form" accept-charset="UTF-8" class="contact-form">
+        <input type="hidden" name="form_type" value="contact">
+        <input type="hidden" name="utf8" value="✓">
+        <input type="hidden" name="contact[body]" value="I want this deal for: {{ product.title | escape }}&#10;Product Url: {{ shop.url }}{{ product.url }}&#10;Product ID: {{ product.id }}">       
+        <label for="email">Email:</label>
+        <input type="email" name="contact[email]" id="email" required>
+        
+        <div class="note">
+          Please note: Some deals may only be for Prime members, have codes, or clipped coupons.
+        </div>
+        
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  </div>
+`;
+
+
+      overlay.appendChild(popup);
+      document.body.appendChild(overlay);
+
+      popup.querySelector('#closePopup').addEventListener('click', () => document.body.removeChild(overlay));
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) document.body.removeChild(overlay); });
+    });
+  });
+</script>
+

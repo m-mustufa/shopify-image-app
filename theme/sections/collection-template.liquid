@@ -1,0 +1,171 @@
+<style> 
+  
+  @media (max-width: 749px){
+    .mobile-ad-row{ float:none!important; clear:both!important; width:100%!important; }
+    .mobile-ad-inner, .mobile-ad-inner *{ max-width:100%!important; }
+    .mobile-ad-inner iframe{ display:block!important; width:100%!important; }
+    .mobile-ad-inner img{ height:auto!important; }
+  }
+
+
+@media(min-width: 768px){
+.collection-template {
+display: flex;
+flex-wrap: wrap;
+}
+#mob-collection-template{
+display: none;
+}
+}
+@media(max-width: 767px){
+.collection-template {
+display: flex;
+flex-wrap: wrap;
+}
+#dsk-collection-template{
+display: none;
+}
+}
+</style>
+{% include 'dsk-collection-template' %}
+{% include 'mob-collection-template' %}
+
+<script>
+  window.theme = window.theme || {};
+  // Override default values of shop.strings for each template.
+  // Alternate product templates can change values of
+  //
+  theme.collectionStrings = {
+    sortBy: '{{ collection.sort_by | default: collection.default_sort_by }}'
+  }
+</script>
+
+{% schema %}
+{
+  "name": {
+    "de": "Kategorie-Seiten",
+    "en": "Collection pages",
+    "es": "Páginas de colección",
+    "fr": "Pages de collections",
+    "it": "Pagine delle collezioni",
+    "ja": "コレクションページ",
+    "pt-BR": "Páginas de Coleções"
+  },
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "vendor_show",
+      "label": {
+        "de": "Produktverkäufer anzeigen",
+        "en": "Show product vendor",
+        "es": "Mostrar proveedor del producto",
+        "fr": "Afficher le distributeur du produit",
+        "it": "Mostra fornitore prodotto",
+        "ja": "商品の販売元を表示する",
+        "pt-BR": "Exiba o fornecedor do produto"
+      }
+    },
+    {
+      "type": "checkbox",
+      "id": "collection_sort_enable",
+      "label": {
+        "de": "Kategoriesortierung aktivieren",
+        "en": "Enable collection sorting",
+        "es": "Habilitar la función ordenar colecciones",
+        "fr": "Activer le tri de la collection",
+        "it": "Abilita ordinamento collezione",
+        "ja": "コレクションの並べ替えを有効にする",
+        "pt-BR": "Ativar a ordenação de coleções"
+      },
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "collection_tag_enable",
+      "label": {
+        "de": "Filterung nach Produkt-Tag aktivieren",
+        "en": "Enable filtering by product tag",
+        "es": "Habilitar filtro por etiqueta de producto",
+        "fr": "Activer le filtrage par étiquette de produit",
+        "it": "Abilita filtri per tag di prodotto",
+        "ja": "商品タグによる絞り込みを有効にする",
+        "pt-BR": "Ativar filtragem por tag de produto"
+      },
+      "default": false
+    },
+
+   {
+      "type": "header",
+      "content": "Ads"
+    },
+        {
+      "type": "checkbox",
+      "id": "ads_code_enable",
+      "label": "Ads Code Enable"
+    },
+    {
+      "type": "textarea",
+      "id": "ads_code",
+      "label": "Ads Code"
+    },
+     {
+      "type": "checkbox",
+      "id": "mobile_ads_code_enable",
+      "label": "Mobile Ads Code Enable"
+    },
+    {
+      "type": "textarea",
+      "id": "mobile_ads_code",
+      "label": "Mobile Ads Code"
+    },
+
+
+
+    
+    {
+      "type": "header",
+      "content": "Number of products per page"
+    },
+    {
+      "type": "select",
+      "id": "products_per_page",
+      "label": "Number per page",
+      "default": "18",
+      "options": [
+        {
+          "value": "9",
+          "label": "9"
+        },
+        {
+          "value": "12",
+          "label": "12"
+        },
+        {
+          "value": "15",
+          "label": "15"
+        },
+        {
+          "value": "18",
+          "label": "18"
+        },
+        {
+          "value": "21",
+          "label": "21"
+        },
+        {
+          "value": "24",
+          "label": "24"
+        },
+        {
+          "value": "48",
+          "label": "48"
+        },
+        {
+          "value": "96",
+          "label": "96"
+        },
+      ]
+    }
+  ]
+}
+{% endschema %}

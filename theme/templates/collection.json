@@ -1,0 +1,104 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "collection-template",
+      "settings": {
+        "vendor_show": true,
+        "collection_sort_enable": false,
+        "collection_tag_enable": false,
+        "ads_code_enable": true,
+        "ads_code": "<div class=\"collection-ad--banner\">\n  <br>\n  <script async src=\"https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2117859206272045\" crossorigin=\"anonymous\"></script>\n  \n  <ins class=\"adsbygoogle\" style=\"display:block;width:100%;height:90px\" data-ad-client=\"ca-pub-2117859206272045\" data-ad-slot=\"6726236749\" data-ad-format=\"horizontal\" data-full-width-responsive=\"true\"></ins>\n       \n  <script>\n    (adsbygoogle = window.adsbygoogle || []).push({});\n  </script>\n</div>",
+        "mobile_ads_code_enable": true,
+        "mobile_ads_code": "<div class=\"collection-ad--banner\" style=\"text-align:center;\">\n\n<br>\n\n<script async src=\"https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2117859206272045\" crossorigin=\"anonymous\"></script>\n<!-- SimplexDeals_Mobile_Responsive -->\n<ins class=\"adsbygoogle\" style=\"display:block\" data-ad-client=\"ca-pub-2117859206272045\" data-ad-slot=\"8945114231\" data-ad-format=\"horizontal\" data-full-width-responsive=\"false\"></ins>\n<script>\n     (adsbygoogle = window.adsbygoogle || []).push({});\n</script>\n</div>",
+        "products_per_page": "96"
+      }
+    },
+    "1778249390b3e9af46": {
+      "type": "_blocks",
+      "blocks": {
+        "ai_gen_block_13330a7_wKQhTd": {
+          "type": "ai_gen_block_13330a7",
+          "settings": {
+            "heading_text": "🔥Credit Card Offers: Highest Ever, Limited Time",
+            "heading_link": "https://www.cardbenefit.com/featured-credit-cards/?ref=simplexd",
+            "text_alignment": "center",
+            "desktop_width_percent": 100,
+            "heading_font": "sans_serif_n7",
+            "font_size": 50,
+            "text_color": "#ffffff",
+            "glow_color": "#0008ff",
+            "glow_intensity": 20,
+            "animation_speed": 2,
+            "background_color": "#333333",
+            "border_color": "#0008ff",
+            "border_width": 2,
+            "border_radius": 10,
+            "box_glow": 15
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "ai_gen_block_13330a7_wKQhTd"
+      ],
+      "settings": {}
+    },
+    "177824970526f3f8dd": {
+      "type": "_blocks",
+      "blocks": {
+        "ai_gen_block_76c9fba_UiUJVw": {
+          "type": "ai_gen_block_76c9fba",
+          "disabled": true,
+          "settings": {
+            "desktop_width_percent": 100,
+            "background_color": "#ffffff",
+            "line_color": "#e0e0e0",
+            "active_line_color": "#0008ff",
+            "card_background_color": "#f9f9f9",
+            "card_border_radius": 8,
+            "date_font_size": 14,
+            "date_color": "#0008ff",
+            "title_font_size": 20,
+            "title_color": "#333333",
+            "description_font_size": 15,
+            "description_color": "#666666",
+            "item_1_date": "January 2024",
+            "item_1_title": "Company founded",
+            "item_1_description": "<p>Our journey began with a simple idea and a passion for innovation.</p>",
+            "item_2_date": "March 2024",
+            "item_2_title": "First product launch",
+            "item_2_description": "<p>We introduced our flagship product to the market with great success.</p>",
+            "item_3_date": "June 2024",
+            "item_3_title": "Expanded team",
+            "item_3_description": "<p>Grew our team to 50 talented individuals across multiple departments.</p>",
+            "item_4_date": "September 2024",
+            "item_4_title": "International expansion",
+            "item_4_description": "<p>Opened offices in three new countries to serve our global customers.</p>",
+            "item_5_date": "December 2024",
+            "item_5_title": "Award recognition",
+            "item_5_description": "<p>Received industry awards for innovation and customer satisfaction.</p>"
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "ai_gen_block_76c9fba_UiUJVw"
+      ],
+      "settings": {}
+    }
+  },
+  "order": [
+    "main",
+    "1778249390b3e9af46",
+    "177824970526f3f8dd"
+  ]
+}

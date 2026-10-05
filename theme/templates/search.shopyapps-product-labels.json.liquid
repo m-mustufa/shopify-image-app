@@ -1,0 +1,23 @@
+{% layout none %}
+
+{% capture output %}
+{% paginate search.results by 50 %}
+{% for product in search.results %}
+{% capture applyBadgeResult %}
+{% include 'shopyapps-product-labels-badge-type' with product %}
+{% endcapture %}
+
+{% assign badgeToApply = applyBadgeResult  | replace: '\n', '' | replace: '\t', '' | replace: ' ', '' %}
+"{{ product.handle }}" : {{ badgeToApply | downcase }},
+{% endfor %}
+{% endpaginate %}
+{% endcapture %}
+
+
+{% comment %} Enclose in curly brackets and output the json object {% endcomment %}
+{% capture jsonOutput %}
+{ {{ output | strip_newlines }} }
+{% endcapture %}
+
+
+{{ jsonOutput | json }}

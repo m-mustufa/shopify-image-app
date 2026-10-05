@@ -1,0 +1,404 @@
+
+    <style>
+        .holiday-shop-modal-wraper{
+          display:none;
+          position: fixed;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          z-index: 999999;
+          background: #fff;
+          overflow: auto;
+          padding: 74px 0;
+        }
+        .holiday-shop-modal-text-center{
+          text-align: center;
+          padding: 0  30px;
+        }
+        .holiday-shop-text-container{
+          max-width: 1170px;
+          margin: 30px auto 50px;
+          padding: 0 30px;
+        }
+        .holiday-shop-modal-countdown{
+          background-color: #f5f5f5;
+          padding: 50px 0;
+        }
+        .holiday-shop-modal-countdown-wrapper{
+          max-width: 1170px;
+          margin: 0 auto;
+          text-align: center;
+          padding: 0 5px;
+        }
+        .holiday-shop-countdown{
+          display: -webkit-box;
+          display: -webkit-flex;
+          display: -ms-flexbox;
+          display: flex;
+          width: 320px;
+          margin: 0 auto;
+          -webkit-box-pack: justify;
+          -webkit-justify-content: space-between;
+          -ms-flex-pack: justify;
+          justify-content: space-between;
+        }
+        .holiday-shop-countdown-clock_time{
+          display: -webkit-inline-box;
+          display: -webkit-inline-flex;
+          display: -ms-inline-flexbox;
+          display: inline-flex;
+          -webkit-box-orient: vertical;
+          -webkit-box-direction: normal;
+          -webkit-flex-direction: column;
+          -ms-flex-direction: column;
+          flex-direction: column;
+          width: 58px;
+          justify-content: center;
+          text-align: center;
+        }
+        .holiday-shop-countdown-title{
+          color: #131315;
+          font-size: 17px;
+          font-weight: 700;
+          line-height: 30px;
+          margin-bottom: 20px;
+        }
+        .holiday-shop-countdown-end_num{
+          color: #131315;
+          font-size: 48px;
+          font-weight: 700;
+          line-height: 1;
+          text-transform: uppercase;
+        }
+        .holiday-shop-countdown-divider{
+          font-size: 48px;
+          font-weight: 700;
+          line-height: 1;
+          color: #000;
+        }
+        .holiday-shop-modal-container{
+          display: flex;
+          flex-direction: column;
+          align-items: stretch;
+          justify-content: center;
+          height: 100%;
+          width: 100%;
+        }
+        .holiday-shop-countdown-num_title{
+          color: #131315;
+          font-size: 20px;
+          font-weight: 400;
+          line-height: 40px;
+          text-transform: uppercase;
+        }
+        .holiday-shop-modal-end-holiday{
+          padding: 0 30px;
+          max-width: 1170px;
+          margin: 80px auto 20px;
+          color: #666666;
+          font-size: 16px;
+          font-weight: 500;
+          line-height: 26px;
+          text-align:center;
+          width: 100%;
+        }
+        .holiday-shop-modal-copyright{
+          max-width: 1170px;
+          padding: 0 30px;
+          margin: 0 auto;
+          opacity: 0.5;
+          color: #666666;
+          font-size: 12px;
+          font-weight: 500;
+          line-height: 26px;
+          text-align:center;
+          width: 100%;
+        }
+        
+        .holiday-shop-modal-wraper{
+        background: rgba(255,255,255,1);
+      }
+      
+        #holiday-shop-modalend-date span{
+          text-transform: capitalize;
+        }
+        </style>
+        <div class="holiday-shop-modal-wraper" id="holiday-shop-modal-wraper">
+        <div class="holiday-shop-modal-container">
+          <div class="holiday-shop-modal-heading">
+              <div class="holiday-shop-modal-text-center" id="holiday-app-modal-logo-wrapper">
+                
+        <img src='https://cdn.shopify.com/s/files/1/0042/9205/1030/files/20191107_163322_180x.jpg?v=1613777333' alt="{{shop.name}}" />
+        
+              </div>
+              <div class="holiday-shop-text-container" id="holiday-text-container">
+                <p><span style="font-family: Tahoma;"><strong>Please come back soon! </strong></span><strong>Every Friday Afternoon until Saturday night we are closed because of our religion. </strong><span style="font-family: Tahoma;"><strong>Thank you for your support!</strong></span></p>
+
+              </div>
+          </div>
+          <div class="holiday-shop-modal-countdown" id="holiday-shop-modal-countdown">
+            <div class="holiday-shop-modal-countdown-wrapper">
+              <div class="holiday-shop-countdown-title">Our store will be back online in</div>
+              <div class="holiday-shop-countdown">
+                <div class="holiday-shop-countdown-clock_time">
+                  <div class="holiday-shop-countdown-end_num" id="holiday-shop-countdown-days_end">00</div>
+                  <div class="holiday-shop-countdown-num_title">DAYS</div>
+                </div>
+                <div class="holiday-shop-countdown-divider">:</div>
+                <div class="holiday-shop-countdown-clock_time">
+                  <div class="holiday-shop-countdown-end_num" id="holiday-shop-countdown-hrs_end">00</div>
+                  <div class="holiday-shop-countdown-num_title">HRS</div>
+                </div>
+                <div class="holiday-shop-countdown-divider">:</div>
+                <div class="holiday-shop-countdown-clock_time">
+                  <div class="holiday-shop-countdown-end_num" id="holiday-shop-countdown-mins_end">00</div>
+                  <div class="holiday-shop-countdown-num_title">MINS</div>
+                </div>
+                <div class="holiday-shop-countdown-divider">:</div>
+                <div class="holiday-shop-countdown-clock_time">
+                  <div class="holiday-shop-countdown-end_num" id="holiday-shop-countdown-sec_end">00</div>
+                  <div class="holiday-shop-countdown-num_title">SEC</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="holiday-shop-modal-end-holiday" id="holiday-shop-modal-end-holiday">We will reopen at <span id="holiday-shop-modalend-date"></span>.</div>
+          <div class="holiday-shop-modal-copyright">{{ "now" | date: "%Y" }}  ©  {{shop.name}}</div>
+        </div>
+        </div>
+        <script>
+          var now = new Date(new Date().toLocaleString("en-US", {timeZone: 'America/New_York'}))
+          var useModal = true
+          var useTimezone = 1
+          var rows = [];
+          var startWeekDay = "friday"
+          var startWeekTime = "04:55:pm"
+          var endWeekDay = "saturday"
+          var endWeekTime = "06:20:pm"
+          var numWeekDay = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+          var month = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+          var holidayType = {"every_week":false,"api":true,"speciffic":false};
+          var geoname_id = 5128581
+          var havdalah = 5
+          var candleLighting = 10
+          var timerIsActive = false
+
+          function getQueryString() {
+            var key = false, res = {}, itm = null;
+            var qs = location.search.substring(1);
+            if (arguments.length > 0 && arguments[0].length > 1)
+              key = arguments[0];
+            var pattern = /([^&=]+)=([^&]*)/g;
+            while (itm = pattern.exec(qs)) {
+              if (key !== false && decodeURIComponent(itm[1]) === key)
+                return decodeURIComponent(itm[2]);
+              else if (key === false)
+                res[decodeURIComponent(itm[1])] = decodeURIComponent(itm[2]);
+            }
+            return key === false ? res : null;
+          }
+          var view = getQueryString("view");
+          if(useModal != 1){
+            document.getElementById("holiday-shop-modal-countdown").style.display = "none"
+            document.getElementById("holiday-shop-modal-end-holiday").style.display = "none"
+          }
+            if(parseInt(view) === 1){
+              if(getQueryString("timezone") === 1 || getQueryString("timezone") == "true"){
+              	now = new Date(new Date({{"now"|date: "%s"}}000).setHours({{"now"|date: "%H"}}, {{"now"|date: "%M"}}))
+                useTimezone = 1
+              }else{
+                useTimezone = 0
+                now = new Date()
+              }
+              useEveryweek = 1
+              if(getQueryString("specdate") === 1 || getQueryString("specdate") == "true"){
+                useSpeciffic = 1
+              }else{
+                useSpeciffic = 0
+              }
+              rows = JSON.parse(getQueryString("rows"))
+              startWeekDay = "sunday"
+              startWeekTime = "01:00:am"
+              endWeekDay = "saturday"
+              endWeekTime = "12:59:pm"
+              var body = getQueryString("body")
+              document.querySelector(".holiday-shop-text-container").innerHTML = body
+              var logo = document.createElement("img");
+
+              if(getQueryString("logo") != ""){
+                logo.setAttribute("src", getQueryString("logo"));
+                logo.setAttribute("alt", "{{shop.name}}");
+                document.getElementById("holiday-app-modal-logo-wrapper").textContent = ""
+                document.getElementById("holiday-app-modal-logo-wrapper").appendChild(logo)
+              }
+
+              var bgColor = JSON.parse(getQueryString("bgcolor"))
+              document.getElementById("holiday-shop-modal-wraper").style.backgroundColor = "rgb("+bgColor.r+","+bgColor.g+","+bgColor.b+")"
+            }
+
+
+            function formatAMPM(date) {
+              var hours = date.getHours();
+              var minutes = date.getMinutes();
+              var ampm = hours >= 12 ? "pm" : "am";
+              hours = hours % 12;
+              hours = hours ? hours : 12; // the hour "0" should be "12"
+              minutes = minutes < 10 ? "0"+minutes : minutes;
+              var strTime = hours + ":" + minutes + ampm;
+              return strTime;
+            }
+
+            function format24(time){
+              var hours = Number(time.match(/^(\d+)/)[1]);
+              var minutes = Number(time.match(/:(\d+)/)[1]);
+              var AMPM = time.match(/(.*):(.*)$/)[2];
+              if(AMPM == "pm" && hours < 12) {hours = hours + 12;}
+              if(AMPM == "am" && hours == 12) hours = hours - 12;
+              var sHours = hours.toString();
+              var sMinutes = minutes.toString();
+              if(hours<10) sHours = "0" + sHours;
+              if(minutes<10) sMinutes = "0" + sMinutes;
+              var endTime = [sHours,sMinutes];
+              return endTime
+            }
+            function nextWeekdayDate(day_in_week) {
+                var ret = new Date(new Date({{'now'|date: '%s'}}000).setHours({{'now'|date: '%H'}}, {{'now'|date: '%M'}}));
+                ret.setDate(ret.getDate() + (day_in_week - 1 - ret.getDay() + 7) % 7 + 1);
+                return ret;
+              }
+
+              function weekDayDate(day_in_week){
+                  var currentWeekDate = new Date(new Date({{'now'|date: '%s'}}000).setHours({{'now'|date: '%H'}}, {{'now'|date: '%M'}}))
+                  currentWeekDate.setDate(currentWeekDate.getDate() + (day_in_week - 1 - currentWeekDate.getDay() ) % 7 + 1 );
+                  return currentWeekDate
+              } 
+
+              function setTimetToDate(date, time){
+                var t = format24(time)
+                return new Date(date).setHours(t[0], t[1])
+                // return new Date(date)
+              }
+              if(holidayType.every_week && !timerIsActive){
+                  var curStartWeekTime = setTimetToDate(weekDayDate(numWeekDay.indexOf(startWeekDay)), startWeekTime)
+                  var curEndWeekTime = setTimetToDate(weekDayDate(numWeekDay.indexOf(endWeekDay)), endWeekTime)
+                  if(curStartWeekTime > curEndWeekTime){
+                    curStartWeekTime = new Date(curStartWeekTime).setDate(new Date(curStartWeekTime).getDate() - 7)
+                  }
+                  if(curStartWeekTime < now.getTime() && curEndWeekTime > now.getTime()){
+                    Timer(new Date(curEndWeekTime))
+                  }
+              }
+              if(holidayType.speciffic && !timerIsActive){
+                if(rows.length > 0){
+                  for(var i=0;i<rows.length;i++){
+                    var curStartTime = new Date(rows[i].startDate)
+                    var curEndTime = new Date(rows[i].endDate)
+                    if(curStartTime.getTime() < now.getTime() && curEndTime.getTime() > now.getTime()){
+                      Timer(new Date(curEndTime)) 
+                    }
+                  }
+                }
+            }
+            if(holidayType.api && !timerIsActive && geoname_id !== 0){
+                let xhr = new XMLHttpRequest();
+                xhr.open("GET", "https://www.hebcal.com/shabbat/?cfg=json&geonameid="+geoname_id+"&m="+havdalah+"&b="+candleLighting+"&leyning=off");
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState !== 4) return;
+                    if (xhr.status === 200) {
+                      var hebResponse = JSON.parse(xhr.responseText)
+                      var cndlLigntin = hebResponse.items.filter(item => {
+                        return item.title_orig == "Candle lighting"
+                      })
+                      var clearStartDay = cndlLigntin[cndlLigntin.length - 1].date
+                      var indxOfstart = clearStartDay.lastIndexOf('-')
+                      if(indxOfstart > 16){
+                        clearStartDay = clearStartDay.slice(0, indxOfstart)
+                      }
+                      if(new Date(clearStartDay).getTime() < now.getTime()){
+                        var resp = hebResponse.items.filter(item => {
+                          return item.title_orig == "Havdalah"
+                        })
+                        var clearEndDate = resp[resp.length - 1].date
+                        var indxOftr = clearEndDate.lastIndexOf('-')
+                        if(indxOftr > 16){
+                          clearEndDate = clearEndDate.slice(0, indxOftr)
+                        }
+                        if(new Date(clearEndDate).getTime() > now.getTime()){
+                          Timer(new Date(clearEndDate))
+                        }
+                      }else{
+                        console.log(false)
+                      }
+                    } else {
+                       console.log("HTTP error", xhr.status, xhr.statusText);
+                    }
+                };
+                xhr.send();
+              }
+
+              function Timer(end){
+                var itter = 0
+                var x = setInterval(function(end){
+                  if(useTimezone == 1){
+                    itter--
+                    //var now = new Date(new Date({{"now"|date: "%s"}}000).setHours({{"now"|date: "%H"}}, {{"now"|date: "%M"}}))-itter*1000
+                    var now = new Date(new Date().toLocaleString("en-US", {timeZone: 'America/New_York'}))
+                  }else{
+                    var now = new Date()
+                  }
+                  var _second = 1000;
+                  var _minute = _second * 60;
+                  var _hour = _minute * 60;
+                  var _day = _hour * 24;
+                  var distance = end - now;
+                  var days = Math.floor(distance / _day);
+
+                  if (days.toString().length == 1) {
+                    days = "0"+days
+                  }
+                  var hours = Math.floor((distance % _day) / _hour);
+                  if (hours.toString().length == 1) {
+                    hours = "0"+hours
+                  }
+                  var minutes = Math.floor((distance % _hour) / _minute);
+                  if (minutes.toString().length == 1) {
+                    minutes = "0"+minutes
+                  }
+                  var seconds = Math.floor((distance % _minute) / _second);
+                  if (seconds.toString().length == 1) {
+                    seconds = "0"+seconds
+                  }
+                  document.getElementById("holiday-shop-countdown-days_end").textContent = days
+                  document.getElementById("holiday-shop-countdown-hrs_end").textContent = hours
+                  document.getElementById("holiday-shop-countdown-mins_end").textContent = minutes
+                  document.getElementById("holiday-shop-countdown-sec_end").textContent = seconds
+                  if (distance < 0) {
+                    clearInterval(x);
+                    document.getElementById("holiday-shop-modal-wraper").style.display = "none"
+                    document.body.style.overflowY = "auto";
+                    return;
+                  }
+              },1000, end)
+                var hours = end.getHours()
+                var time = "am"
+                if(hours > 12){
+                  hours -= 12
+                  time = "pm"
+                }
+                if (hours.toString().length == 1) {
+                    hours = "0"+hours
+                }
+                var minutes = end.getMinutes()
+                if (minutes.toString().length == 1) {
+                    minutes = "0"+minutes
+                }
+                document.getElementById("holiday-shop-modalend-date").textContent = formatAMPM(end)+" on "+numWeekDay[end.getDay()].charAt(0).toUpperCase() + numWeekDay[end.getDay()].slice(1)+", "+month[end.getMonth()]+" "+end.getDate()
+                document.body.style.overflowY = "hidden";
+                document.getElementById("holiday-shop-modal-wraper").style.display = "block"
+                timerIsActive = true
+             }
+
+
+        </script>
+  

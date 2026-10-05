@@ -1,0 +1,14 @@
+<div class="index-sections">
+  {%- comment %} 'Design change by Jon L @Shopify Theme Support | April 25 2019 | optional redirect' {% endcomment -%}
+	<script>
+		window.location.replace( '{{ settings.home_page }}' );
+	</script>
+    <meta http-equiv="refresh" content="0; URL='{{ settings.home_page }}'" />
+</div>
+
+{% schema %}
+{
+  "name": "Index Redirect",
+  "settings": []
+}
+{% endschema %}

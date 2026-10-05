@@ -1,0 +1,7 @@
+{% assign mf = product.metafields.custom.new_description_box %}
+
+{% if mf != blank %}
+  <div class="new-description-box rte">
+    {{ mf | metafield_tag }}
+  </div>
+{% endif %}

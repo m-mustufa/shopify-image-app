@@ -1,0 +1,159 @@
+{%- assign og_title = page_title -%}
+{%- assign og_url = canonical_url -%}
+{%- assign og_type = 'website' -%}
+{%- assign og_description = page_description | default: shop.description | default: shop.name -%}
+
+{%- if settings.share_image -%}
+  {%- capture og_image_tags -%}
+    <meta property="og:image" content="https:{{ settings.share_image | image_url: width: 1200, height: 630 }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/jpeg">
+  {%- endcapture -%}
+
+  {%- capture og_image_secure_url_tags -%}
+    <meta property="og:image:secure_url" content="https:{{ settings.share_image | image_url: width: 1200, height: 630 }}">
+  {%- endcapture -%}
+{%- endif -%}
+
+{%- case template.name -%}
+  {%- when 'product' -%}
+    {%- assign is_roundup = false -%}
+    {%- if product.template_suffix == 'deal-roundup' -%}
+      {%- assign is_roundup = true -%}
+    {%- endif -%}
+
+    {%- if is_roundup -%}
+      {%- assign roundup_title = product.metafields.custom.roundup_page_title.value | strip | default: product.title -%}
+      {%- assign og_title = roundup_title | strip_html -%}
+      {%- assign og_type = 'website' -%}
+      {%- assign og_description = product.description | strip_html | strip -%}
+    {%- else -%}
+      {%- assign og_title = product.title | strip_html -%}
+      {%- assign og_type = 'product' -%}
+    {%- endif -%}
+    {%- assign promo_image_url = product.metafields.custom.og_image.value | strip -%}
+    {%- assign share_version = product.metafields.custom.share_version.value | strip -%}
+
+    {%- if promo_image_url != blank -%}
+      {%- if share_version != blank -%}
+        {%- assign og_url = canonical_url | append: '?pv=' | append: share_version -%}
+      {%- endif -%}
+      {%- capture og_image_tags -%}
+        <meta property="og:image" content="{{ promo_image_url | escape }}">
+        <meta property="og:image:width" content="1200">
+        <meta property="og:image:height" content="628">
+        <meta property="og:image:type" content="image/jpeg">
+      {%- endcapture -%}
+
+      {%- capture og_image_secure_url_tags -%}
+        <meta property="og:image:secure_url" content="{{ promo_image_url | escape }}">
+      {%- endcapture -%}
+    {%- elsif product.featured_image -%}
+      {%- capture og_image_tags -%}
+        <meta property="og:image" content="https:{{ product.featured_image | image_url: width: 1200, height: 630 }}">
+        <meta property="og:image:width" content="1200">
+        <meta property="og:image:height" content="630">
+        <meta property="og:image:type" content="image/jpeg">
+      {%- endcapture -%}
+
+      {%- capture og_image_secure_url_tags -%}
+        <meta property="og:image:secure_url" content="https:{{ product.featured_image | image_url: width: 1200, height: 630 }}">
+      {%- endcapture -%}
+    {%- endif -%}
+
+  {%- when 'article' -%}
+    {%- assign og_title = article.title | strip_html -%}
+    {%- assign og_type = 'article' -%}
+    {%- assign og_description = article.excerpt_or_content | strip_html -%}
+
+    {%- if article.image -%}
+      {%- capture og_image_tags -%}
+        <meta property="og:image" content="https:{{ article.image | image_url: width: 1200, height: 630 }}">
+        <meta property="og:image:width" content="1200">
+        <meta property="og:image:height" content="630">
+        <meta property="og:image:type" content="image/jpeg">
+      {%- endcapture -%}
+
+      {%- capture og_image_secure_url_tags -%}
+        <meta property="og:image:secure_url" content="https:{{ article.image | image_url: width: 1200, height: 630 }}">
+      {%- endcapture -%}
+    {%- endif -%}
+
+  {%- when 'collection' -%}
+    {%- assign og_title = collection.title | strip_html -%}
+    {%- assign og_type = 'product.group' -%}
+
+    {%- if collection.image -%}
+      {%- capture og_image_tags -%}
+        <meta property="og:image" content="https:{{ collection.image | image_url: width: 1200, height: 630 }}">
+        <meta property="og:image:width" content="1200">
+        <meta property="og:image:height" content="630">
+        <meta property="og:image:type" content="image/jpeg">
+      {%- endcapture -%}
+
+      {%- capture og_image_secure_url_tags -%}
+        <meta property="og:image:secure_url" content="https:{{ collection.image | image_url: width: 1200, height: 630 }}">
+      {%- endcapture -%}
+    {%- endif -%}
+
+  {%- when 'password' -%}
+    {%- assign og_title = shop.name -%}
+    {%- assign og_url = shop.url -%}
+    {%- assign og_description = shop.description | default: shop.name -%}
+
+{%- endcase -%}
+
+<meta property="og:site_name" content="{{ shop.name }}">
+<meta property="og:url" content="{{ og_url }}">
+<meta property="og:title" content="{{ og_title }}">
+<meta property="og:type" content="{{ og_type }}">
+{%- if template.name != 'product' -%}
+  <meta property="og:description" content="{{ og_description }}">
+{%- elsif is_roundup and og_description != blank -%}
+  <meta property="og:description" content="{{ og_description }}">
+{%- endif -%}
+
+{%- if template.name == 'product' and is_roundup == false -%}
+  <meta property="og:price:amount" content="{{ product.price | money_without_currency | strip_html }}">
+  <meta property="og:price:currency" content="{{ shop.currency }}">
+{%- endif -%}
+
+{{ og_image_tags }}
+{{ og_image_secure_url_tags }}
+
+{%- unless settings.social_twitter_link == blank -%}
+  <meta name="twitter:site" content="{{ settings.social_twitter_link | split: 'twitter.com/' | last | prepend: '@' }}">
+{%- endunless -%}
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ og_title }}">
+{%- if template.name != 'product' -%}
+  <meta name="twitter:description" content="{{ og_description }}">
+{%- elsif is_roundup and og_description != blank -%}
+  <meta name="twitter:description" content="{{ og_description }}">
+{%- endif -%}
+{%- if template.name == 'product' -%}
+  {%- if promo_image_url != blank -%}
+    <meta name="twitter:image" content="{{ promo_image_url | escape }}">
+  {%- elsif product.featured_image -%}
+    <meta name="twitter:image" content="https:{{ product.featured_image | image_url: width: 1200, height: 630 }}">
+  {%- endif -%}
+{%- endif -%}
+
+{%- if template.name == 'product' and share_version != blank -%}
+  <meta name="social-image-version" content="{{ share_version | escape }}">
+  <script>
+    (function () {
+      try {
+        var versionTag = document.querySelector('meta[name="social-image-version"]');
+        var version = versionTag && versionTag.content;
+        if (!version) return;
+        var url = new URL(window.location.href);
+        if (url.searchParams.get('pv') === version) return;
+        url.searchParams.set('pv', version);
+        window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+      } catch (_error) {}
+    })();
+  </script>
+{%- endif -%}

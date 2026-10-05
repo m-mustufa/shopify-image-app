@@ -1,0 +1,476 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "current": {
+    "out_of_stock_image": "shopify://shop_images/1564717525953.png",
+    "color_body_bg": "#ffffff",
+    "color_body_text": "#333333",
+    "color_primary_color": "#0008ff",
+    "color_primary_button_text": "#f3f0f0",
+    "color_sale_badge": "#d31c1c",
+    "color_borders": "#1641b9",
+    "color_form": "#f4f4f4",
+    "color_image_overlay_text": "#c52f2f",
+    "color_image_overlay": "#197bbd",
+    "image_overlay_opacity": 25,
+    "type_header_font": "swiss_721_rounded_n7",
+    "type_header_base_size": "23px",
+    "type_base_font": "helvetica_n4",
+    "type_base_size": "16px",
+    "type_button_base_size": "14px",
+    "type_navigation_base_size": "16px",
+    "cart_enable_ajax": true,
+    "show_breadcrumb_nav": true,
+    "share_image": "",
+    "social_facebook_link": "https://www.facebook.com/SimplexDeals",
+    "social_twitter_link": "https://twitter.com/simplexdeals?lang=en",
+    "social_pinterest_link": "",
+    "social_instagram_link": "https://www.instagram.com/simplexdeals/",
+    "social_snapchat_link": "https://api.whatsapp.com/send?phone=19292762388&text=Please%20add%20me%20to%20Simplex%20Deals%20WhatsApp%20group%20(I%27m%20saving%20this%20number)%20",
+    "social_google_plus_link": "",
+    "social_tumblr_link": "",
+    "social_youtube_link": "",
+    "social_vimeo_link": "",
+    "social_fancy_link": "",
+    "main_blog": "",
+    "share_facebook": false,
+    "share_twitter": false,
+    "share_pinterest": false,
+    "favicon": "shopify://shop_images/Untitled_design_-_2022-12-21T123246.473.png",
+    "hide_sale_badge": false,
+    "top_line": "🚨Limited Time Offers",
+    "product_title": "🔥 Earn Up to 200,000 Bonus Points With These Highest-Ever Offers",
+    "product_link": "https://www.cardbenefit.com/simplex-deals-card-picks-the-new-offers-id-check-first/?ref=simplexd",
+    "product_image": "shopify://shop_images/ard_11_x_8.5_in_4.jpg",
+    "product_description": "<p>✅ Up to <strong>200,000 Bonus Points</strong><br/>✅ <strong>Record-High</strong> bonuses available now<br/>✈️ Travel Rewards, Cash Back & Business Cards<br/>💳 Some options with <strong>no annual fee</strong><br/>⏰ These offers <strong>won't last</strong><br/><br/><br/></p><p></p><p><strong>👉 </strong><a href=\"https://www.cardbenefit.com/simplex-deals-card-picks-the-new-offers-id-check-first/?ref=simplexd\" target=\"_blank\" title=\"https://www.cardbenefit.com/simplex-deals-card-picks-the-new-offers-id-check-first/?ref=simplexd\"><strong>Check Highest-Ever Offers</strong></a></p>",
+    "home_page": "shopify://collections/all-products",
+    "checkout_header_image": "",
+    "checkout_logo_image": "",
+    "checkout_logo_position": "left",
+    "checkout_logo_size": "medium",
+    "checkout_body_background_image": "",
+    "checkout_body_background_color": "#ffffff",
+    "checkout_input_background_color_mode": "white",
+    "checkout_sidebar_background_image": "",
+    "checkout_sidebar_background_color": "#fafafa",
+    "checkout_heading_font": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'",
+    "checkout_body_font": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'",
+    "checkout_accent_color": "#197bbd",
+    "checkout_button_color": "#197bbd",
+    "checkout_error_color": "#e32c2b",
+    "sections": {
+      "footer": {
+        "type": "footer",
+        "blocks": {
+          "product_axQ3NN": {
+            "type": "product",
+            "settings": {
+              "product": "earn-3"
+            }
+          },
+          "product_eFUzNK": {
+            "type": "product",
+            "settings": {
+              "product": "new-earn-as-much-as-200-000-points-with-these-new-huge-limited-time-offers"
+            }
+          },
+          "product_KYfpW6": {
+            "type": "product",
+            "settings": {
+              "product": "deals-vanish-in-minutes-follow-simplex-deals-on-whatsapp"
+            }
+          },
+          "product_Ma4NeF": {
+            "type": "product",
+            "settings": {
+              "product": "gold-1"
+            }
+          },
+          "product_eyQGLJ": {
+            "type": "product",
+            "settings": {
+              "product": "free-2"
+            }
+          },
+          "product_qdYmPU": {
+            "type": "product",
+            "disabled": true,
+            "settings": {
+              "product": "early-prime-day-deals-have-started"
+            }
+          },
+          "1564586217298": {
+            "type": "social",
+            "settings": {
+              "title": "Follow us",
+              "footer_logo_1": "shopify://shop_images/Untitled-2-05-6.jpg",
+              "footer_logo_1_url": "https://wa.me/message/DHKKYRKXGT5HA1",
+              "footer_logo_2": "shopify://shop_images/Untitled-2-04-3.jpg",
+              "footer_logo_2_url": "https://chat.whatsapp.com/IMb0iscy9WfDq9pC0IKA5M",
+              "footer_logo_3": "shopify://shop_images/30-23-1hqgs-8ekoj.jpg",
+              "footer_logo_3_url": "https://www.facebook.com/SimplexDeals",
+              "footer_logo_4": "shopify://shop_images/30-22-2nsm5-0h3mx.jpg",
+              "footer_logo_4_url": "https://www.instagram.com/simplexdeals/",
+              "footer_logo_5": "shopify://shop_images/30-22-pa760-1t3bz.jpg",
+              "footer_logo_5_url": "https://t.me/simplexdeals",
+              "footer_logo_6": "shopify://shop_images/30-21-tdewg-v2mrb.jpg",
+              "footer_logo_6_url": "https://twitter.com/simplexdeals"
+            }
+          },
+          "7393e184-4448-4d99-8095-e0de6677c727": {
+            "type": "newsletter",
+            "settings": {
+              "subtext": ""
+            }
+          },
+          "7ed37f66-1217-45f5-8f2c-fc8f775c4889": {
+            "type": "text",
+            "disabled": true,
+            "settings": {
+              "title": "Advertiser Disclosure",
+              "richtext": "<p><em>Credit Cards on Simplex Deals are part of an affiliate sales network and receives compensation for sending traffic to partner sites. This compensation may impact how and where links appear on this site. We may receive a commission from card issuers. Simplex Deals does not include all financial companies or all available financial offers.</em></p><p></p>"
+            }
+          },
+          "f9c80806-c15b-4651-bb80-c3fe2bdcd845": {
+            "type": "text",
+            "disabled": true,
+            "settings": {
+              "title": "",
+              "richtext": "<p><em>.</em></p><p><em>Editorial note: Opinions expressed here are author's alone, not those of any bank, credit card issuer, or other entity. This content has not been reviewed, approved or otherwise endorsed by any of the entities included within the post</em></p>"
+            }
+          }
+        },
+        "block_order": [
+          "product_axQ3NN",
+          "product_eFUzNK",
+          "product_KYfpW6",
+          "product_Ma4NeF",
+          "product_eyQGLJ",
+          "product_qdYmPU",
+          "1564586217298",
+          "7393e184-4448-4d99-8095-e0de6677c727",
+          "7ed37f66-1217-45f5-8f2c-fc8f775c4889",
+          "f9c80806-c15b-4651-bb80-c3fe2bdcd845"
+        ],
+        "custom_css": [],
+        "settings": {
+          "show_payment_icons": false,
+          "vendor_show": true,
+          "footer_linklist": "footer"
+        }
+      },
+      "header": {
+        "type": "header",
+        "settings": {
+          "vendor_show": true,
+          "ads_code_enable": true,
+          "ads_code": "<script async src=\"https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2117859206272045\" crossorigin=\"anonymous\"></script>\n<!-- small fixed ads1 -->\n<ins class=\"adsbygoogle\" style=\"display:inline-block; width:350px; height:80px; position:absolute; left:50%; transform:translateX(-50%);\" data-ad-client=\"ca-pub-2117859206272045\" data-ad-slot=\"8699962267\"></ins>\n<script>\n     (adsbygoogle = window.adsbygoogle || []).push({});\n</script>",
+          "ads_code_enable_mobile": false,
+          "ads_code_mobile": "<div class=\"collection-ad--banner\" style=\"text-align:center;\">\n<script async src=\"https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2117859206272045\" crossorigin=\"anonymous\"></script>\n<ins class=\"adsbygoogle\" style=\"display:block\" data-ad-client=\"ca-pub-2117859206272045\" data-ad-slot=\"8945114231\" data-ad-format=\"horizontal\" data-full-width-responsive=\"false\"></ins>\n<script></script>\n</div>",
+          "logo": "shopify://shop_images/20191107_163322.jpg",
+          "logo_max_width": "89",
+          "show_announcement": true,
+          "home_page_only": false,
+          "announcement_text": "🚨🔥 Earn Up to 200,000 Bonus Points With These Highest-Ever Offers →",
+          "announcement_link": "https://www.cardbenefit.com/simplex-deals-card-picks-the-new-offers-id-check-first/?ref=simplexd",
+          "show_whatsapp": true,
+          "whatsapp_link": "https://chat.whatsapp.com/L01yN0FSnOn8txPW8WkkdD",
+          "show_facebook": true,
+          "facebook_link": "https://www.facebook.com/SimplexDeals",
+          "show_instagram": true,
+          "instagram_link": "https://www.instagram.com/simplexdeals/",
+          "show_twitter": false,
+          "twitter_link": "",
+          "show_youtube": false,
+          "youtube_link": "",
+          "tagline": "<p>BEST DAILY ONLINE DEALS </p>"
+        }
+      },
+      "sidebar": {
+        "type": "sidebar",
+        "custom_css": [
+          "{}"
+        ],
+        "settings": {
+          "main_menu_link_list": "main-menu"
+        }
+      },
+      "product-template": {
+        "type": "product-template",
+        "settings": {
+          "coupon_position": "below_product_description",
+          "product_quantity_enable": false,
+          "whatsapp-url": "https://chat.whatsapp.com/D3wIBxGndgD3LplNW34T7i",
+          "vendor_show": true,
+          "social_sharing_products": true,
+          "product_description_position": "right",
+          "new_desc_box_position": "below_product_description",
+          "show_extra_tab": true,
+          "extra_tab_content": "",
+          "product_image_zoom_type": "none",
+          "enable_payment_button": false,
+          "add_to_cart_width": "regular",
+          "whatsapp_url": "https://chat.whatsapp.com/BAKCvFAbSwO9eM1mwXMsGR",
+          "telegram_url": "https://t.me/simplexdeals",
+          "discount_code": "50EUTMHD"
+        }
+      },
+      "collection-template": {
+        "type": "collection-template",
+        "settings": {
+          "vendor_show": true,
+          "collection_sort_enable": false,
+          "collection_tag_enable": false,
+          "ads_code_enable": true,
+          "ads_code": "<div class=\"collection-ad--banner\">\n  <br>\n  <script async src=\"https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2117859206272045\" crossorigin=\"anonymous\"></script>\n  \n  <ins class=\"adsbygoogle\" style=\"display:block;width:100%;height:90px\" data-ad-client=\"ca-pub-2117859206272045\" data-ad-slot=\"6726236749\" data-ad-format=\"horizontal\" data-full-width-responsive=\"true\"></ins>\n       \n  <script>\n    (adsbygoogle = window.adsbygoogle || []).push({});\n  </script>\n</div>",
+          "mobile_ads_code_enable": true,
+          "mobile_ads_code": "<div class=\"collection-ad--banner\" style=\"text-align:center;\">\n\n<br>\n\n<script async src=\"https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2117859206272045\" crossorigin=\"anonymous\"></script>\n<!-- SimplexDeals_Mobile_Responsive -->\n<ins class=\"adsbygoogle\" style=\"display:block\" data-ad-client=\"ca-pub-2117859206272045\" data-ad-slot=\"8945114231\" data-ad-format=\"auto\" data-full-width-responsive=\"true\"></ins>\n<script>\n     (adsbygoogle = window.adsbygoogle || []).push({});\n</script>\n</div>",
+          "products_per_page": "48"
+        }
+      },
+      "list-collections-template": {
+        "type": "list-collections-template",
+        "blocks": {
+          "16d38a77-d66a-46f4-bbba-aef40ce4f460": {
+            "type": "collection",
+            "settings": {
+              "collection": "credit-cards"
+            }
+          }
+        },
+        "block_order": [
+          "16d38a77-d66a-46f4-bbba-aef40ce4f460"
+        ],
+        "settings": {
+          "display_type": "all",
+          "sort": "alphabetical",
+          "grid": 3
+        }
+      },
+      "1548707464220": {
+        "type": "featured-products",
+        "settings": {
+          "title": "NEW DEALS",
+          "home_page_featured_products": "frontpage",
+          "home_featured_products_row_num": 10
+        }
+      },
+      "vendor-product-list": {
+        "type": "vendor-product-list",
+        "blocks": {
+          "item_bfFgYq": {
+            "type": "item",
+            "settings": {
+              "product": "father-who-wants-nothing-edc-box-cutter-outdoor-camping-tools"
+            }
+          }
+        },
+        "block_order": [
+          "item_bfFgYq"
+        ],
+        "settings": {
+          "heading": "Products",
+          "max_width": 1400,
+          "pad_y": 22,
+          "image_h": 140,
+          "vendor_logo_height": 70,
+          "bg_color": "#ffffff",
+          "card_bg": "#ffffff",
+          "heading_color": "#222222",
+          "text_color": "#1f1f1f",
+          "price_color": "#0a8a2a",
+          "discount_color": "#d40000",
+          "button_label": "GET DETAILS",
+          "button_fallback": "GET DETAILS",
+          "btn_bg": "#0b7a1f",
+          "btn_text": "#ffffff",
+          "instructions_label": "Instructions",
+          "show_vendor_logo": true,
+          "show_vendor_text": true,
+          "show_end_button": false,
+          "end_button_text": "View all",
+          "end_button_link": "#",
+          "end_btn_bg": "#0b7a1f",
+          "end_btn_text": "#ffffff"
+        }
+      },
+      "facebook-product": {
+        "type": "facebook-product",
+        "blocks": {
+          "item_zKCzL9": {
+            "type": "item",
+            "settings": {
+              "product": "350-piece-disposable-plastic-dinnerware-set"
+            }
+          }
+        },
+        "block_order": [
+          "item_zKCzL9"
+        ],
+        "settings": {
+          "heading": "Plastic Dinner Sets",
+          "max_width": 1400,
+          "pad_y": 22,
+          "image_h": 170,
+          "vendor_logo_height": 70,
+          "bg_color": "#ffffff",
+          "card_bg": "#ffffff",
+          "heading_color": "#222222",
+          "text_color": "#1f1f1f",
+          "price_color": "#0a8a2a",
+          "discount_color": "#d40000",
+          "button_label": "GET DETAILS",
+          "button_fallback": "GET DETAILS",
+          "btn_bg": "#0b7a1f",
+          "btn_text": "#ffffff",
+          "instructions_label": "Instructions",
+          "show_vendor_logo": true,
+          "show_vendor_text": true,
+          "show_end_button": true,
+          "end_button_text": "View all Products",
+          "end_button_link": "https://www.facebook.com/",
+          "end_btn_bg": "#0008ff",
+          "end_btn_text": "#ffffff"
+        }
+      }
+    },
+    "content_for_index": [
+      "1548707464220"
+    ],
+    "blocks": {
+      "12715431849321867433": {
+        "type": "shopify://apps/nospy-protect-data/blocks/app-block/0ea824f6-5b8e-445c-b27f-1d4763c81aa3",
+        "disabled": false,
+        "settings": {}
+      },
+      "1759773598402494664": {
+        "type": "shopify://apps/rt-whatsapp-chat-live-chat/blocks/app-embed/9baee9b7-6929-47af-9935-05bcdc376396",
+        "disabled": true,
+        "settings": {}
+      },
+      "12062694365984144401": {
+        "type": "shopify://apps/simplex-deals-social-image/blocks/social-preview/01a079ea-d89f-7479-bbf4-4d1275548f64",
+        "disabled": true,
+        "settings": {}
+      }
+    }
+  },
+  "presets": {
+    "Light": {
+      "color_body_bg": "#ffffff",
+      "color_body_text": "#333333",
+      "color_primary_color": "#333333",
+      "color_primary_button_text": "#ffffff",
+      "color_sale_badge": "#c8493f",
+      "color_borders": "#e8e8e8",
+      "color_form": "#f4f4f4",
+      "color_image_overlay_text": "#fff",
+      "color_image_overlay": "#333333",
+      "image_overlay_opacity": "25",
+      "type_header_font": "times_new_roman_n4",
+      "type_header_base_size": "28px",
+      "type_base_font": "helvetica_n4",
+      "type_base_size": "15px",
+      "type_button_base_size": "14px",
+      "type_navigation_base_size": "16px",
+      "show_breadcrumb_nav": true,
+      "share_facebook": true,
+      "share_twitter": true,
+      "share_pinterest": true,
+      "sections": {
+        "featured-products": {
+          "type": "featured-products",
+          "settings": {
+            "home_page_featured_products": "frontpage"
+          }
+        },
+        "featured-content": {
+          "type": "featured-content",
+          "settings": {}
+        },
+        "footer": {
+          "type": "footer",
+          "blocks": {
+            "footer-0": {
+              "type": "menu",
+              "settings": {
+                "menu": "footer"
+              }
+            }
+          },
+          "block_order": [
+            "footer-0"
+          ],
+          "settings": {}
+        }
+      },
+      "content_for_index": [
+        "featured-products",
+        "featured-content"
+      ]
+    },
+    "Beauty": {
+      "color_body_bg": "#f7f7f7",
+      "color_body_text": "#3c4049",
+      "color_primary_color": "#d97c76",
+      "color_primary_button_text": "#ffffff",
+      "color_sale_badge": "#d97c76",
+      "color_borders": "#d7d8d2",
+      "color_form": "#ffffff",
+      "color_image_overlay_text": "#fff",
+      "color_image_overlay": "#3c4049",
+      "image_overlay_opacity": "25",
+      "type_header_font": "pt_serif_n7",
+      "type_header_base_size": "28px",
+      "type_base_font": "pt_serif_n4",
+      "type_base_size": "16px",
+      "type_button_base_size": "12px",
+      "type_navigation_base_size": "16px",
+      "show_breadcrumb_nav": true,
+      "share_facebook": true,
+      "share_twitter": true,
+      "share_pinterest": true,
+      "sections": {
+        "featured-products": {
+          "type": "featured-products",
+          "settings": {
+            "home_page_featured_products": "frontpage"
+          }
+        },
+        "featured-content": {
+          "type": "featured-content",
+          "settings": {}
+        },
+        "footer": {
+          "type": "footer",
+          "blocks": {
+            "footer-0": {
+              "type": "menu",
+              "settings": {
+                "menu": "footer"
+              }
+            }
+          },
+          "block_order": [
+            "footer-0"
+          ],
+          "settings": {}
+        }
+      },
+      "content_for_index": [
+        "featured-products",
+        "featured-content"
+      ]
+    }
+  },
+  "platform_customizations": {
+    "custom_css": []
+  }
+}
