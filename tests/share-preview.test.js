@@ -38,20 +38,66 @@ async function run() {
         handle: 'example-product',
         title: '<script>unsafe</script>',
         description: 'Example description',
+        templateSuffix: '',
         ogImage: { value: 'https://cdn.shopify.com/files/preview.jpg' },
         shareVersion: { value: 'abc123' },
+        roundupTitle: null,
+        roundupDeals: null,
       }] } } } };
     },
   });
   assert.strictEqual(calls[0].path, '/graphql.json');
   assert.strictEqual(calls[0].body.variables.query, 'handle:example-product');
   assert.strictEqual(product.shareVersion, 'abc123');
+  assert.strictEqual(product.isRoundup, false);
 
   const storefrontUrl = buildStorefrontUrl({
     shopDomain: 'alpha.myshopify.com',
     publicDomain: 'www.example.com',
   }, product);
   assert.strictEqual(storefrontUrl, 'https://www.example.com/products/example-product?pv=abc123');
+
+  const roundupProduct = await fetchPreviewProduct('roundup', {
+    async post() {
+      return { data: { data: { products: { nodes: [{
+        handle: 'roundup',
+        title: 'Carrier product',
+        description: 'Several current offers.',
+        templateSuffix: '',
+        ogImage: { value: 'https://cdn.shopify.com/files/roundup.jpg' },
+        shareVersion: { value: 'roundup123' },
+        roundupTitle: { value: 'Weekend deals' },
+        roundupDeals: { value: '["gid://shopify/Product/1"]' },
+      }] } } } };
+    },
+  });
+  assert.strictEqual(roundupProduct.title, 'Carrier product');
+  assert.strictEqual(roundupProduct.isRoundup, false);
+  assert.strictEqual(buildStorefrontUrl({
+    shopDomain: 'alpha.myshopify.com',
+    publicDomain: 'www.example.com',
+  }, roundupProduct), 'https://www.example.com/products/roundup?pv=roundup123');
+
+  const emptyRoundupProduct = await fetchPreviewProduct('empty-roundup', {
+    async post() {
+      return { data: { data: { products: { nodes: [{
+        handle: 'empty-roundup',
+        title: 'Empty carrier',
+        description: 'No selected deals yet.',
+        templateSuffix: 'deal-roundup',
+        ogImage: { value: 'https://cdn.shopify.com/files/empty-roundup.jpg' },
+        shareVersion: { value: 'empty123' },
+        roundupTitle: { value: 'Upcoming deals' },
+        roundupDeals: null,
+      }] } } } };
+    },
+  });
+  assert.strictEqual(emptyRoundupProduct.title, 'Upcoming deals');
+  assert.strictEqual(emptyRoundupProduct.isRoundup, true);
+  assert.strictEqual(buildStorefrontUrl({
+    shopDomain: 'alpha.myshopify.com',
+    publicDomain: 'www.example.com',
+  }, emptyRoundupProduct), 'https://www.example.com/products/empty-roundup?pv=empty123');
 
   const previewUrl = createSharePreviewUrl(token, 'https://app.example.com');
   assert.match(previewUrl, /^https:\/\/app\.example\.com\/share-preview\?token=/);

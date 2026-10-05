@@ -6,4 +6,9 @@ output/
 .vercel
 .env.bridge
 .claude/
+
+# Fiverr portfolio assets (not part of the deployed app)
+fiverr/
 .data/
+
+.vercel

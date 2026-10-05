@@ -28,8 +28,10 @@ const PRODUCT_PREVIEW_QUERY = `
         handle
         title
         description
+        templateSuffix
         ogImage: metafield(namespace: $namespace, key: $imageKey) { value }
         shareVersion: metafield(namespace: $namespace, key: $versionKey) { value }
+        roundupTitle: metafield(namespace: "custom", key: "roundup_page_title") { value }
       }
     }
   }
@@ -114,12 +116,15 @@ async function fetchPreviewProduct(handle, client) {
     error.status = 409;
     throw error;
   }
+  const isRoundup = product.templateSuffix === 'deal-roundup';
+  const roundupTitle = String(product.roundupTitle?.value || '').trim();
   return {
     handle,
-    title: String(product.title || '').trim() || 'Product preview',
+    title: (isRoundup && roundupTitle) || String(product.title || '').trim() || 'Product preview',
     description: String(product.description || '').trim().slice(0, 300),
     imageUrl,
     shareVersion: String(product.shareVersion?.value || '').trim(),
+    isRoundup,
   };
 }
 

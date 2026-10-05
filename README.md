@@ -11,7 +11,7 @@ After the app is distributed, a merchant only needs to:
 1. Install the app and approve its Shopify scopes.
 2. Upload their logo and confirm their public storefront domain.
 3. Open the provided theme-editor link, enable the Social preview metadata app embed, and save the theme.
-4. Set Enable promo image on a product and save it.
+4. Save a product. Promo images are on by default; set Enable promo image to false to skip one.
 
 The app handles Shopify-managed installation, embedded ID-token authentication, encrypted offline-token storage, product webhooks, metafield definitions, image upload, and version metadata. Merchants don't create webhooks or metafield definitions manually.
 
@@ -30,8 +30,9 @@ Signed products/create or products/update webhook
         |
         +-- Resolve the sending shop and its token
         +-- Read deal overrides and stored versions
+        +-- Resolve selected products when custom.roundup_deals is populated
         +-- Skip unchanged input
-        +-- Generate the promotional image
+        +-- Generate a single-product or four-card roundup image
         +-- Upload a versioned file to Shopify Files
         +-- Write OG image and sharing versions in one mutation
 ```
@@ -57,7 +58,7 @@ The app creates these merchant-owned product metafield definitions during instal
 
 | Metafield | Type | Purpose |
 | --- | --- | --- |
-| `custom.deal_enabled` | Boolean | Enables generation for the product. |
+| `custom.deal_enabled` | Boolean | Generation is on unless this is `false`. |
 | `custom.deal_badge_text` | Single line text | Badge override; `hide` removes it. |
 | `custom.deal_sale_price` | Single line text | Sale-price override; `hide` removes prices. |
 | `custom.deal_reg_price` | Single line text | Regular-price override. |
@@ -66,6 +67,11 @@ The app creates these merchant-owned product metafield definitions during instal
 | `custom.og_version` | Single line text | Generated-image hash. |
 | `custom.share_version` | Single line text | Customer-visible sharing-state hash. |
 | `custom.og_image_input_hash` | Single line text | Image-input idempotency hash. |
+
+Roundup products can additionally use `custom.roundup_page_title` and the
+`custom.roundup_deals` list of product references. When selected deals are
+present, the webhook generates a 1200 x 628 roundup preview automatically; the
+normal product-image path remains unchanged for every other product.
 
 The `custom` namespace is retained for compatibility with stores already using the prototype.
 

@@ -197,8 +197,39 @@ function getFireData() {
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-async function generateProductImage(product, options = {}) {
+function isHideValue(value) {
+  return typeof value === 'string' && value.trim().toLowerCase() === 'hide';
+}
+
+function priceAmount(value) {
+  if (value === null || value === undefined || value === '') return 0;
+  return Number(String(value).replace(/[^\d.]/g, '')) || 0;
+}
+
+// Merchants type "Hide"/"HIDE" as often as "hide", and a $0 price is never a
+// real deal price: normalize both before any layout decision is made.
+function normalizeDealOverrides(product) {
+  const normalized = { ...product };
+  if (isHideValue(normalized.deal_badge_text)) normalized.deal_badge_text = 'hide';
+  if (isHideValue(normalized.deal_sale_price)) normalized.deal_sale_price = 'hide';
+  if (isHideValue(normalized.deal_reg_price) || (normalized.deal_reg_price && priceAmount(normalized.deal_reg_price) <= 0)) {
+    normalized.deal_reg_price = null;
+    normalized.compare_at_price = null;
+  }
+
+  const hasTitle = Boolean(normalized.deal_title && String(normalized.deal_title).trim());
+  const saleSource = normalized.deal_sale_price && normalized.deal_sale_price !== 'hide'
+    ? normalized.deal_sale_price
+    : normalized.price;
+  if (!hasTitle && !normalized.deal_sale_text && priceAmount(saleSource) <= 0 && normalized.title) {
+    normalized.deal_title = normalized.title;
+  }
+  return normalized;
+}
+
+async function generateProductImage(rawProduct, options = {}) {
   console.log('[generator] entered generateProductImage');
+  const product = normalizeDealOverrides(rawProduct);
 
   console.log('[generator] step 1: parsing product data');
   const {
@@ -210,6 +241,7 @@ async function generateProductImage(product, options = {}) {
     badge_text       = null,
     deal_badge_text  = null,
     deal_sale_price  = null,
+    deal_sale_text   = null,
     deal_reg_price   = null,
     deal_title       = null,
   } = product;
@@ -268,7 +300,9 @@ async function generateProductImage(product, options = {}) {
   const _titleMode     = !!(deal_title && deal_title.trim());
   const _badgeHidden   = deal_badge_text === 'hide';
   const _titleOnlyMode = _titleMode && _badgeHidden;
-  const _saleStrLayout = deal_sale_price === 'hide' ? '' : (deal_sale_price || formatCurrency(price));
+  const _saleStrLayout = deal_sale_price === 'hide'
+    ? ''
+    : (deal_sale_text || deal_sale_price || formatCurrency(price));
   const _badgeOnly     = !_titleMode && !_saleStrLayout;
   const _priceFSLayout = getPriceFontSize(_saleStrLayout);
   let computedBadgeY;
@@ -284,7 +318,7 @@ async function generateProductImage(product, options = {}) {
     computedBadgeY = PRICE_Y - Math.floor(_priceFSLayout / 2) - ORANGE_PRICE_GAP - BADGE_H;
   }
   console.log('[generator] step 4: building SVG');
-  const svgBuf = Buffer.from(buildSVG({ price, compare_at_price, badge_text: _badgeHidden ? null : (deal_badge_text || badge_text), deal_title, badgeHidden: _badgeHidden, deal_sale_price, deal_reg_price, showLogoText: logoData === null && !hasShopLogoSetting, showFireImg: fireData !== null && !_badgeHidden, fireWidth: fireData?.w ?? 0 }));
+  const svgBuf = Buffer.from(buildSVG({ price, compare_at_price, badge_text: _badgeHidden ? null : (deal_badge_text || badge_text), deal_title, badgeHidden: _badgeHidden, deal_sale_price, deal_sale_text, deal_reg_price, showLogoText: logoData === null && !hasShopLogoSetting, showFireImg: fireData !== null && !_badgeHidden, fireWidth: fireData?.w ?? 0 }));
 
   // 5. Building composites array
   console.log('[generator] step 5: building composites array');
@@ -321,6 +355,12 @@ module.exports = {
   generateProductImage,
   detectTrimmableBackground,
   trimPlainProductBackground,
+  downloadImage,
+  formatCurrency,
+  normalizeDealOverrides,
+  svgPath,
+  truncateText,
+  wrapText,
 };
 
 // ─── Image download ───────────────────────────────────────────────────────────
@@ -507,7 +547,7 @@ function getPriceFontSize(priceText) {
   return Math.max(24, Math.floor(smallest * maxWidth / widthAtSmallest));
 }
 
-function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden, deal_sale_price, deal_reg_price, showLogoText, showFireImg, fireWidth }) {
+function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden, deal_sale_price, deal_sale_text, deal_reg_price, showLogoText, showFireImg, fireWidth }) {
 
   // ── Mode detection ────────────────────────────────────────────────────────
   const titleMode     = !!(deal_title && deal_title.trim());
@@ -546,7 +586,9 @@ function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden
   const compareRaw = parseFloat(compare_at_price) || 0;
 
   // "hide" suppresses all price rows; empty price triggers badge-only
-  const saleStr   = deal_sale_price === 'hide' ? '' : (deal_sale_price ? formatCurrency(deal_sale_price) : formatCurrency(price));
+  const saleStr   = deal_sale_price === 'hide'
+    ? ''
+    : (deal_sale_text || (deal_sale_price ? formatCurrency(deal_sale_price) : formatCurrency(price)));
   const badgeOnly = !titleMode && !saleStr;
 
   const showReg     = !titleMode && !badgeOnly && (!!(deal_reg_price) || (compareRaw > 0 && compareRaw > saleNum));

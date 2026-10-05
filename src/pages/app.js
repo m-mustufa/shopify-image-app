@@ -309,7 +309,7 @@ function dashboardContent(installation, message = '') {
           <div class='card-head'><div><h2>Generate your first preview</h2><p>After the theme embed is active.</p></div></div>
           <div class='card-body mini-steps'>
             <div class='mini-step'><span class='mini-num'>1</span><div><h3>Open a product</h3><p>Choose any product you want to promote.</p></div></div>
-            <div class='mini-step'><span class='mini-num'>2</span><div><h3>Enable the promo image</h3><p>Set <code>Enable promo image</code> to true.</p></div></div>
+            <div class='mini-step'><span class='mini-num'>2</span><div><h3>Check the promo image setting</h3><p>Promo images are on by default. Set <code>Enable promo image</code> to false only to skip a product.</p></div></div>
             <div class='mini-step'><span class='mini-num'>3</span><div><h3>Save the product</h3><p>Your branded social image is generated automatically.</p></div></div>
           </div>
         </section>

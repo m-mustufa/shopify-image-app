@@ -168,9 +168,9 @@ async function testInputValidationAndPages() {
 
   const liquid = fs.readFileSync('extensions/social-preview/blocks/social-preview.liquid', 'utf8');
   const browserScript = fs.readFileSync('extensions/social-preview/assets/social-preview.js', 'utf8');
-  assert.match(liquid, /custom\.og_image/);
   assert.match(liquid, /custom\.share_version/);
-  assert.match(liquid, /property="og:image"/);
+  assert.doesNotMatch(liquid, /property="og:/);
+  assert.doesNotMatch(liquid, /name="twitter:/);
   assert.match(browserScript, /searchParams\.set\('pv'/);
 }
 

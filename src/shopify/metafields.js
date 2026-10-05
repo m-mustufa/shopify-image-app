@@ -14,6 +14,25 @@ const METAFIELD_SET_MUTATION = `
 const PRODUCT_METAFIELDS_QUERY = `
   query ProductMetafields($id: ID!) {
     product(id: $id) {
+      roundupTitle: metafield(namespace: "custom", key: "roundup_page_title") { value }
+      roundupDeals: metafield(namespace: "custom", key: "roundup_deals") {
+        references(first: 100) {
+          nodes {
+            ... on Product {
+              id
+              handle
+              title
+              vendor
+              status
+              featuredImage { url altText }
+              dealExpired: metafield(namespace: "custom", key: "deal_expired") { value }
+              variants(first: 1) {
+                nodes { price compareAtPrice }
+              }
+            }
+          }
+        }
+      }
       metafields(first: 100, namespace: "custom") {
         nodes { namespace key type value }
       }
@@ -40,7 +59,7 @@ const METAFIELD_DEFINITION_PIN = `
 `;
 
 const DEFINITIONS = [
-  ['deal_enabled', 'Enable promo image', 'boolean', 'Generate a promotional social image for this product.', true],
+  ['deal_enabled', 'Enable promo image', 'boolean', 'On by default. Set to false to skip the promotional social image for this product.', true],
   ['deal_badge_text', 'Promo badge text', 'single_line_text_field', 'Optional badge text. Enter hide to remove the badge.', true],
   ['deal_sale_price', 'Promo sale price', 'single_line_text_field', 'Optional displayed sale price. Enter hide to remove prices.', true],
   ['deal_reg_price', 'Promo regular price', 'single_line_text_field', 'Optional displayed regular price.', true],
@@ -160,6 +179,29 @@ function parseBoolean(value) {
   return null;
 }
 
+function extractRoundupData(product) {
+  const references = product?.roundupDeals?.references?.nodes || [];
+  const deals = references.filter(node => node?.id && node?.title).map(node => {
+    const variant = node.variants?.nodes?.[0] || {};
+    return {
+      id: node.id,
+      handle: node.handle || null,
+      title: node.title,
+      vendor: node.vendor || null,
+      imageUrl: node.featuredImage?.url || null,
+      imageAlt: node.featuredImage?.altText || null,
+      price: variant.price ?? null,
+      compareAtPrice: variant.compareAtPrice ?? null,
+      expired: parseBoolean(node.dealExpired?.value) === true,
+      active: node.status === 'ACTIVE',
+    };
+  });
+  return {
+    title: product.roundupTitle?.value?.trim() || null,
+    deals,
+  };
+}
+
 async function fetchProductOverrides(productId, client = defaultClient) {
   try {
     const response = await client.post('/graphql.json', {
@@ -178,7 +220,9 @@ async function fetchProductOverrides(productId, client = defaultClient) {
     }
     result._storedHash = metafields.find(item => item.key === 'og_image_input_hash')?.value ?? null;
     result._storedOgVersion = metafields.find(item => item.key === 'og_version')?.value ?? null;
+    result._storedOgImage = metafields.find(item => item.key === 'og_image')?.value?.trim() || null;
     result._storedShareVersion = metafields.find(item => item.key === 'share_version')?.value ?? null;
+    result._roundup = extractRoundupData(product);
     result._shareMetafields = metafields
       .filter(item => !APP_MANAGED_KEYS.has(item.key))
       .map(item => ({ namespace: item.namespace, key: item.key, type: item.type, value: item.value }))
@@ -194,6 +238,7 @@ async function fetchProductOverrides(productId, client = defaultClient) {
 module.exports = {
   DEFINITIONS,
   ensureProductMetafieldDefinitions,
+  extractRoundupData,
   fetchProductOverrides,
   updateProductMetafields,
   updateProductProcessingState,

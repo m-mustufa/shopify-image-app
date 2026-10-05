@@ -10,9 +10,76 @@ const {
   updateProductShareVersion,
   fetchProductOverrides,
 } = require('../shopify/metafields');
+
+function roundupInputSnapshot(roundup) {
+  if (!roundup) return null;
+  return {
+    title: roundup.title ?? '',
+    deals: (roundup.deals || []).map(deal => ({
+      id: String(deal.id ?? ''),
+      title: deal.title ?? '',
+      vendor: deal.vendor ?? '',
+      image_url: deal.imageUrl ?? '',
+      price: deal.price ?? '',
+      compare_at_price: deal.compareAtPrice ?? '',
+      expired: deal.expired === true,
+      active: deal.active !== false,
+    })),
+  };
+}
+
+function roundupDiscountPercent(deal) {
+  const price = Number.parseFloat(deal?.price);
+  const compareAtPrice = Number.parseFloat(deal?.compareAtPrice);
+  if (!Number.isFinite(price) || !Number.isFinite(compareAtPrice) || compareAtPrice <= price || compareAtPrice <= 0) {
+    return null;
+  }
+  return Math.round(((compareAtPrice - price) * 100) / compareAtPrice);
+}
+
+function buildRoundupProductData(product, overrides, roundup) {
+  const nonExpiredDeals = (roundup?.deals || []).filter(deal => deal.expired !== true);
+  const activeDeals = nonExpiredDeals.filter(deal => deal.active !== false);
+  const highestDiscount = activeDeals.reduce((highest, deal) => {
+    const discount = roundupDiscountPercent(deal);
+    return discount === null ? highest : Math.max(highest, discount);
+  }, 0);
+  const imageUrl = product.image_url || nonExpiredDeals.find(deal => deal.imageUrl)?.imageUrl || null;
+  const base = {
+    ...product,
+    ...overrides,
+    image_url: imageUrl,
+    compare_at_price: null,
+    deal_reg_price: null,
+  };
+
+  if (highestDiscount > 0) {
+    return {
+      ...base,
+      deal_badge_text: 'UP TO',
+      deal_sale_price: null,
+      deal_sale_text: `${highestDiscount}% OFF`,
+      deal_title: null,
+    };
+  }
+
+  return {
+    ...base,
+    deal_badge_text: 'hide',
+    deal_sale_price: 'hide',
+    deal_sale_text: null,
+    deal_title: roundup?.title || product.title,
+  };
+}
+
+// Bump when generator output changes for the same inputs, so saved products regenerate.
+const GENERATOR_VERSION = '2';
+
 function computeInputHash(product, overrides, brand = {}) {
   const parts = [
+    GENERATOR_VERSION,
     product.title            ?? '',
+    product.template_suffix  ?? '',
     product.price            ?? '',
     product.compare_at_price ?? '',
     product.image_url        ?? '',
@@ -23,6 +90,7 @@ function computeInputHash(product, overrides, brand = {}) {
     overrides.deal_title       ?? '',
     brand.logoUrl              ?? '',
   ];
+  if (brand.roundup) parts.push(JSON.stringify(roundupInputSnapshot(brand.roundup)));
   return crypto.createHash('sha256').update(parts.join('|')).digest('hex').slice(0, 16);
 }
 
@@ -82,9 +150,15 @@ function computeShareVersion(payload) {
 }
 
 function computeShareVersionWithMetafields(baseVersion, metafields = [], brand = {}) {
+  const snapshot = {
+    baseVersion,
+    metafields,
+    logoUrl: brand.logoUrl || null,
+  };
+  if (brand.roundup) snapshot.roundup = brand.roundup;
   return crypto
     .createHash('sha256')
-    .update(JSON.stringify({ baseVersion, metafields, logoUrl: brand.logoUrl || null }))
+    .update(JSON.stringify(snapshot))
     .digest('hex')
     .slice(0, 12);
 }
@@ -94,6 +168,7 @@ function extractProductData(payload) {
     id:               payload.id,
     handle:           payload.handle ?? null,
     title:            payload.title,
+    template_suffix:  payload.template_suffix ?? null,
     price:            payload.variants?.[0]?.price ?? null,
     compare_at_price: payload.variants?.[0]?.compare_at_price ?? null,
     image_url:        payload.image?.src || payload.images?.[0]?.src || null,
@@ -110,8 +185,10 @@ async function handleProduct(product, context = {}) {
     const {
       _storedHash,
       _storedOgVersion,
+      _storedOgImage,
       _storedShareVersion,
       _shareMetafields,
+      _roundup,
       _notFound,
       ...cleanOverrides
     } = overrides;
@@ -123,27 +200,37 @@ async function handleProduct(product, context = {}) {
 
     console.log('[product] overrides:', cleanOverrides);
 
+    const isRoundup = product.template_suffix === 'deal-roundup';
+    const roundup = isRoundup ? (_roundup || { title: null, deals: [] }) : null;
+    if (isRoundup && !roundup.deals.length) {
+      console.log('[product] roundup template has no selected deals — using title-only fallback');
+    }
     const shareVersion = computeShareVersionWithMetafields(
       product.share_version,
       _shareMetafields ?? [],
-      { logoUrl: context.logoUrl }
+      { logoUrl: context.logoUrl, roundup }
     );
     const shareVersionChanged = Boolean(shareVersion && _storedShareVersion !== shareVersion);
 
-    const generationDisabled = context.installation
-      ? cleanOverrides.deal_enabled !== true
-      : cleanOverrides.deal_enabled === false;
+    // On by default for every shop: only an explicit "false" opts a product out.
+    const generationDisabled = !isRoundup && cleanOverrides.deal_enabled === false;
     if (generationDisabled) {
       if (shareVersionChanged) await updateProductShareVersion(product.id, shareVersion, context.client);
-      console.log('[product] skipping - deal_enabled is not enabled');
+      console.log('[product] skipping - deal_enabled is false');
       return;
     }
 
     // 2. Skip if nothing that affects the image actually changed.
     //    This breaks the infinite loop caused by our own metafield updates
     //    triggering a new products/update webhook.
-    const inputHash = computeInputHash(product, cleanOverrides, { logoUrl: context.logoUrl });
-    if (_storedHash === inputHash) {
+    const inputHash = computeInputHash(product, cleanOverrides, {
+      logoUrl: context.logoUrl,
+      roundup,
+    });
+    // A missing og_image (e.g. cleared by a stale admin save) must not be
+    // masked by a matching hash or image version, or the product stays stuck.
+    const hasStoredImage = Boolean(_storedOgImage);
+    if (_storedHash === inputHash && hasStoredImage) {
       if (shareVersionChanged) {
         await updateProductShareVersion(product.id, shareVersion, context.client);
         console.log(`[product] share version updated — ${shareVersion}`);
@@ -151,16 +238,22 @@ async function handleProduct(product, context = {}) {
       console.log(`[product] skipping — input unchanged (hash ${inputHash})`);
       return;
     }
-    console.log(`[product] input changed (${_storedHash ?? 'none'} → ${inputHash}), generating`);
+    if (_storedHash === inputHash) {
+      console.log(`[product] input unchanged but og_image is missing (hash ${inputHash}), regenerating`);
+    } else {
+      console.log(`[product] input changed (${_storedHash ?? 'none'} → ${inputHash}), generating`);
+    }
 
-    const productData = { ...product, ...cleanOverrides };
+    const productData = roundup
+      ? buildRoundupProductData(product, cleanOverrides, roundup)
+      : { ...product, ...cleanOverrides };
 
     // 3. Generate the promo image as a buffer
     const buffer = await generateProductImage(productData, { logoUrl: context.logoUrl });
     console.log('[product] image buffer ready, size:', buffer.length);
 
     const ogVersion = computeOgVersion(buffer);
-    if (_storedOgVersion === ogVersion) {
+    if (_storedOgVersion === ogVersion && hasStoredImage) {
       await updateProductProcessingState(product.id, shareVersion, inputHash, context.client);
       console.log(`[product] processing state updated — share ${shareVersion}, input ${inputHash}`);
       console.log(`[product] skipping — generated image unchanged (OG version ${ogVersion})`);
@@ -251,4 +344,6 @@ module.exports = {
   computeOgVersion,
   computeShareVersion,
   computeShareVersionWithMetafields,
+  buildRoundupProductData,
+  roundupDiscountPercent,
 };

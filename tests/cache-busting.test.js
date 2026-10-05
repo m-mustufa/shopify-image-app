@@ -23,6 +23,7 @@ async function testProductIdempotency() {
   const expectedVersion = crypto.createHash('sha256').update(imageBuffer).digest('hex').slice(0, 12);
   let storedHash = null;
   let storedVersion = null;
+  let storedOgImage = null;
   let storedShareVersion = null;
   let generationCalls = 0;
   let uploadCalls = 0;
@@ -51,10 +52,11 @@ async function testProductIdempotency() {
       deal_enabled: dealEnabled,
       _storedHash: storedHash,
       _storedOgVersion: storedVersion,
+      _storedOgImage: storedOgImage,
       _storedShareVersion: storedShareVersion,
       _shareMetafields: [{ namespace: 'custom', key: 'deal_title', type: 'single_line_text_field', value: 'Deal' }],
     }),
-    updateProductMetafields: async (...args) => { metafieldCalls += 1; lastMetafieldArgs = args; },
+    updateProductMetafields: async (...args) => { metafieldCalls += 1; lastMetafieldArgs = args; storedOgImage = args[1]; },
     updateProductProcessingState: async (...args) => {
       metafieldCalls += 1;
       lastProcessingArgs = args;
@@ -127,12 +129,33 @@ async function testProductIdempotency() {
   assert.strictEqual(uploadCalls, 1);
   assert.strictEqual(metafieldCalls, 2);
 
+  // og_image cleared outside the app (stale admin save): same hash and image
+  // version must still regenerate and write the image back.
+  storedOgImage = null;
+  const healed = await handleProduct(product);
+  assert.strictEqual(healed.imageUrl, 'https://cdn.example/og.jpg');
+  assert.strictEqual(generationCalls, 3, 'missing og_image must bypass the input-hash skip');
+  assert.strictEqual(uploadCalls, 2, 'missing og_image must bypass the image-version skip');
+  assert.strictEqual(storedOgImage, 'https://cdn.example/og.jpg');
+
   dealEnabled = null;
+  storedHash = null;
   storedVersion = null;
   storedShareVersion = expectedShareVersion;
+  const unsetForInstalledShop = await handleProduct(product, { installation: { shopDomain: 'installed.myshopify.com' } });
+  assert.strictEqual(unsetForInstalledShop.ogVersion, expectedVersion);
+  assert.strictEqual(uploadCalls, 3, 'installed shops generate by default when deal_enabled is unset');
+
+  dealEnabled = false;
+  storedHash = null;
+  storedVersion = null;
   const disabledForInstalledShop = await handleProduct(product, { installation: { shopDomain: 'installed.myshopify.com' } });
   assert.strictEqual(disabledForInstalledShop, undefined);
-  assert.strictEqual(uploadCalls, 1, 'new installations require deal_enabled=true');
+  assert.strictEqual(uploadCalls, 3, 'deal_enabled=false must skip generation');
+
+  const disabledForLegacyShop = await handleProduct(product);
+  assert.strictEqual(disabledForLegacyShop, undefined);
+  assert.strictEqual(uploadCalls, 3, 'deal_enabled=false must skip generation without an installation');
 }
 
 async function testBatchedMetafields() {

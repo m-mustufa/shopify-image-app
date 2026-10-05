@@ -1,0 +1,6 @@
+tmp/
+tests/
+extensions/
+shopify.app*.toml
+.env*
+*.log
