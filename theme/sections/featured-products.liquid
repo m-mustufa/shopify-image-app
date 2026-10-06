@@ -16,6 +16,9 @@
   <div class="grid grid--uniform" role="list">
 
     {% for product in collections[featured].products limit: total_products %}
+      {%- comment -%} Grid-only deals (tag "roundup-only", any casing) appear only inside a Deal Roundup. {%- endcomment -%}
+      {%- assign tags_lc = product.tags | join: '|' | downcase | prepend: '|' | append: '|' -%}
+      {%- if tags_lc contains '|roundup-only|' -%}{%- continue -%}{%- endif -%}
       {% include 'product-grid-item' %}
     {% else %}
       {% comment %}

@@ -19,6 +19,9 @@
       {% assign current_product = product %}
       {% assign current_product_found = false %}
       {% for product in collection.products limit: number_of_products_to_fetch %}
+        {%- comment -%} Grid-only deals (tag "roundup-only", any casing) appear only inside a Deal Roundup. {%- endcomment -%}
+        {%- assign tags_lc = product.tags | join: '|' | downcase | prepend: '|' | append: '|' -%}
+        {%- if tags_lc contains '|roundup-only|' -%}{%- continue -%}{%- endif -%}
         {% if product.handle == current_product.handle %}
           {% assign current_product_found = true %}
         {% else %}
