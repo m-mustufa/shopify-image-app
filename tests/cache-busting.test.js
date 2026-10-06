@@ -45,7 +45,7 @@ async function testProductIdempotency() {
   require.cache[filesPath] = { exports: { uploadBufferToShopify: async (...args) => {
     uploadCalls += 1;
     lastUploadArgs = args;
-    return 'https://cdn.example/og.jpg';
+    return `https://cdn.example/promo-${args[1]}-${args[2]}.jpg`;
   } } };
   require.cache[metafieldsPath] = { exports: {
     fetchProductOverrides: async () => ({
@@ -114,7 +114,7 @@ async function testProductIdempotency() {
   assert.strictEqual(uploadCalls, 1);
   assert.strictEqual(lastUploadArgs[2], expectedVersion);
   assert.strictEqual(metafieldCalls, 1);
-  assert.strictEqual(lastMetafieldArgs[1], 'https://cdn.example/og.jpg');
+  assert.strictEqual(lastMetafieldArgs[1], `https://cdn.example/promo-123-${expectedVersion}.jpg`);
   assert.strictEqual(lastMetafieldArgs[2], expectedVersion);
   assert.strictEqual(lastMetafieldArgs[3], expectedShareVersion);
   assert.strictEqual(lastMetafieldArgs[4], expectedInputHash);
@@ -135,19 +135,32 @@ async function testProductIdempotency() {
 
   // og_image cleared outside the app (stale admin save): same hash and image
   // version must still regenerate and write the image back.
+  const currentUrl = `https://cdn.example/promo-123-${expectedVersion}.jpg`;
   storedImage = null;
   const healed = await handleProduct(product);
-  assert.strictEqual(healed.imageUrl, 'https://cdn.example/og.jpg');
+  assert.strictEqual(healed.imageUrl, currentUrl);
   assert.strictEqual(generationCalls, 3, 'missing og_image must bypass the input-hash skip');
   assert.strictEqual(uploadCalls, 2, 'missing og_image must bypass the image-version skip');
-  assert.strictEqual(storedImage, 'https://cdn.example/og.jpg');
+  assert.strictEqual(storedImage, currentUrl);
+
+  // An older image URL written back by a stale admin save is not the current image.
+  storedImage = 'https://cdn.example/promo-123-0123456789ab_c548.jpg';
+  const restaled = await handleProduct(product);
+  assert.strictEqual(restaled.imageUrl, currentUrl, 'stale og_image URL must be replaced');
+  assert.strictEqual(generationCalls, 4);
+  assert.strictEqual(uploadCalls, 3);
+  assert.strictEqual(storedImage, currentUrl);
+
+  const settled = await handleProduct(product);
+  assert.strictEqual(settled, undefined, 'matching og_image must skip again');
+  assert.strictEqual(generationCalls, 4);
 
   dealEnabled = true;
   storedHash = null;
   storedVersion = null;
   storedShareVersion = expectedShareVersion;
   await handleProduct(product, { installation: { shopDomain: 'installed.myshopify.com' } });
-  assert.strictEqual(uploadCalls, 3, 'default-enabled products generate for installed shops');
+  assert.strictEqual(uploadCalls, 4, 'default-enabled products generate for installed shops');
 
   dealEnabled = false;
   storedImage = null;
@@ -158,7 +171,7 @@ async function testProductIdempotency() {
   dealEnabled = null;
   const disabledForInstalledShop = await handleProduct(product, { installation: { shopDomain: 'installed.myshopify.com' } });
   assert.strictEqual(disabledForInstalledShop, undefined);
-  assert.strictEqual(uploadCalls, 3, 'unavailable overrides must not enable generation');
+  assert.strictEqual(uploadCalls, 4, 'unavailable overrides must not enable generation');
 
   dealEnabled = true;
   storedHash = computeInputHash(product, { deal_enabled: true });
@@ -166,12 +179,12 @@ async function testProductIdempotency() {
   storedImage = null;
   const callsBeforeRepair = generationCalls;
   const repaired = await handleProduct(product, { installation: { shopDomain: 'installed.myshopify.com' } });
-  assert.strictEqual(repaired.imageUrl, 'https://cdn.example/og.jpg');
+  assert.strictEqual(repaired.imageUrl, currentUrl);
   assert.strictEqual(generationCalls, callsBeforeRepair + 1, 'copied input hash must not skip a missing image');
-  assert.strictEqual(uploadCalls, 4, 'copied image version must not skip uploading a missing image');
+  assert.strictEqual(uploadCalls, 5, 'copied image version must not skip uploading a missing image');
   await handleProduct(product, { installation: { shopDomain: 'installed.myshopify.com' } });
   assert.strictEqual(generationCalls, callsBeforeRepair + 1, 'repaired image must prevent repeat generation');
-  assert.strictEqual(uploadCalls, 4);
+  assert.strictEqual(uploadCalls, 5);
 }
 
 async function testDefaultPromoEnabled() {

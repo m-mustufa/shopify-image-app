@@ -237,8 +237,13 @@ async function handleProduct(product, context = {}) {
     });
     // A missing og_image (stale admin save, or a duplicated product that copied
     // processing state without an image) must not be masked by a matching hash.
-    const hasStoredImage = Boolean(_storedOgImage);
-    if (_storedHash === inputHash && hasStoredImage && _storedOgVersion) {
+    // The stored URL must also be the image we last generated: uploads are named
+    // promo-<id>-<ogVersion>.jpg, and a stale admin save can write an older URL
+    // back into og_image while og_version and the input hash still match.
+    const hasStoredImage = Boolean(
+      _storedOgImage && _storedOgVersion && _storedOgImage.includes(`-${_storedOgVersion}`)
+    );
+    if (_storedHash === inputHash && hasStoredImage) {
       if (shareVersionChanged) {
         await updateProductShareVersion(product.id, shareVersion, context.client);
         console.log(`[product] share version updated — ${shareVersion}`);
@@ -247,7 +252,7 @@ async function handleProduct(product, context = {}) {
       return;
     }
     if (_storedHash === inputHash) {
-      console.log(`[product] input unchanged but og_image is missing (hash ${inputHash}), regenerating`);
+      console.log(`[product] input unchanged but og_image is missing or stale (hash ${inputHash}), regenerating`);
     } else {
       console.log(`[product] input changed (${_storedHash ?? 'none'} → ${inputHash}), generating`);
     }
