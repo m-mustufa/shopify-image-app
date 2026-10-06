@@ -586,6 +586,17 @@ function getPriceFontSize(priceText) {
   return Math.max(24, Math.floor(smallest * maxWidth / widthAtSmallest));
 }
 
+// Roundup "70% OFF": each word on its own line, as large as the blue area allows.
+const STACKED_SALE_LADDER = [150, 140, 130, 120, 112, 100, 89, 82, 76, 72, 66, 60];
+const STACKED_SALE_GAP = 6;
+function getStackedSaleFontSize(lines) {
+  const maxWidth = CURVE_MIN_X - BADGE_X - 12;
+  for (const fontSize of STACKED_SALE_LADDER) {
+    if (lines.every(line => textWidth(line, fontSize, fontBold(), 0) <= maxWidth)) return fontSize;
+  }
+  return STACKED_SALE_LADDER[STACKED_SALE_LADDER.length - 1];
+}
+
 function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden, deal_sale_price, deal_sale_text, deal_reg_price, showLogoText, showFireImg, fireWidth }) {
 
   // ── Mode detection ────────────────────────────────────────────────────────
@@ -646,6 +657,11 @@ function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden
 
   // ── Sale price font size ───────────────────────────────────────────────────
   const priceFS = getPriceFontSize(saleStr);
+  const saleLines = !titleMode && deal_sale_text && deal_sale_price !== 'hide' && /^\S+\s+\S+$/.test(deal_sale_text.trim())
+    ? deal_sale_text.trim().split(/\s+/)
+    : null;
+  const saleLineFS = saleLines ? getStackedSaleFontSize(saleLines) : 0;
+  const priceBlockH = saleLines ? saleLines.length * saleLineFS + (saleLines.length - 1) * STACKED_SALE_GAP : priceFS;
 
   // ── Reg. price geometry ────────────────────────────────────────────────────
   const regLabelW  = textWidth('Reg. ', REG_FONT, fontReg(), 0);
@@ -659,7 +675,7 @@ function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden
     ? BADGE_H + ORANGE_TITLE_GAP + titleBlockH
     : badgeOnly
       ? BADGE_H
-      : BADGE_H + ORANGE_PRICE_GAP + priceFS + (showReg ? 25 + REG_FONT : 0);
+      : BADGE_H + ORANGE_PRICE_GAP + priceBlockH + (showReg ? 25 + REG_FONT : 0);
   // titleOnlyMode centers text itself; all other badge-bearing modes center the
   // whole block (badge + price + reg price) vertically via blockH, then nudge it
   // down 15px so the block sits with a bit more top breathing room than a dead centre.
@@ -715,7 +731,11 @@ function buildSVG({ price, compare_at_price, badge_text, deal_title, badgeHidden
   }).join('') : ''}
 
   <!-- ══ Sale price ══ -->
-  ${!titleMode && saleStr ? svgPath(saleStr, BADGE_X, priceY, priceFS, { bold: true, fill: WHITE, middleBaseline: true, strokeColor: WHITE, strokeWidth: 1.5 }) : ''}
+  ${saleLines ? saleLines.map((line, i) => {
+    const cy = dynamicBadgeY + BADGE_H + ORANGE_PRICE_GAP + i * (saleLineFS + STACKED_SALE_GAP) + Math.floor(saleLineFS / 2);
+    return svgPath(line, BADGE_X, cy, saleLineFS, { bold: true, fill: WHITE, middleBaseline: true, strokeColor: WHITE, strokeWidth: 3.5 });
+  }).join('') : ''}
+  ${!titleMode && saleStr && !saleLines ? svgPath(saleStr, BADGE_X, priceY, priceFS, { bold: true, fill: WHITE, middleBaseline: true, strokeColor: WHITE, strokeWidth: 1.5 }) : ''}
 
   <!-- ══ Reg. price ══ -->
   ${showReg ? `

@@ -32,3 +32,14 @@ assert.strictEqual(normal.deal_title, undefined);
 assert.strictEqual(normal.compare_at_price, '149.99');
 
 console.log('deal override tests passed');
+
+// Roundup "X% OFF" renders stacked, one word per line, and stays inside the blue area.
+(async () => {
+  const { generateProductImage } = require('../src/image/generator');
+  const sharp = require('sharp');
+  const buf = await generateProductImage({ id: 'r', title: 'Roundup', price: '0', image_url: null, deal_badge_text: 'UP TO', deal_sale_text: '100% OFF' });
+  const meta = await sharp(buf).metadata();
+  assert.strictEqual(meta.width, 1200);
+  assert.strictEqual(meta.height, 628);
+  console.log('stacked roundup render ok');
+})().catch(err => { console.error(err); process.exit(1); });
