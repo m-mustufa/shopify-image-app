@@ -132,7 +132,7 @@
 
             {%- comment -%} Same destination as the deal page's own Get Deal button (Outlink). {%- endcomment -%}
             <a
-              class="dr-deal"
+              class="btn dr-deal"
               href="{{ img_href }}"
               {% if img_external %}target="_blank" rel="sponsored nofollow noopener"{% endif %}
             >
@@ -187,8 +187,8 @@
   .dr-sale { font-size: 20px; font-weight: 800; color: #0a8a2a; line-height: 1.1; }
   .dr-reg { font-size: 14px; color: #8a8f98; }
   .dr-date { font-size: 12px; color: #6b6b6b; margin: 0; }
-  .dr-deal { align-self: flex-end; margin-top: auto; padding: 8px 16px; border-radius: 999px; background: #0a8a2a; color: #fff; font-size: 13px; font-weight: 800; letter-spacing: .03em; line-height: 1.2; text-transform: uppercase; text-decoration: none; white-space: nowrap; }
-  .dr-deal:hover { filter: brightness(1.1); color: #fff; }
+  /* Visual style comes from the theme's .btn, same as the deal page's Get Deal button. */
+  .dr-deal { align-self: flex-end; margin-top: auto; white-space: nowrap; }
   .dr-note { grid-column: 1 / -1; margin: 0; padding: 8px 10px; border-radius: 4px; background: #fff8e1; border-left: 3px solid #f5b400; color: #3d3200; font-size: 14px; line-height: 1.4; }
   .dr-card.is-expired .dr-img,
   .dr-card.is-expired .dr-body { opacity: .55; filter: grayscale(1); }
