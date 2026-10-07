@@ -543,17 +543,21 @@ function wrapTitleOnlyText(text, maxWidth, fontSize) {
 function fitTitleOnlyText(text, maxWidth, initialFontSize, targetLines, minFontSize = 36) {
   for (let fontSize = initialFontSize; fontSize >= minFontSize; fontSize -= 1) {
     const lines = wrapTitleOnlyText(text, maxWidth, fontSize);
-    const awkwardLineStart = lines.slice(1).some(line => /^(?:of|and|or|to|for|in|on|at|by)\b/i.test(line));
-    if (lines.length <= targetLines && !awkwardLineStart) return { fontSize, lines };
+    // A line may start with "On"/"of"/etc. (normal English wrapping); only a line
+    // that is nothing but one of those short words reads badly. Rejecting every
+    // such line start shrank titles like "Prime Deals On Toilet Paper!" to ~47px.
+    const orphanLine = lines.some(line => /^(?:of|and|or|to|for|in|on|at|by|the|a)$/i.test(line.trim()));
+    if (lines.length <= targetLines && !orphanLine) return { fontSize, lines };
   }
   return { fontSize: minFontSize, lines: wrapTitleOnlyText(text, maxWidth, minFontSize) };
 }
 
 function layoutTitleOnlyText(text, maxWidth = TITLE_ONLY_MAX_W) {
   const initialFontSize = text.length <= 45 ? 80 : 50;
-  const targetLines = text.length <= 32 ? 3
-                    : text.length <= 45 ? 4
-                    :                     6;
+  // Short titles get the same four lines as medium ones; capping them at three
+  // forced short-but-wide titles (e.g. "Prime Deals On Toilet Paper!") far below
+  // the size of longer ones.
+  const targetLines = text.length <= 45 ? 4 : 6;
   return fitTitleOnlyText(text, maxWidth, initialFontSize, targetLines);
 }
 

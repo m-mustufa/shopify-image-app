@@ -290,9 +290,16 @@ async function testAutomaticNoPriceText() {
   const { generateProductImage, layoutTitleOnlyText } = require('../src/image/generator');
   const topGolfTitle = layoutTitleOnlyText('Verizon: Free Hour Of TopGolf!');
   assert.deepStrictEqual(topGolfTitle, {
-    fontSize: 56,
-    lines: ['Verizon:', 'Free Hour Of', 'TopGolf!'],
+    fontSize: 80,
+    lines: ['Verizon:', 'Free', 'Hour Of', 'TopGolf!'],
   });
+  // Short titles must not be shrunk below longer ones just to avoid a line
+  // starting with "On" (client report: Toilet Paper title far smaller than Skechers).
+  assert.deepStrictEqual(layoutTitleOnlyText('Prime Deals On Toilet Paper!'), {
+    fontSize: 80,
+    lines: ['Prime', 'Deals On', 'Toilet', 'Paper!'],
+  });
+  assert.strictEqual(layoutTitleOnlyText('Save on Skechers Shoes!').fontSize, 80);
   const starbucksTitle = layoutTitleOnlyText('Verizon: Free $5 Starbucks Gift Card!');
   assert.deepStrictEqual(starbucksTitle, {
     fontSize: 74,
