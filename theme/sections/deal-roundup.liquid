@@ -28,11 +28,8 @@
   style="--dr-accent: {{ settings.color_primary_color }}; --dr-accent-text: {{ settings.color_primary_button_text }}; --dr-badge: {{ settings.color_sale_badge }};"
 >
   <header class="dr-head">
-    {%- if roundup_title != blank -%}
-      <h1 class="dr-h1">{{ roundup_title }}</h1>
-    {%- else -%}
-      <h1 class="visually-hidden">{{ product.title }}</h1>
-    {%- endif -%}
+    {%- comment -%} "Roundup: Page title" overrides the heading; otherwise the product title shows. {%- endcomment -%}
+    <h1 class="dr-h1">{{ roundup_title | default: product.title }}</h1>
 
     {%- if desc_check != blank -%}
       <div class="dr-desc rte">{{ product.description }}</div>
