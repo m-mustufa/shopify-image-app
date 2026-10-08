@@ -5,6 +5,7 @@ const { resolvePromoText } = require('../image/promoText');
 
 const { generateProductImage }                          = require('../image/generator');
 const { uploadBufferToShopify }                         = require('../shopify/files');
+const { syncRoundupDeals }                              = require('../shopify/roundupDeals');
 const {
   updateProductMetafields,
   updateProductProcessingState,
@@ -208,6 +209,16 @@ async function handleProduct(product, context = {}) {
     const roundup = isRoundup ? (_roundup || { title: null, deals: [] }) : null;
     if (isRoundup && !roundup.deals.length) {
       console.log('[product] roundup template has no selected deals — using title-only fallback');
+    }
+    // Only act on deals we actually read (a failed read leaves _roundup unset).
+    if (isRoundup && _roundup && roundup.deals.length) {
+      const synced = await syncRoundupDeals(roundup.deals, context.client);
+      if (synced.tagged.length || synced.activated.length) {
+        console.log(`[product] roundup deals synced — tagged ${synced.tagged.length}, activated ${synced.activated.length}`);
+      }
+      for (const failure of synced.failed) {
+        console.error(`[product] roundup deal sync failed for ${failure.id}: ${failure.error}`);
+      }
     }
     const shareVersion = computeShareVersionWithMetafields(
       product.share_version,

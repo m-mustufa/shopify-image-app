@@ -24,6 +24,7 @@ const PRODUCT_METAFIELDS_QUERY = `
               title
               vendor
               status
+              tags
               featuredImage { url altText }
               dealExpired: metafield(namespace: "custom", key: "deal_expired") { value }
               variants(first: 1) {
@@ -194,6 +195,8 @@ function extractRoundupData(product) {
       compareAtPrice: variant.compareAtPrice ?? null,
       expired: parseBoolean(node.dealExpired?.value) === true,
       active: node.status === 'ACTIVE',
+      status: node.status || null,
+      tags: Array.isArray(node.tags) ? node.tags : [],
     };
   });
   return {

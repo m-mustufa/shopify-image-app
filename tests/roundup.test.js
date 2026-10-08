@@ -21,6 +21,7 @@ async function testRoundupDataExtraction() {
       title: 'First deal',
       vendor: 'Amazon',
       status: 'ACTIVE',
+      tags: ['Toys'],
       featuredImage: { url: 'https://cdn.shopify.com/files/first.jpg', altText: 'First' },
       dealExpired: { value: 'true' },
       variants: { nodes: [{ price: '9.99', compareAtPrice: '19.99' }] },
@@ -38,6 +39,8 @@ async function testRoundupDataExtraction() {
     compareAtPrice: '19.99',
     expired: true,
     active: true,
+    status: 'ACTIVE',
+    tags: ['Toys'],
   });
   assert.deepStrictEqual(
     extractRoundupData({ roundupTitle: { value: 'Empty roundup' }, roundupDeals: { references: { nodes: [] } } }),
@@ -182,7 +185,13 @@ async function testRoundupWebhookRouting() {
   } };
   delete require.cache[productPath];
   const { handleProduct } = require(productPath);
-  const context = { installation: { shopDomain: 'example.myshopify.com' }, shopDomain: 'example.myshopify.com' };
+  const syncCalls = [];
+  const client = { post: async (_path, { query, variables }) => {
+    const op = query.includes('tagsAdd') ? 'tagsAdd' : 'productUpdate';
+    syncCalls.push({ op, id: variables.id || variables.product.id });
+    return { data: { data: { [op]: { userErrors: [] } } } };
+  } };
+  const context = { installation: { shopDomain: 'example.myshopify.com' }, shopDomain: 'example.myshopify.com', client };
 
   await handleProduct({ id: 1, title: 'Normal', template_suffix: '', price: '10', compare_at_price: '20', image_url: 'normal.jpg', share_version: 'v1' }, context);
   await handleProduct({ id: 2, title: 'Own', template_suffix: 'deal-roundup', image_url: 'own.jpg', share_version: 'v2' }, context);
@@ -191,6 +200,9 @@ async function testRoundupWebhookRouting() {
   await handleProduct({ id: 5, title: 'Empty', template_suffix: 'deal-roundup', image_url: null, share_version: 'v5' }, context);
 
   assert.strictEqual(generated.length, 5);
+  // Saving a roundup tags its deals and never touches a normal product's references.
+  assert.ok(!syncCalls.some(call => call.id === 'normal-ref'), 'normal products must not sync roundup deals');
+  assert.ok(syncCalls.some(call => call.op === 'tagsAdd' && call.id === 'own'), 'roundup deals must be tagged roundup-only');
   assert.strictEqual(generated[0].deal_sale_text, undefined);
   assert.strictEqual(generated[0].image_url, 'normal.jpg');
   assert.strictEqual(generated[0].price, '10');
