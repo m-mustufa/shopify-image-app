@@ -1,13 +1,9 @@
-name = "deal-image-test-hook"
-client_id = "6fe6cac5f5d1b6a9d153480e93bd2c99"
-application_url = "https://shopify-image-app-seven.vercel.app"
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "6b4a22689fe1a3b175c2775f2850b2b0"
+name = "Simplex Deals Social Image"
+application_url = "https://simplex-deals-social-image.vercel.app"
 embedded = true
-
-[access_scopes]
-scopes = "read_products,write_products,read_files,write_files,read_publications,write_publications"
-
-[auth]
-redirect_urls = ["https://shopify-image-app-seven.vercel.app/auth/callback"]
 
 [webhooks]
 api_version = "2026-07"
@@ -32,6 +28,11 @@ uri = "/webhooks/shopify/customers-redact"
 compliance_topics = ["shop/redact"]
 uri = "/webhooks/shopify/shop-redact"
 
-[build]
-automatically_update_urls_on_dev = false
-dev_store_url = "revya-boutique.myshopify.com"
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_products,write_products,read_files,write_files,read_publications,write_publications"
+optional_scopes = [ ]
+use_legacy_install_flow = false
+
+[auth]
+redirect_urls = ["https://simplex-deals-social-image.vercel.app/auth/callback"]

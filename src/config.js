@@ -4,7 +4,7 @@ module.exports = {
   port: parseInt(process.env.PORT, 10) || 3000,
   appUrl: process.env.APP_URL || process.env.SHOPIFY_APP_URL || 'http://localhost:3000',
   shopifyApiVersion: process.env.SHOPIFY_API_VERSION || '2026-07',
-  shopifyScopes: (process.env.SHOPIFY_SCOPES || 'read_products,write_products,read_files,write_files')
+  shopifyScopes: (process.env.SHOPIFY_SCOPES || 'read_products,write_products,read_files,write_files,read_publications,write_publications')
     .split(',')
     .map(scope => scope.trim())
     .filter(Boolean),

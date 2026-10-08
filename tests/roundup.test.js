@@ -187,7 +187,13 @@ async function testRoundupWebhookRouting() {
   const { handleProduct } = require(productPath);
   const syncCalls = [];
   const client = { post: async (_path, { query, variables }) => {
-    const op = query.includes('tagsAdd') ? 'tagsAdd' : 'productUpdate';
+    if (query.includes('RoundupPublications')) {
+      return { data: { data: { publications: { nodes: [{ id: 'gid://shopify/Publication/1', catalog: { title: 'Online Store' } }] } } } };
+    }
+    if (query.includes('RoundupPublished')) {
+      return { data: { data: { nodes: variables.ids.map(id => ({ id, publishedOnPublication: true })) } } };
+    }
+    const op = query.includes('tagsAdd') ? 'tagsAdd' : query.includes('publishablePublish') ? 'publishablePublish' : 'productUpdate';
     syncCalls.push({ op, id: variables.id || variables.product.id });
     return { data: { data: { [op]: { userErrors: [] } } } };
   } };

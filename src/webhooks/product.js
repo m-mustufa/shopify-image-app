@@ -213,8 +213,11 @@ async function handleProduct(product, context = {}) {
     // Only act on deals we actually read (a failed read leaves _roundup unset).
     if (isRoundup && _roundup && roundup.deals.length) {
       const synced = await syncRoundupDeals(roundup.deals, context.client);
-      if (synced.tagged.length || synced.activated.length) {
-        console.log(`[product] roundup deals synced — tagged ${synced.tagged.length}, activated ${synced.activated.length}`);
+      if (synced.tagged.length || synced.published.length || synced.activated.length) {
+        console.log(`[product] roundup deals synced — tagged ${synced.tagged.length}, published ${synced.published.length}, activated ${synced.activated.length}`);
+      }
+      if (synced.publishError) {
+        console.error(`[product] roundup deals not published to Online Store (open the app once to approve publishing access): ${synced.publishError}`);
       }
       for (const failure of synced.failed) {
         console.error(`[product] roundup deal sync failed for ${failure.id}: ${failure.error}`);
