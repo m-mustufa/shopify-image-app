@@ -363,6 +363,8 @@ module.exports = {
   truncateText,
   wrapText,
   wrapTitleOnlyText,
+  textWidth,
+  fontBold,
   fitTitleOnlyText,
   layoutTitleOnlyText,
 };
@@ -459,7 +461,8 @@ const TITLE_FS       = 44;
 const TITLE_LINE_GAP = 12;   // vertical gap between title lines (badge+title mode)
 const TITLE_MAX_W    = 350;
 
-const TITLE_ONLY_MAX_W = 350;
+// Same limit as the price text: the narrowest point of the blue curve, minus a margin.
+const TITLE_ONLY_MAX_W = Math.floor(CURVE_MIN_X - BADGE_X - 12);
 
 // Truncate text to charLimit characters at word boundary.
 function truncateText(text, charLimit = 60) {
@@ -547,7 +550,10 @@ function fitTitleOnlyText(text, maxWidth, initialFontSize, targetLines, minFontS
     // that is nothing but one of those short words reads badly. Rejecting every
     // such line start shrank titles like "Prime Deals On Toilet Paper!" to ~47px.
     const orphanLine = lines.some(line => /^(?:of|and|or|to|for|in|on|at|by|the|a)$/i.test(line.trim()));
-    if (lines.length <= targetLines && !orphanLine) return { fontSize, lines };
+    // Wrapping never splits a word, so a single long word ("Networking") can be
+    // wider than the blue area; keep shrinking until every line fits.
+    const fitsWidth = lines.every(line => textWidth(line, fontSize, fontBold(), 0) <= maxWidth);
+    if (lines.length <= targetLines && !orphanLine && fitsWidth) return { fontSize, lines };
   }
   return { fontSize: minFontSize, lines: wrapTitleOnlyText(text, maxWidth, minFontSize) };
 }

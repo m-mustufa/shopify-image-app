@@ -302,14 +302,21 @@ async function testAutomaticNoPriceText() {
   assert.strictEqual(layoutTitleOnlyText('Save on Skechers Shoes!').fontSize, 80);
   const starbucksTitle = layoutTitleOnlyText('Verizon: Free $5 Starbucks Gift Card!');
   assert.deepStrictEqual(starbucksTitle, {
-    fontSize: 74,
+    fontSize: 75,
     lines: ['Verizon:', 'Free $5', 'Starbucks', 'Gift Card!'],
   });
   const ultaTitle = layoutTitleOnlyText('Verizon: Free $5 Ulta Beauty eGift Card!');
   assert.deepStrictEqual(ultaTitle, {
-    fontSize: 62,
+    fontSize: 66,
     lines: ['Verizon:', 'Free $5', 'Ulta Beauty', 'eGift Card!'],
   });
+  // A single long word must shrink to fit inside the blue area, not spill past the curve.
+  const { textWidth, fontBold } = require('../src/image/generator');
+  const networking = layoutTitleOnlyText('Prime Deals on Networking & Memory');
+  assert.ok(networking.lines.includes('Networking'));
+  for (const line of networking.lines) {
+    assert.ok(textWidth(line, networking.fontSize, fontBold(), 0) <= 375, `"${line}" overflows the blue area`);
+  }
   const image = await sharp({ create: { width: 80, height: 100, channels: 3, background: '#4477aa' } }).png().toBuffer();
   const product = { ...base, price: '0.00', image_buffer: image };
   const automatic = await generateProductImage(product, { logoUrl: null });
