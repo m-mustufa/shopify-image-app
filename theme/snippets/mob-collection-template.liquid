@@ -61,10 +61,13 @@
 
 <div class="grid grid--uniform collection-template" role="list">
 
+{%- assign shown_count = 0 -%}
 {% for product in collection.products %}
   {%- comment -%} Grid-only deals (tag "roundup-only", any casing) appear only inside a Deal Roundup. {%- endcomment -%}
   {%- assign tags_lc = product.tags | join: '|' | downcase | prepend: '|' | append: '|' -%}
   {%- if tags_lc contains '|roundup-only|' -%}{%- continue -%}{%- endif -%}
+  {%- comment -%} Ad rows follow visible products only, so hidden deals don't leave gaps. {%- endcomment -%}
+  {%- assign shown_count = shown_count | plus: 1 -%}
   
   
   {% if collection.products.size == 1 %}
@@ -74,7 +77,7 @@
   {% endif %}
   
   
-  {% assign res = forloop.index | modulo: 4 %}
+  {% assign res = shown_count | modulo: 4 %}
   
  {% if res == 0 %}
   {% include 'product-grid-item' %}
