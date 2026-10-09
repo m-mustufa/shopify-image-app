@@ -25,7 +25,7 @@
 
 <section
   class="dr"
-  style="--dr-accent: {{ settings.color_primary_color }}; --dr-accent-text: {{ settings.color_primary_button_text }}; --dr-badge: {{ settings.color_sale_badge }};"
+  style="--dr-accent: {{ settings.color_primary_color }}; --dr-accent-text: {{ settings.color_primary_button_text }}; --dr-badge: {{ settings.color_sale_badge }}; --dr-text: {{ settings.color_body_text }};"
 >
   <header class="dr-head">
     {%- comment -%} "Roundup: Page title" overrides the heading; otherwise the product title shows. {%- endcomment -%}
@@ -181,8 +181,9 @@
   .dr-logo { display: block; height: 18px; width: auto; }
   .dr-store { font-size: 13px; font-weight: 600; color: #555; }
   .dr-prices { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; }
-  .dr-sale { font-size: 20px; font-weight: 800; color: #0a8a2a; line-height: 1.1; }
-  .dr-reg { font-size: 14px; color: #8a8f98; }
+  /* Same colours as the site's product grid: sale price in the theme's sale red, regular price in body text. */
+  .dr-sale { font-size: 20px; font-weight: 800; color: var(--dr-badge); line-height: 1.1; }
+  .dr-reg { font-size: 14px; color: var(--dr-text); }
   .dr-date { font-size: 12px; color: #6b6b6b; margin: 0; }
   /* Visual style comes from the theme's .btn, same as the deal page's Get Deal button. */
   .dr-deal { align-self: flex-end; margin-top: auto; white-space: nowrap; }
