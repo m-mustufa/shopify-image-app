@@ -137,6 +137,11 @@
             </a>
           </div>
 
+          {%- comment -%} Same copyable coupon box as the deal page. {%- endcomment -%}
+          {%- if p.metafields.custom.coupon_code != blank -%}
+            <div class="dr-coupon">{% render 'coupon-code', product: p %}</div>
+          {%- endif -%}
+
           {%- if inst != blank -%}
             <p class="dr-note">{{ inst | escape | newline_to_br }}</p>
           {%- endif -%}
@@ -187,6 +192,9 @@
   .dr-date { font-size: 12px; color: #6b6b6b; margin: 0; }
   /* Visual style comes from the theme's .btn, same as the deal page's Get Deal button. */
   .dr-deal { align-self: flex-end; margin-top: auto; white-space: nowrap; }
+  .dr-coupon { grid-column: 1 / -1; }
+  .dr-coupon .coupon-wrapper p { margin: 0; font-size: 14px; }
+  .dr-coupon .coupon-wrapper p span.text-black { font-size: 14px; }
   .dr-note { grid-column: 1 / -1; margin: 0; padding: 8px 10px; border-radius: 4px; background: #fff8e1; border-left: 3px solid #f5b400; color: #3d3200; font-size: 14px; line-height: 1.4; }
   .dr-card.is-expired .dr-img,
   .dr-card.is-expired .dr-body { opacity: .55; filter: grayscale(1); }
