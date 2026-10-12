@@ -58,6 +58,10 @@
           endif
 
           assign inst = p.metafields.custom.instructions.value | strip
+          # Deals often carry their instructions in the description (e.g. "Use code X at checkout").
+          if inst == blank
+            assign inst = p.description | strip_html | strip | truncate: 200
+          endif
 
           assign img_href = p.url
           assign img_external = false
