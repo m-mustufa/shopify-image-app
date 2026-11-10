@@ -75,7 +75,7 @@ function buildRoundupProductData(product, overrides, roundup) {
 }
 
 // Bump when generator output changes for the same inputs, so saved products regenerate.
-const GENERATOR_VERSION = '5';
+const GENERATOR_VERSION = '6';
 
 function computeInputHash(product, overrides, brand = {}) {
   const parts = [

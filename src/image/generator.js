@@ -29,7 +29,9 @@ const ORANGE = '#ff6a03';
 const WHITE  = '#FFFFFF';
 
 // ─── Badge geometry ──────────────────────────────────────────────────────────
-const BADGE_X  = 30;
+// Safe margins: WhatsApp Status crops link previews on every side (reported on
+// Galaxy S26 / Note, Oct 2026), so text, logo and product sit ~6-8% inside the edges.
+const BADGE_X  = 81;
 const BADGE_Y  = 140;
 const BADGE_BW = Math.round(270 * 1.05);   // body width; arrow tip adds another BADGE_ARROW_W px
 const BADGE_H  = Math.round(64 * 1.05);
@@ -50,9 +52,14 @@ const REG_FONT = 48;
 const LOGO_W = 180;
 const LOGO_H = 90;
 const LOGO_X = W - LOGO_W - 10;
-const LOGO_Y = 10;
+const LOGO_Y = 50;
 const LOGO_IMG_MAX_W = Math.round(149 * 0.95 * 0.95);
 const LOGO_IMG_MAX_H = Math.round(56 * 0.95 * 0.95);
+const LOGO_RIGHT_INSET = 86;
+// The product photo fits in the band below the logo, so the two never overlap.
+const PRODUCT_BAND_TOP = LOGO_Y + LOGO_IMG_MAX_H + 14;
+const PRODUCT_BAND_BOTTOM = H - 40;
+const PRODUCT_RIGHT_INSET = 65;
 const PRODUCT_SAFE_TOP = LOGO_Y + Math.round(LOGO_H * 0.8);
 const PRODUCT_SHIFT_LEFT = Math.round(580 * 0.1);
 
@@ -266,17 +273,17 @@ async function generateProductImage(rawProduct, options = {}) {
       console.log('[generator] preserving product image background');
     }
     const MAX_W = Math.round(588 * 1.05 * 0.9 * 1.05 * 1.1 * 0.88);
-    const MAX_H = Math.round(553 * 1.05 * 0.9 * 1.05 * 1.1 * 0.88);
+    const MAX_H = PRODUCT_BAND_BOTTOM - PRODUCT_BAND_TOP;
     const fitted = await sharp(preparedImage.buffer)
       .resize(MAX_W, MAX_H, { fit: 'inside', withoutEnlargement: false })
       .png()
       .toBuffer();
     const { width: fw, height: fh } = await sharp(fitted).metadata();
-    const top = Math.round((H - fh) / 2);
+    const top = PRODUCT_BAND_TOP + Math.round((PRODUCT_BAND_BOTTOM - PRODUCT_BAND_TOP - fh) / 2);
     const productRightShift = 25;
     const centeredLeft = SPLIT_X + Math.round((WHITE_SECTION_W - fw) / 2) - 30 + productRightShift;
     const whiteSafeLeft = Math.ceil(CURVE_MIN_X) + 10;
-    const rightPaddedLeft = W - 30 - fw;
+    const rightPaddedLeft = W - PRODUCT_RIGHT_INSET - fw;
     const logoSafeLeft = W - 10 - LOGO_IMG_MAX_W + productRightShift;
     let left = Math.max(whiteSafeLeft, Math.min(centeredLeft, rightPaddedLeft));
     if (top < PRODUCT_SAFE_TOP) {
@@ -337,7 +344,7 @@ async function generateProductImage(rawProduct, options = {}) {
     composites.push({
       input: logoData.buffer,
       top: LOGO_Y,
-      left: W - 10 - logoData.w,
+      left: W - LOGO_RIGHT_INSET - logoData.w,
     });
   }
 
