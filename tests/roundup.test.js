@@ -60,7 +60,7 @@ async function testNormalRendererIsPixelIdentical() {
     badge_text: null,
   });
   const hash = crypto.createHash('sha256').update(buffer).digest('hex');
-  assert.strictEqual(hash, '47675e1e317f972f0f9d6b83026bb68974195f1e1a33a773c1059610d6ba8083');
+  assert.strictEqual(hash, 'c55e373befe8fcda623db67100fe615de272a5edd998646a3d89394edf7683b5');
 }
 
 async function testOptionBRenderer() {

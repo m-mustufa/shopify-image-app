@@ -29,9 +29,9 @@ const ORANGE = '#ff6a03';
 const WHITE  = '#FFFFFF';
 
 // ─── Badge geometry ──────────────────────────────────────────────────────────
-// Safe margins: WhatsApp Status crops link previews on every side (reported on
-// Galaxy S26 / Note, Oct 2026), so text, logo and product sit ~6-8% inside the edges.
-const BADGE_X  = 81;
+// Margins: Nov 2026 the 81px/86px Status-safe margins made the product and text too
+// small, so the client chose a middle ground: a little inside the edges, not 6-8%.
+const BADGE_X  = 50;
 const BADGE_Y  = 140;
 const BADGE_BW = Math.round(270 * 1.05);   // body width; arrow tip adds another BADGE_ARROW_W px
 const BADGE_H  = Math.round(64 * 1.05);
@@ -52,14 +52,14 @@ const REG_FONT = 48;
 const LOGO_W = 180;
 const LOGO_H = 90;
 const LOGO_X = W - LOGO_W - 10;
-const LOGO_Y = 50;
+const LOGO_Y = 22;
 const LOGO_IMG_MAX_W = Math.round(149 * 0.95 * 0.95);
 const LOGO_IMG_MAX_H = Math.round(56 * 0.95 * 0.95);
-const LOGO_RIGHT_INSET = 86;
+const LOGO_RIGHT_INSET = 30;
 // The product photo fits in the band below the logo, so the two never overlap.
-const PRODUCT_BAND_TOP = LOGO_Y + LOGO_IMG_MAX_H + 14;
-const PRODUCT_BAND_BOTTOM = H - 40;
-const PRODUCT_RIGHT_INSET = 65;
+const PRODUCT_BAND_TOP = LOGO_Y + LOGO_IMG_MAX_H + 10;
+const PRODUCT_BAND_BOTTOM = H - 20;
+const PRODUCT_RIGHT_INSET = 30;
 const PRODUCT_SAFE_TOP = LOGO_Y + Math.round(LOGO_H * 0.8);
 const PRODUCT_SHIFT_LEFT = Math.round(580 * 0.1);
 
