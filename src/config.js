@@ -15,6 +15,8 @@ module.exports = {
   shopifyClientId:       process.env.SHOPIFY_CLIENT_ID,
   shopifyClientSecret:   process.env.SHOPIFY_CLIENT_SECRET,
   databaseUrl:           process.env.DATABASE_URL || null,
+  // Optional second database, used when the primary is unreachable (e.g. free quota used up).
+  databaseBackupUrl:     process.env.DATABASE_URL_BACKUP || null,
   shopifyTokenEncryptionKey: process.env.SHOPIFY_TOKEN_ENCRYPTION_KEY || null,
   fbAppId:               process.env.FB_APP_ID      || null,
   fbAppSecret:           process.env.FB_APP_SECRET  || null,

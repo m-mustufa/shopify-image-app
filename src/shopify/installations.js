@@ -131,9 +131,15 @@ class FileInstallationStore {
 }
 
 class PostgresInstallationStore {
-  constructor(databaseUrl) {
+  constructor(databaseUrl, { label = 'primary', connectionTimeoutMillis = 5000 } = {}) {
     const { Pool } = require('pg');
-    this.pool = new Pool({ connectionString: databaseUrl });
+    this.label = label;
+    // A suspended or over-quota database must fail fast so failover can kick in,
+    // instead of hanging the webhook until the function times out.
+    this.pool = new Pool({ connectionString: databaseUrl, connectionTimeoutMillis });
+    // Without a listener, an idle client dropped by the server (Neon suspends idle
+    // computes) emits an unhandled 'error' that crashes the process.
+    this.pool.on('error', err => console.warn(`[db:${this.label}] idle client error: ${err.message}`));
     this.ready = null;
   }
 
@@ -155,6 +161,8 @@ class PostgresInstallationStore {
         ALTER TABLE shop_installations ADD COLUMN IF NOT EXISTS refresh_token TEXT;
         ALTER TABLE shop_installations ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ
       `);
+      // Do not keep a failed setup: the next call retries once the database is back.
+      this.ready.catch(() => { this.ready = null; });
     }
     await this.ready;
   }
@@ -217,6 +225,130 @@ class PostgresInstallationStore {
   }
 }
 
+// Two databases: reads use the primary and fall back to the backup when the primary
+// is unreachable; writes go to both so either one can serve on its own.
+class FailoverInstallationStore {
+  constructor(primary, backup, { cooldownMs = 10 * 60 * 1000, now = () => Date.now() } = {}) {
+    this.primary = primary;
+    this.backup = backup;
+    this.cooldownMs = cooldownMs;
+    this.now = now;
+    this.primaryDownUntil = 0;
+  }
+
+  primaryAvailable() {
+    return this.now() >= this.primaryDownUntil;
+  }
+
+  markPrimaryDown(err) {
+    this.primaryDownUntil = this.now() + this.cooldownMs;
+    console.warn(`[db] primary unavailable, using backup for ${Math.round(this.cooldownMs / 60000)} min: ${err.message}`);
+  }
+
+  async get(shopDomain) {
+    if (!this.primaryAvailable()) return this.backup.get(shopDomain);
+
+    let record;
+    try {
+      record = await this.primary.get(shopDomain);
+    } catch (err) {
+      this.markPrimaryDown(err);
+      return this.backup.get(shopDomain);
+    }
+    if (record) return record;
+
+    // Saved while the primary was down: copy it back so the primary catches up.
+    let fromBackup;
+    try {
+      fromBackup = await this.backup.get(shopDomain);
+    } catch (err) {
+      console.warn(`[db] backup read failed: ${err.message}`);
+      return null;
+    }
+    if (fromBackup) {
+      try {
+        await this.primary.save(fromBackup);
+      } catch (err) {
+        console.warn(`[db] could not copy installation back to primary: ${err.message}`);
+      }
+    }
+    return fromBackup;
+  }
+
+  async save(input) {
+    const usePrimary = this.primaryAvailable();
+    const [primary, backup] = await Promise.allSettled([
+      usePrimary ? this.primary.save(input) : Promise.resolve(null),
+      this.backup.save(input),
+    ]);
+    if (usePrimary && primary.status === 'rejected') this.markPrimaryDown(primary.reason);
+    if (backup.status === 'rejected') console.warn(`[db] backup write failed: ${backup.reason.message}`);
+
+    if (usePrimary && primary.status === 'fulfilled') return primary.value;
+    if (backup.status === 'fulfilled') return backup.value;
+    throw usePrimary ? primary.reason : backup.reason;
+  }
+
+  async delete(shopDomain) {
+    const [primary, backup] = await Promise.allSettled([
+      this.primary.delete(shopDomain),
+      this.backup.delete(shopDomain),
+    ]);
+    if (primary.status === 'rejected') console.warn(`[db] primary delete failed: ${primary.reason.message}`);
+    if (backup.status === 'rejected') console.warn(`[db] backup delete failed: ${backup.reason.message}`);
+    if (primary.status === 'rejected' && backup.status === 'rejected') throw primary.reason;
+    return [primary, backup].some(result => result.status === 'fulfilled' && result.value);
+  }
+}
+
+// Keeps recently read installations in memory so a burst of product webhooks does
+// not wake the database for every request (each wake bills compute time).
+// A record is served from cache only while its access token has plenty of life
+// left, so a token refresh always starts from a fresh database read: Shopify
+// rotates refresh tokens, and a stale cached one would be rejected.
+class CachedInstallationStore {
+  constructor(store, { ttlMs = 30 * 60 * 1000, minTokenLifeMs = 10 * 60 * 1000, now = () => Date.now() } = {}) {
+    this.store = store;
+    this.ttlMs = ttlMs;
+    this.minTokenLifeMs = minTokenLifeMs;
+    this.now = now;
+    this.entries = new Map();
+  }
+
+  remember(record) {
+    if (record?.shopDomain) this.entries.set(record.shopDomain, { record, cachedAt: this.now() });
+    return record;
+  }
+
+  fresh(entry) {
+    if (!entry) return false;
+    if (this.now() - entry.cachedAt >= this.ttlMs) return false;
+    const expiresAt = entry.record.expiresAt ? new Date(entry.record.expiresAt).getTime() : Infinity;
+    return expiresAt - this.now() > this.minTokenLifeMs;
+  }
+
+  async get(shopDomain) {
+    const shop = normalizeShopDomain(shopDomain);
+    if (!shop) return null;
+    const entry = this.entries.get(shop);
+    if (this.fresh(entry)) return entry.record;
+    this.entries.delete(shop);
+    return this.remember(await this.store.get(shop));
+  }
+
+  async save(input) {
+    const shop = normalizeShopDomain(input?.shopDomain);
+    if (shop) this.entries.delete(shop);
+    return this.remember(await this.store.save(input));
+  }
+
+  async delete(shopDomain) {
+    const shop = normalizeShopDomain(shopDomain);
+    if (shop) this.entries.delete(shop);
+    return this.store.delete(shopDomain);
+  }
+}
+
 class UnconfiguredInstallationStore {
   unavailable() {
     const error = new Error('DATABASE_URL is required for installable mode on Vercel');
@@ -231,10 +363,21 @@ class UnconfiguredInstallationStore {
 
 let singleton;
 
+function createDatabaseStore() {
+  const primary = new PostgresInstallationStore(config.databaseUrl, { label: 'primary' });
+  const store = config.databaseBackupUrl
+    ? new FailoverInstallationStore(
+      primary,
+      new PostgresInstallationStore(config.databaseBackupUrl, { label: 'backup' })
+    )
+    : primary;
+  return new CachedInstallationStore(store);
+}
+
 function getInstallationStore() {
   if (!singleton) {
     singleton = config.databaseUrl
-      ? new PostgresInstallationStore(config.databaseUrl)
+      ? createDatabaseStore()
       : process.env.VERCEL
         ? new UnconfiguredInstallationStore()
         : new FileInstallationStore();
@@ -247,6 +390,8 @@ function setInstallationStoreForTests(store) {
 }
 
 module.exports = {
+  CachedInstallationStore,
+  FailoverInstallationStore,
   FileInstallationStore,
   MemoryInstallationStore,
   PostgresInstallationStore,
