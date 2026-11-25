@@ -219,6 +219,9 @@ async function handleProduct(product, context = {}) {
       if (synced.publishError) {
         console.error(`[product] roundup deals not published to Online Store (open the app once to approve publishing access): ${synced.publishError}`);
       }
+      if (synced.deferred) {
+        console.warn(`[product] roundup deal sync stopped for time — ${synced.deferred} deals left, save the roundup again to finish`);
+      }
       for (const failure of synced.failed) {
         console.error(`[product] roundup deal sync failed for ${failure.id}: ${failure.error}`);
       }

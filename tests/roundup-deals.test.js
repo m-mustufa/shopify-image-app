@@ -91,5 +91,17 @@ function fakeClient({ publishedIds = [], failIds = [], denyPublications = false,
   assert.strictEqual(mixed.failed.length, 1);
   assert.deepStrictEqual(mixed.activated, ['gid://shopify/Product/6']);
 
+  // A large roundup stops at the time budget instead of running past the
+  // function timeout; the remaining deals are reported as deferred.
+  let fakeTime = 0;
+  const slow = fakeClient();
+  const many = Array.from({ length: 10 }, (_, i) => ({ id: `gid://shopify/Product/${100 + i}`, status: 'ACTIVE', tags: [] }));
+  const budgeted = await syncRoundupDeals(many, slow, {
+    budgetMs: 3,
+    now: () => fakeTime++,
+  });
+  assert.ok(budgeted.deferred > 0, 'expected some deals deferred');
+  assert.strictEqual(budgeted.tagged.length + budgeted.deferred, many.length);
+
   console.log('roundup deal sync tests passed');
 })().catch(err => { console.error(err); process.exit(1); });

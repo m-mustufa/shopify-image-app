@@ -84,8 +84,15 @@ async function unpublishedDealIds(deals, client, publicationId) {
   return new Set(deals.map(deal => deal.id).filter(id => !published.has(id)));
 }
 
-async function syncRoundupDeals(deals = [], client) {
-  const result = { tagged: [], published: [], activated: [], failed: [], publishError: null };
+// A big roundup (up to 128 deals) can need hundreds of mutations on its first save,
+// which would run past the function timeout and stop the preview image from being
+// made. The sync stops after a time budget; the rest is picked up on the next save
+// (deals already tagged, published and active are skipped).
+const SYNC_BUDGET_MS = 15 * 1000;
+
+async function syncRoundupDeals(deals = [], client, { budgetMs = SYNC_BUDGET_MS, now = () => Date.now() } = {}) {
+  const result = { tagged: [], published: [], activated: [], failed: [], publishError: null, deferred: 0 };
+  const deadline = now() + budgetMs;
   let publicationId = null;
   let unpublished = new Set();
   if (deals.length) {
@@ -98,7 +105,11 @@ async function syncRoundupDeals(deals = [], client) {
       result.publishError = err.message;
     }
   }
-  for (const deal of deals) {
+  for (const [index, deal] of deals.entries()) {
+    if (now() >= deadline) {
+      result.deferred = deals.length - index;
+      break;
+    }
     try {
       if (!hasRoundupOnlyTag(deal.tags)) {
         await runMutation(client, TAGS_ADD_MUTATION, { id: deal.id, tags: [ROUNDUP_ONLY_TAG] }, 'tagsAdd');

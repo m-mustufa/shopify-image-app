@@ -12,7 +12,8 @@ async function testRoundupDataExtraction() {
     path.join(__dirname, '..', 'src', 'shopify', 'metafields.js'),
     'utf8'
   );
-  assert.match(metafieldsSource, /references\(first:\s*100\)/);
+  // Shopify lists hold at most 128 products; read all of them.
+  assert.match(metafieldsSource, /references\(first:\s*128\)/);
   const roundup = extractRoundupData({
     roundupTitle: { value: ' Weekend deals ' },
     roundupDeals: { references: { nodes: [{

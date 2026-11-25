@@ -16,7 +16,7 @@ const PRODUCT_METAFIELDS_QUERY = `
     product(id: $id) {
       roundupTitle: metafield(namespace: "custom", key: "roundup_page_title") { value }
       roundupDeals: metafield(namespace: "custom", key: "roundup_deals") {
-        references(first: 100) {
+        references(first: 128) {
           nodes {
             ... on Product {
               id

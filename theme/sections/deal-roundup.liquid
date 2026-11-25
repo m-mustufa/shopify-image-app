@@ -40,8 +40,13 @@
   </header>
 
   {%- if deals != blank and deals.size > 0 -%}
+    {%- comment -%}
+      A Liquid loop over a list of references stops at 50 items; paginate lifts that
+      (up to 250 per page). The list itself holds at most 128 products.
+    {%- endcomment -%}
+    {%- paginate product.metafields.custom.roundup_deals.value by 250 -%}
     <ul class="dr-list" role="list">
-      {%- for p in deals -%}
+      {%- for p in product.metafields.custom.roundup_deals.value -%}
         {%- if p == blank -%}{%- continue -%}{%- endif -%}
 
         {%- liquid
@@ -152,6 +157,7 @@
         </li>
       {%- endfor -%}
     </ul>
+    {%- endpaginate -%}
   {%- elsif request.design_mode -%}
     <p class="dr-empty">No deals selected yet. Add them in the product's "Roundup: Deals" field.</p>
   {%- endif -%}
