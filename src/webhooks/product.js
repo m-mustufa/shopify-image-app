@@ -75,7 +75,7 @@ function buildRoundupProductData(product, overrides, roundup) {
 }
 
 // Bump when generator output changes for the same inputs, so saved products regenerate.
-const GENERATOR_VERSION = '7';
+const GENERATOR_VERSION = '8';  // 8: regenerate previews made blank by CDN 429s (Nov 2026)
 
 function computeInputHash(product, overrides, brand = {}) {
   const parts = [

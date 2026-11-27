@@ -262,7 +262,11 @@ async function generateProductImage(rawProduct, options = {}) {
     try {
       productImgBuffer = await downloadImage(image_url);
     } catch (err) {
-      console.warn('[generator] product image fetch failed (non-fatal):', err.message);
+      // Never publish a preview with an empty white panel: fail instead, so the
+      // previous image stays and the next save regenerates it.
+      const error = new Error(`product image fetch failed: ${err.message}`);
+      error.cause = err;
+      throw error;
     }
   }
   if (productImgBuffer) {
@@ -378,13 +382,29 @@ module.exports = {
 
 // ─── Image download ───────────────────────────────────────────────────────────
 
-async function downloadImage(url) {
-  const res = await axios.get(url, {
-    responseType: 'arraybuffer',
-    timeout: 8_000,
-    headers: { 'User-Agent': 'ShopifyImageApp/1.0' },
-  });
-  return Buffer.from(res.data);
+// Shopify's CDN answers 429 under heavy load (e.g. Black Friday). Retry rate
+// limits, server errors and network errors with backoff, honouring Retry-After.
+async function downloadImage(url, { attempts = 4, baseDelayMs = 1000, sleep = ms => new Promise(resolve => setTimeout(resolve, ms)) } = {}) {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      const res = await axios.get(url, {
+        responseType: 'arraybuffer',
+        timeout: 8_000,
+        headers: { 'User-Agent': 'ShopifyImageApp/1.0' },
+      });
+      return Buffer.from(res.data);
+    } catch (err) {
+      const status = err.response?.status;
+      const retryable = !status || status === 429 || status >= 500;
+      if (!retryable || attempt >= attempts) throw err;
+      const retryAfter = Number(err.response?.headers?.['retry-after']);
+      const delay = Number.isFinite(retryAfter) && retryAfter > 0
+        ? Math.min(retryAfter * 1000, 8_000)
+        : baseDelayMs * 2 ** (attempt - 1);
+      console.warn(`[generator] image fetch got ${status || err.code || 'error'}, retry ${attempt}/${attempts - 1} in ${delay}ms`);
+      await sleep(delay);
+    }
+  }
 }
 
 // ─── SVG overlay ─────────────────────────────────────────────────────────────
